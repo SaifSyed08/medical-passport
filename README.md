@@ -3,7 +3,7 @@
 A separate Sites app inspired by the existing survey's intro typography and transitions. This project has its own hosting identity, D1 database, and R2 storage. It does not access or modify the survey or its responses.
 
 ## Routes
-- `/`: onboarding, simulated Apple Health / ARC consent, fictional record review, card customization, address, 3D completion.
+- `/`: onboarding, eight simulated health providers, fictional record review, swipeable card styles, address autocomplete/manual entry, and interactive 3D completion.
 - `/home`: account-scoped saved cards, reversible disable, confirmed delete, delivery preview and links.
 - `/professional`: explicitly simulated professional access. Lookup is restricted to the signed-in user's demo cards by number or Alex Morgan + 1994-06-18.
 - `/card/:token`: account-scoped DOB-gated medical-only view. English, Spanish, and French demo terms. Browser language detection. Local medicine naming for the exact supported albuterol fixture.
@@ -20,6 +20,8 @@ Use a native HealthKit application and approved provider authorization for live 
 Use Node >=22.13, the Sites installation/build helpers, and the included local preview. Generate migrations after schema changes and apply them to the local D1 database before testing. The local platform sign-in route is `/signin-with-chatgpt?return_to=/`.
 
 ### References
+- ARC logo: https://www.austinregionalclinic.com/templates/ARCRD/svg/arc_logo_flat.svg
+- Address suggestions: https://photon.komoot.io (OpenStreetMap). Typed address queries are sent through an authenticated server route after a 650 ms debounce. The public service has no availability guarantee; manual entry and browser autofill remain available. No medical or identity information is sent to Photon.
 - https://developer.apple.com/documentation/Xcode/configuring-healthkit-access
 - https://www.austinregionalclinic.com/patient-guide/mychart-tips/manage-your-authorized-sharing-for-providers-outside-arc
 - https://medlineplus.gov/druginfo/meds/a607004.html

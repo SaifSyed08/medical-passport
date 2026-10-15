@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const identity = { name: "Alex Morgan", dob: "1994-06-18", sex: "Female" };
+export const providers = { apple: "Apple Health", arc: "Austin Regional Clinic", fitbit: "Fitbit", garmin: "Garmin Connect", samsung: "Samsung Health", healthconnect: "Health Connect", mychart: "MyChart", onemedical: "One Medical" } as const;
+export type Provider = keyof typeof providers;
 export const profileSchema = z.object({
   allergies: z.string().max(500), conditions: z.string().max(800), medications: z.string().max(1000),
   height: z.coerce.number().min(30).max(260), weight: z.coerce.number().min(1).max(500),
@@ -9,7 +11,7 @@ export const profileSchema = z.object({
 });
 export const dataSchema = z.object({
   profile: profileSchema,
-  integrations: z.array(z.enum(["apple", "arc"])).min(1).max(2),
+  integrations: z.array(z.enum(["apple", "arc", "fitbit", "garmin", "samsung", "healthconnect", "mychart", "onemedical"])).min(1).max(8),
   theme: z.enum(["midnight", "pearl", "cobalt", "sage"]),
   photo: z.string().regex(/^$|^\/api\/photo\/[a-f0-9-]{36}$/),
   address: z.object({ street: z.string().min(3).max(160), unit: z.string().max(80), city: z.string().min(2).max(80), region: z.string().min(2).max(80), postal: z.string().min(3).max(20), country: z.string().min(2).max(80) }),
