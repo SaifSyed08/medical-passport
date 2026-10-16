@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Check, ChevronLeft, ChevronRight, Upload } from "lucide-react";
+import { AddressField } from "./address-field";
+import { searchAddresses,countryCode } from "@/lib/address";
 import { type PassportData } from "@/lib/passport";
 import { Action, Back, Field, PassportCard } from "./shared";
 
@@ -29,7 +31,7 @@ type Suggestion=PassportData["address"]&{place:string;complete:boolean};
 export function AddressEntry({address,onChange}:{address:PassportData["address"];onChange:(address:PassportData["address"])=>void}) {
   const [manual,setManual]=useState(!!address.street);
   const [query,setQuery]=useState("");const [results,setResults]=useState<Suggestion[]>([]);const [searching,setSearching]=useState(false);const [message,setMessage]=useState("");const [picked,setPicked]=useState(!!address.city);
-  useEffect(()=>{if(manual||picked||query.trim().length<4){setResults([]);setSearching(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSearching(true);setMessage("");try{const r=await fetch("/api/address?q="+encodeURIComponent(query.trim()),{signal:controller.signal});const body=await r.json() as {suggestions?:Suggestion[];error?:string};if(!r.ok)throw new Error(body.error);setResults(body.suggestions||[]);if(!body.suggestions?.length)setMessage("No matches yet. Try adding your city, or enter it manually.");}catch(e){if(!controller.signal.aborted)setMessage("Address search is unavailable. Enter your address manually.");}finally{if(!controller.signal.aborted)setSearching(false);}},650);return()=>{clearTimeout(timer);controller.abort();};},[query,manual,picked]);
+  useEffect(()=>{if(manual||picked||query.trim().length<4){setResults([]);setSearching(false);return;}const controller=new AbortController();const timer=setTimeout(async()=>{setSearching(true);setMessage("");try{const suggestions=await searchAddresses(query.trim(),controller.signal,"address",countryCode(address.country));if(controller.signal.aborted)return;setResults(suggestions);if(!suggestions.length)setMessage("No matches yet. Try adding your city, or enter it manually.");}catch(e){if(!controller.signal.aborted)setMessage("Address search is unavailable. Enter your address manually.");}finally{if(!controller.signal.aborted)setSearching(false);}},650);return()=>{clearTimeout(timer);controller.abort();};},[query,manual,picked,address.country]);
   const fields=[["street","Street address","address-line1"],["unit","Apartment / suite","address-line2"],["city","City","address-level2"],["region","State / region","address-level1"],["postal","Postal code","postal-code"],["country","Country","country-name"]] as const;
   function pick(result:Suggestion){const {place,complete,...next}=result;onChange(next);setPicked(true);setQuery(next.street);setResults([]);setMessage("");if(!complete)setManual(true);}
   return <div className="address-entry">
@@ -39,7 +41,7 @@ export function AddressEntry({address,onChange}:{address:PassportData["address"]
       <p className="address-status" role="status">{searching?"Finding addresses…":message}</p>
     </>}
     <button className="text-button manual-toggle" type="button" onClick={()=>{setManual(!manual);setMessage("");}}>{manual?"Search for an address":"Enter address manually"}</button>
-    {manual&&<div className="address-details">{fields.map(([key,label,autocomplete])=><Field label={label} key={key}><input name={key} autoComplete={autocomplete} required={key!=="unit"} minLength={key==="street"||key==="postal"?3:key==="unit"?0:2} maxLength={key==="street"?160:key==="postal"?20:80} value={address[key]} onChange={e=>onChange({...address,[key]:e.target.value})}/></Field>)}</div>}
+    {manual&&<div className="address-details">{fields.map(([key,label,autocomplete])=><AddressField key={key} field={key} label={label} autoComplete={autocomplete} address={address} onChange={onChange}/>)}</div>}
     {!manual&&picked&&<Field label="Apartment / suite (optional)"><input autoComplete="address-line2" value={address.unit} maxLength={80} onChange={e=>onChange({...address,unit:e.target.value})}/></Field>}
     {!manual&&<input className="address-validation" tabIndex={-1} aria-label="Select a complete address or enter it manually" required value={address.street.length>=3&&address.city.length>=2&&address.region.length>=2&&address.postal.length>=3&&address.country.length>=2?"complete":""} onChange={()=>{}} onInvalid={()=>setManual(true)}/>}
     <small className="address-attribution">Address suggestions by Photon / OpenStreetMap.</small>

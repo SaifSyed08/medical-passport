@@ -31,6 +31,17 @@ export const initialData: PassportData = { profile: sampleProfile, integrations:
 export function age(dob = identity.dob) { const d = new Date(dob + "T12:00:00"); const n = new Date(); return n.getFullYear() - d.getFullYear() - (n.getMonth() < d.getMonth() || (n.getMonth() === d.getMonth() && n.getDate() < d.getDate()) ? 1 : 0); }
 export function date(value: string) { return new Date(value).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }); }
 export async function api<T>(path: string, method = "GET", data?: unknown): Promise<T> {
+  if(await isGuest()){const {guestApi}=await import("./guest");return guestApi(path,method,data) as T;}
   const r = await fetch(path, { method, ...(data === undefined ? {} : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(data) }) });
   const body = await r.json() as T & {error?:string}; if (!r.ok) throw new Error(body.error || "Something went wrong. Please try again."); return body;
 }
+let guestCheck:Promise<boolean>|undefined;
+export function isGuest():Promise<boolean>{
+ if(!guestCheck)guestCheck=fetch("/api/session",{cache:"no-store"}).then(async r=>{if(!r.ok)throw new Error("Could not check saved-card access. Please retry.");return !(await r.json() as {signedIn:boolean}).signedIn;}).catch(e=>{guestCheck=undefined;throw e;});
+ return guestCheck;
+}
+export async function savePhoto(blob:Blob):Promise<string>{
+ if(await isGuest())return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result));reader.onerror=()=>reject(new Error("Could not read this photo."));reader.readAsDataURL(blob);});
+ const response=await fetch("/api/photo",{method:"POST",headers:{"Content-Type":"image/jpeg"},body:blob});const result=await response.json() as {url:string;error?:string};if(!response.ok)throw new Error(result.error||"Could not save this photo.");return result.url;
+}
+
