@@ -203,3 +203,75 @@ form.studio-address{max-width:490px;margin:auto;animation:address-in .65s .18s b
 .review-shell .identity-strip{margin-top:10px}
 }
 
+/* Tessera: anchored progress, compact controls, and a solid rounded card. */
+.app-shell:has(.fixed-progress) .site-header{height:64px}
+.site-header nav a[aria-label="Go home"],.site-header nav a[aria-label="Go home"] svg{display:flex}
+@view-transition{navigation:auto}
+.address-search-message{font-size:.65rem;padding:8px;color:#7a8c99}
+.arc-placeholder>span{width:100%;height:100%;background-size:contain;background-position:center;background-repeat:no-repeat}
+.fixed-progress{height:3px;width:90px;background:#dce4eb;border-radius:9px;margin:0 auto 20px;overflow:hidden;flex-shrink:0}
+.fixed-progress i{display:block;height:100%;background:#315f98;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.connections-shell .flow-panel{justify-content:center;flex:1;max-height:none;padding-block:12px}
+.review-shell .flow-panel{max-height:calc(100dvh - 136px);justify-content:center}
+.review-shell .health-review-form{flex:0 1 auto}
+.review-shell .identity-strip{display:flex;flex-wrap:nowrap;gap:14px;margin:14px 0 5px}
+.review-shell .identity-strip div:first-child{width:auto}
+.review-shell .identity-strip div>span{font-size:.58rem;gap:3px}
+.review-shell .identity-strip strong{font-size:.78rem;margin-top:4px}
+.review-shell .identity-strip small{display:none}
+.review-shell .source-note{font-size:.57rem;margin-bottom:12px}
+.health-plus{width:34px;height:34px;border:1px dashed #aabfce;border-radius:50%;display:grid;place-items:center;transition:background .2s,transform .2s}
+.health-plus:hover{background:#dfeaf3;transform:rotate(90deg)}
+.health-add{animation:pill-expand .25s ease both}
+.health-group:last-child .health-options{top:auto;bottom:calc(100% + 4px)}
+.health-add input{width:165px}
+.health-pill{transition:background .2s,transform .2s}
+.health-pill:has(button:hover){background:#f7e5e4;transform:translateY(-1px)}
+.health-pill button:hover{color:#b34943}
+@keyframes pill-expand{from{opacity:0;max-width:34px}to{opacity:1;max-width:230px}}
+.card-carousel{height:250px}.studio-customization .theme-picker{margin-top:0}
+.theme-picker button .swatch{position:relative}
+.theme-picker button .swatch::after{content:"";position:absolute;inset:-5px;border:1px solid #809cb5;border-radius:50%;clip-path:inset(0 100% 0 0);transition:clip-path .45s}
+.theme-picker button:hover .swatch::after{clip-path:inset(0)}
+.address-entry{isolation:isolate}
+.address-entry.suggestions-open>.field input{border-radius:9px 9px 0 0}
+.delivery-search{position:relative}.address-suggestions{top:100%;margin:0;padding:3px;border-radius:0 0 10px 10px;max-height:220px;box-shadow:0 8px 20px #142b4415}
+.suggestions-open .delivery-search input{border-radius:9px 9px 0 0}
+.address-suggestions button{font-size:.74rem;padding:8px;gap:8px}
+.address-suggestions button strong{font-weight:600}
+.address-suggestions button>small,.address-suggestions span small{font-size:.61rem}
+.address-suggestions li:last-child{border:0}
+.address-suggestions .separated{border-top:1px solid #edf0f2!important}
+.address-suggestions button.active{background:#edf3f8}
+.address-status{position:absolute;top:100%;font-size:.65rem;background:#fff;z-index:2}
+.demo-address{font-size:.73rem;margin:10px auto;display:block}
+.card-arrival{perspective:650px}
+.card-front{transform:translateZ(3px)}
+.card-back{transform:rotateY(180deg) translateZ(3px)}
+.card-core{position:absolute;inset:0;border-radius:17px;background:var(--card-edge);backface-visibility:visible}
+.card-edge{display:none}
+.completion-orbit svg{width:305px;height:305px}
+.success-content .switch-row{width:fit-content;margin:0 auto;padding:12px 18px;border-radius:18px;background:linear-gradient(130deg,#ffffffb8,#ffffff45);border:1px solid #ffffffd9;box-shadow:0 6px 20px #1638560b,inset 0 1px #fff;backdrop-filter:blur(16px)}
+.add-card-tile{display:flex;align-items:center;justify-content:center;gap:14px;min-height:180px;border:1px dashed #afc1cf;border-radius:22px;margin-top:24px;background:#ffffff50;transition:background .25s,transform .25s}
+.add-card-tile:hover{background:#e7eff5;transform:translateY(-3px)}
+.dashboard{animation:destination-in .5s ease both}
+.route-leaving{animation:destination-out .3s ease both;pointer-events:none}
+@keyframes destination-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes destination-out{to{opacity:0;filter:blur(5px);transform:translateY(-12px)}}
+.arc-placeholder{display:grid;place-items:center;position:relative;width:54px;height:35px}
+.arc-placeholder>span{font-size:20px;font-weight:700;color:#31567d;filter:blur(2px);opacity:.45;transition:opacity .3s}
+.arc-placeholder img{position:absolute;inset:0;opacity:0;transition:opacity .35s}
+.arc-placeholder.loaded img{opacity:1}.arc-placeholder.loaded>span{opacity:0}
+@media(max-width:760px){
+.card-carousel{height:210px}
+.fixed-progress{margin-bottom:12px}
+.review-shell .flow-panel{max-height:calc(100dvh - 120px)}
+.completion-orbit svg{width:265px;height:265px}
+.card-core{border-radius:14px}
+.add-card-tile{position:fixed;right:22px;bottom:24px;z-index:15;min-height:0;width:58px;height:58px;margin:0;border:1px solid #ffffff80;border-radius:50%;background:#315f98;color:white;box-shadow:0 8px 28px #193e6330}
+.add-card-tile span{display:none}.dashboard-footer{padding-bottom:70px}
+}
+@media(max-height:650px){.completion-orbit svg{width:220px;height:220px}.review-shell .flow-panel{max-height:calc(100dvh - 110px)}}
+@media(prefers-reduced-motion:reduce){.route-leaving{animation:none}.health-add{animation:none}}
+
+

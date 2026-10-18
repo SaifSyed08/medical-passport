@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./passport.css";
 
 export const metadata: Metadata = {
-  title: "Medical Passport",
+  title: "Tessera",
   description: "Your essential health information, beautifully together. An interactive demo.",
   icons: {
     icon: "/passport.svg",
