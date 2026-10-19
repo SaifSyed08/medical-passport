@@ -320,6 +320,10 @@ form.studio-address{max-width:490px;margin:auto;animation:address-in .65s .18s b
 .clinical-reader .medical-section>small{line-height:1.6;margin-top:14px}
 .clinical-reader .ask-dock{background:linear-gradient(transparent,#f1f3f2dd);padding-bottom:max(22px,env(safe-area-inset-bottom))}
 .clinical-reader .ask-button{background:#ffffffc9;border:1px solid #19334b;border-radius:99px;color:#19334b;box-shadow:0 8px 30px #1b344715;backdrop-filter:blur(18px)}
+/* Ask Anything stays over the reader instead of extending the page. */
+.clinical-reader .inline-assistant{position:fixed;z-index:30;right:24px;bottom:24px;width:min(520px,calc(100vw - 48px));height:min(640px,calc(100dvh - 48px));margin:0;box-shadow:0 24px 70px #18344a30;backdrop-filter:blur(18px);animation:assistant-pop .32s cubic-bezier(.2,.8,.2,1) both}
+@keyframes assistant-pop{from{opacity:0;transform:translateY(18px) scale(.97)}to{opacity:1;transform:none}}
+@media(max-width:760px){.clinical-reader .inline-assistant{left:12px;right:12px;bottom:12px;width:auto;height:66dvh;max-height:calc(100dvh - 24px);padding:23px 18px;border-radius:20px}.clinical-reader .inline-assistant .chat-messages{min-height:0}.clinical-reader .ask-dock{z-index:20}}
 .refined-professional .professional-panel,.reader-shell .gate-panel{max-width:620px;margin:35px auto;padding:0 26px}
 .refined-professional .professional-panel h1{font-size:clamp(3rem,5.4vw,4.5rem)}
 .refined-professional .professional-icon,.gate-panel .professional-icon{border:1px solid #fff;background:#ffffffa0;box-shadow:0 6px 24px #2b485810;border-radius:22px}
