@@ -8,6 +8,8 @@ export type Language=keyof typeof labels;
 const terms:Record<string,{es:string;fr:string}>={
   "Penicillin (hives)":{es:"Penicilina (urticaria)",fr:"Pénicilline (urticaire)"},
   "Asthma; Seasonal allergies":{es:"Asma; Alergias estacionales",fr:"Asthme ; Allergies saisonnières"},
+  "Asthma":{es:"Asma",fr:"Asthme"},
+  "Seasonal allergies":{es:"Alergias estacionales",fr:"Allergies saisonnières"},
   "No additional notes recorded.":{es:"No se registraron notas adicionales.",fr:"Aucune note supplémentaire enregistrée."},
   "Taylor Morgan (sibling)":{es:"Taylor Morgan (hermano/a)",fr:"Taylor Morgan (frère/sœur)"},
   "Cetirizine, 10 mg tablet":{es:"Cetirizina, comprimido de 10 mg",fr:"Cétirizine, comprimé de 10 mg"},
