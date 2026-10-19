@@ -78,8 +78,8 @@ form.studio-address{max-width:490px;margin:auto;animation:address-in .65s .18s b
 .physical-card.interactive{transition:none;touch-action:none}
 .celebrate{animation:card-rise .9s cubic-bezier(.16,1,.3,1) both}
 .spin-toggle{font-size:.62rem;color:#8797a4;padding:7px;margin:1px auto;display:block}
-.inline-phone{display:flex;gap:8px;max-width:360px;margin:15px auto 0;animation:address-in .35s both}
-.inline-phone input{flex:1;min-width:0;border:1px solid #cddae4;border-radius:9px;background:#ffffffaa;padding:12px;font-size:.88rem}
+.inline-phone{display:flex;gap:8px;width:270px;max-width:100%;margin:12px auto 0;animation:address-in .35s both}
+.inline-phone input{flex:1;min-width:0;width:0;border:1px solid #cddae4;border-radius:9px;background:#ffffffaa;padding:10px;font-size:16px}
 .inline-phone button{display:flex;align-items:center;gap:5px;padding:10px 15px;border-radius:9px;background:#315f98;color:white;font-size:.8rem}
 .inline-assistant.chat-modal{position:relative;width:100%;height:520px;max-height:none;margin:25px 0 0;background:white;border:1px solid #d7e1e8;border-radius:18px;padding:28px;animation:address-in .4s both;scroll-margin-block:25px}
 .inline-assistant h2{padding-right:25px}.inline-assistant .chat-intro{color:#7c8c98;line-height:1.5}
