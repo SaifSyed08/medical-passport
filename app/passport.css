@@ -231,8 +231,10 @@ form.studio-address{max-width:490px;margin:auto;animation:address-in .65s .18s b
 @keyframes pill-expand{from{opacity:0;max-width:34px}to{opacity:1;max-width:230px}}
 .card-carousel{height:250px}.studio-customization .theme-picker{margin-top:14px}
 .theme-picker button .swatch{position:relative}
+.theme-picker .active .swatch{outline:none}
 .theme-picker button .swatch::after{content:"";position:absolute;inset:-5px;border:1px solid #809cb5;border-radius:50%;clip-path:inset(0 100% 0 0);transition:clip-path .45s}
-.theme-picker button:hover .swatch::after{clip-path:inset(0)}
+.theme-picker button.active .swatch::after{clip-path:inset(0)}
+@media(hover:hover) and (pointer:fine){.theme-picker button:hover .swatch::after{clip-path:inset(0)}}
 .address-entry{isolation:isolate}
 .address-entry.suggestions-open>.field input{border-radius:9px 9px 0 0}
 .delivery-search{position:relative}.address-suggestions{top:100%;margin:0;padding:3px;border-radius:0 0 10px 10px;max-height:220px;box-shadow:0 8px 20px #142b4415}
