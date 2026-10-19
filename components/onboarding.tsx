@@ -11,7 +11,7 @@ import { Action, Back, CheckMark, DemoNote, ErrorNote, Field, Header, PassportCa
 type Step="welcome"|"prompt"|"connections"|"review"|"customize"|"address"|"complete";
 const steps:Step[]=["welcome","prompt","connections","review","customize","address","complete"];
 export function Onboarding({signedIn}:{signedIn:boolean}) {
-  const [step,setStep]=useState<Step>("welcome"); const [motion,setMotion]=useState("enter-forward"); const moving=useRef(false);
+  const [step,setStep]=useState<Step>("welcome"); const [motion,setMotion]=useState("enter-forward"); const moving=useRef(false); const [variant,setVariant]=useState(false);
   const [data,setData]=useState<PassportData>(structuredClone(initialData));
   const [error,setError]=useState(""); const [busy,setBusy]=useState(false); const [saved,setSaved]=useState<Passport|null>(null);
   const phoneInput=useRef<HTMLInputElement>(null);
