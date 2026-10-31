@@ -1,26 +1,55 @@
 import { and, desc, eq } from "drizzle-orm";
 import { tesseraRecords, tesseraRequests, tesseraTravelers } from "@/db/schema";
-import type { AccessRequest, Language, Privacy, Profile, RecordItem, RequestStatus } from "@/shared/tessera";
+import { DEFAULT_PRIVACY, type AccessRequest, type Language, type Privacy, type Profile, type RecordItem, type RequestStatus } from "@/shared/tessera";
 import { appendAudit } from "./audit";
-import { currentCard } from "./cards";
+import { createCard, currentCard } from "./cards";
 import { nowIso, type TesseraDb } from "./db";
-import type { DemoClinician } from "./seed-data";
+import { mergeTranslations, upgradeProfile } from "./profile";
+import { blankProfile, JORDAN_ID, jordanProfile, type DemoClinician } from "./seed-data";
 import { randomId } from "./tokens";
 
 type TravelerRow = typeof tesseraTravelers.$inferSelect;
+
+/**
+ * The sample traveler may have been stored before newer seed translations existed. Fill them in for
+ * fields whose English text is unchanged; edited fields stay untranslated (same rule as edits).
+ */
+function withSeedTranslations(id: string, profile: Profile): Profile {
+  if (id !== JORDAN_ID) return profile;
+  const merged = mergeTranslations(jordanProfile, profile);
+  return { ...merged, basics: { ...merged.basics, destinationCountry: merged.basics.destinationCountry ?? jordanProfile.basics.destinationCountry } };
+}
 
 export function unpackTraveler(r: TravelerRow) {
   return {
     id: r.id,
     name: r.name,
     dob: r.dob,
-    profile: JSON.parse(r.profile) as Profile,
+    profile: withSeedTranslations(r.id, upgradeProfile(JSON.parse(r.profile) as Profile)),
     privacy: JSON.parse(r.privacy) as Privacy,
     language: r.language as Language,
     autoApprove: r.autoApprove === 1,
   };
 }
 export type Traveler = ReturnType<typeof unpackTraveler>;
+
+export const isSample = (t: Pick<Traveler, "id">) => t.id === JORDAN_ID;
+export const needsSetup = (t: Pick<Traveler, "name" | "dob">) => !t.name.trim() || !t.dob;
+
+/** A fresh, empty traveler for a user-test participant, with its own card. */
+export async function createBlankTraveler(db: TesseraDb) {
+  const id = "trv_" + randomId(12);
+  await db.insert(tesseraTravelers).values({
+    id, name: "", dob: "", profile: JSON.stringify(blankProfile()), privacy: JSON.stringify(DEFAULT_PRIVACY),
+    language: "en", autoApprove: 0, updated: nowIso(),
+  });
+  await createCard(db, id);
+  return id;
+}
+
+export async function updateIdentity(db: TesseraDb, id: string, identity: { name: string; dob: string }) {
+  await db.update(tesseraTravelers).set({ name: identity.name, dob: identity.dob, updated: nowIso() }).where(eq(tesseraTravelers.id, id));
+}
 
 export async function getTraveler(db: TesseraDb, id: string): Promise<Traveler | null> {
   const r = await db.select().from(tesseraTravelers).where(eq(tesseraTravelers.id, id)).get();

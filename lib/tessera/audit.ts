@@ -47,6 +47,7 @@ const verbs: Record<AuditAction, string> = {
   card_unfrozen: "unfroze your card",
   card_replaced: "replaced your card",
   privacy_changed: "changed what appears in your emergency profile",
+  identity_changed: "updated the name or date of birth on your card",
 };
 
 const attempts: Partial<Record<AuditAction, string>> = {

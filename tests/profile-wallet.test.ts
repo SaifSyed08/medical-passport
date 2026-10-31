@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_PRIVACY } from "@/shared/tessera";
+import { DEFAULT_PRIVACY, LANGUAGES, TRANSLATED_LANGUAGES, type Language } from "@/shared/tessera";
 import { currentCard, setFrozen, toCard } from "@/lib/tessera/cards";
 import { listAudit } from "@/lib/tessera/audit";
 import { emergencyView, mergeTranslations, profileSchema } from "@/lib/tessera/profile";
@@ -26,21 +26,24 @@ describe("seeded profile", () => {
 });
 
 describe("emergency view", () => {
-  const view = (lang: "ja" | "en", privacy = DEFAULT_PRIVACY) => emergencyView(jordan.name, jordanProfile, privacy, lang);
+  const view = (lang: Language, privacy = DEFAULT_PRIVACY) => emergencyView(jordan.name, jordanProfile, privacy, lang);
 
-  it("leads with allergies then medications", () => {
-    for (const lang of ["ja", "en"] as const) expect(view(lang).sections.slice(0, 2).map(s => s.category)).toEqual(["allergies", "medications"]);
+  it("leads with allergies then medications in every language", () => {
+    for (const lang of LANGUAGES) expect(view(lang).sections.slice(0, 2).map(s => s.category)).toEqual(["allergies", "medications"]);
   });
 
-  it("includes every seeded allergy and medication, translated", () => {
-    const v = view("ja");
-    const allergies = v.sections.find(s => s.category === "allergies")!.items;
-    const meds = v.sections.find(s => s.category === "medications")!.items;
-    expect(allergies.map(i => i.text)).toEqual(jordanProfile.allergies.map(a => a.substanceJa));
-    expect(meds).toHaveLength(jordanProfile.medications.length);
-    for (const [i, m] of jordanProfile.medications.entries()) expect(meds[i].text).toContain(m.genericJa!);
-    expect(allergies[0].severe).toBe(true);
-    expect([...allergies, ...meds].every(i => !i.untranslated)).toBe(true);
+  it("includes every seeded allergy and medication, translated, in every language", () => {
+    for (const lang of LANGUAGES) {
+      const v = view(lang);
+      const allergies = v.sections.find(s => s.category === "allergies")!.items;
+      const meds = v.sections.find(s => s.category === "medications")!.items;
+      const expected = (a: (typeof jordanProfile.allergies)[number]) => (lang === "en" ? a.substance : a.tr![lang]!.substance);
+      expect(allergies.map(i => i.text)).toEqual(jordanProfile.allergies.map(expected));
+      expect(meds).toHaveLength(jordanProfile.medications.length);
+      for (const [i, m] of jordanProfile.medications.entries()) expect(meds[i].text).toContain(lang === "en" ? m.generic : m.tr![lang]!.generic!);
+      expect(allergies[0].severe).toBe(true);
+      expect([...allergies, ...meds].every(i => !i.untranslated)).toBe(true);
+    }
   });
 
   it("omits restricted categories and never includes insurance, encounters or documents", () => {
@@ -56,11 +59,14 @@ describe("emergency view", () => {
     const edited = structuredClone(jordanProfile);
     edited.allergies[1].substance = "Kiwi and banana";
     const merged = mergeTranslations(jordanProfile, edited);
-    expect(merged.allergies[1].substanceJa).toBeUndefined();
-    expect(merged.allergies[1].reactionJa).toBe(jordanProfile.allergies[1].reactionJa);
-    expect(merged.allergies[0].substanceJa).toBe(jordanProfile.allergies[0].substanceJa);
-    const item = emergencyView(jordan.name, merged, DEFAULT_PRIVACY, "ja").sections[0].items[1];
-    expect(item).toMatchObject({ text: "Kiwi and banana", untranslated: true });
+    for (const lang of TRANSLATED_LANGUAGES) {
+      // Only the edited field loses its translations, in every language.
+      expect(merged.allergies[1].tr?.[lang]?.substance).toBeUndefined();
+      expect(merged.allergies[1].tr?.[lang]?.reaction).toBe(jordanProfile.allergies[1].tr![lang]!.reaction);
+      expect(merged.allergies[0].tr?.[lang]).toEqual(jordanProfile.allergies[0].tr![lang]);
+      const item = emergencyView(jordan.name, merged, DEFAULT_PRIVACY, lang).sections[0].items[1];
+      expect(item).toMatchObject({ text: "Kiwi and banana", untranslated: true });
+    }
   });
 });
 
