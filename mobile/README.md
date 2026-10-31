@@ -17,12 +17,14 @@ Expo SDK 58 (React Native 0.88), Expo Router, TypeScript.
    - **Deployed Workers URL:** `EXPO_PUBLIC_API_URL=https://<your-site-host>`. HTTPS, no tunnel needed. The deployed site must include the `/api/v1` code from this branch, so deploy it first.
    - **Your Mac, over Wi-Fi:** from the repo root run `npm run build` and then `npm run start:lan` (the built Worker on port 8787, reachable from the LAN). Set `EXPO_PUBLIC_API_URL=http://<your-mac-LAN-IP>:8787` (find the IP with `ipconfig getifaddr en0`). Phone and Mac must be on the same network.
    - **Simulator/emulator on the same Mac:** `npm start` in the repo root and `EXPO_PUBLIC_API_URL=http://127.0.0.1:8787` (iOS simulator) or `http://10.0.2.2:8787` (Android emulator).
-3. Start Expo:
+3. **iPhone only: sign in to Expo (free account).** Since SDK 57, Expo Go on a physical iPhone only opens a dev-server project if Expo Go and the Expo CLI are signed in to the *same* Expo account. Create a free account at [expo.dev](https://expo.dev/signup), run `npx expo login` on your computer, and sign in to Expo Go with the same account (Settings/profile tab). Android devices, emulators and the iOS Simulator don't need this yet. See [Expo's troubleshooting page](https://docs.expo.dev/troubleshooting/expo-go-sign-in-required/).
+4. Start Expo:
    ```sh
    npx expo start
    ```
-   Scan the QR code with **Expo Go** (Android) or the Camera app (iOS). Press `i` / `a` for a simulator or emulator if you have Xcode or Android Studio.
-4. On the login screen, tap **Continue as Jordan Rivera**. There are no real accounts.
+   Scan the QR code with **Expo Go** (Android) or the Camera app (iOS).
+   If your Wi-Fi blocks device-to-device traffic (common on campus networks), put the Mac and phone on a phone hotspot, and update `EXPO_PUBLIC_API_URL` to the Mac's new address. Press `i` / `a` for a simulator or emulator if you have Xcode or Android Studio.
+5. On the login screen, tap **Continue as Jordan Rivera**. There are no real accounts.
 
 After changing `.env`, restart with `npx expo start --clear`. Metro also sometimes misses file changes without watchman; `--clear` fixes that too.
 
