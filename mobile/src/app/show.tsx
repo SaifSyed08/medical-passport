@@ -7,6 +7,7 @@ import QRCode from "react-native-qrcode-svg";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { Card } from "@shared/tessera";
 import { useResource } from "@/lib/cache";
+import { clinicianHint } from "@/lib/i18n";
 import { CARD_KEY, useSession } from "@/lib/session";
 import { color, font, space, TOUCH } from "@/lib/theme";
 import { DemoBanner, T } from "@/components/ui";
@@ -51,7 +52,8 @@ export default function Show() {
         </View>
         <T style={{ fontFamily: font.serif, fontSize: 32, color: color.ink, textAlign: "center" }}>{me?.traveler.name}</T>
         <T style={{ fontSize: 16, color: color.muted, textAlign: "center", lineHeight: 23, paddingHorizontal: space.l }}>{t.showHint}</T>
-        <T style={{ fontSize: 15, color: color.muted, textAlign: "center" }}>医療関係者の方：QRコードを読み取ってください。</T>
+        {me && me.language !== "en" && <T style={{ fontSize: 15, color: color.muted, textAlign: "center" }}>{clinicianHint[me.language]}</T>}
+        <T style={{ fontSize: 15, color: color.muted, textAlign: "center" }}>{clinicianHint.en}</T>
       </View>
       <Pressable accessibilityRole="button" accessibilityLabel={t.close} onPress={() => router.back()} style={({ pressed }) => [styles.close, pressed && { opacity: 0.6 }]}>
         <T weight="500" style={{ fontSize: 17, color: color.blue }}>{t.close}</T>

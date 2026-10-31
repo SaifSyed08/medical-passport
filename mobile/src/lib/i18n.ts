@@ -1,6 +1,9 @@
 // App UI strings. Japanese is hand-written and unreviewed: see ../TRANSLATION_REVIEW.md.
 import type { Language } from "@shared/tessera";
 
+/** The app's own interface language. Separate from the doctor-facing profile language (`Language`). */
+export type AppLanguage = "en" | "ja";
+
 const en = {
   demoBanner: "Demo · synthetic data · not for clinical use",
   tabCard: "Card",
@@ -97,6 +100,38 @@ const en = {
   done: "Done",
   cardUnusable: "The card can't be used right now (frozen?). The scan was logged as blocked.",
   notifTitle: "Tessera",
+  // Blank profiles, setup, personal details, insurance, trip
+  loginSample: "Continue as Jordan Rivera (sample data)",
+  loginBlank: "Start with a blank profile",
+  loginBlankNote: "A blank profile is for trying the app with your own made-up details. It lasts until you sign out (or 12 hours).",
+  setupTitle: "Set up your card",
+  setupLead: "Use made-up details. This is a demo, so don't enter real health information.",
+  fullName: "Full name (as on your passport)",
+  dob: "Date of birth",
+  dobHint: "YYYY-MM-DD, for example 2003-05-01",
+  destination: "Where are you studying?",
+  destinationHint: "Doctors there will see your emergency profile in their language.",
+  chooseCountry: "Choose a country",
+  otherCountry: "Other country",
+  otherCountryNote: "Not listed? Doctors will see your profile in English.",
+  searchCountries: "Search countries",
+  city: "City (optional)",
+  continue: "Continue",
+  personalDetails: "Personal details",
+  notRecorded: "Not recorded",
+  noneYet: "None recorded yet. Tap Add.",
+  noneYetInsurance: "No insurance recorded yet. Tap Edit.",
+  yourTrip: "Your trip",
+  tripLead: "Choosing a country sets the language doctors see. You can still pick a different language below.",
+  profileLanguage: "Profile language for doctors",
+  heightCm: "Height (cm)",
+  weightKg: "Weight (kg)",
+  sex: "Sex",
+  plan: "Plan name",
+  memberId: "Member ID",
+  group: "Group number",
+  insurancePhone: "Insurer phone",
+  sampleBadge: "Sample data",
 };
 export type Strings = typeof en;
 
@@ -196,7 +231,48 @@ const ja: Strings = {
   done: "完了",
   cardUnusable: "カードは現在使用できません（凍結中？）。読み取りはブロックとして記録されました。",
   notifTitle: "Tessera",
+  loginSample: "Jordan Rivera として続ける（サンプルデータ）",
+  loginBlank: "空のプロフィールで始める",
+  loginBlankNote: "空のプロフィールは、架空の情報でアプリを試すためのものです。サインアウトするまで（または12時間）保持されます。",
+  setupTitle: "カードを設定",
+  setupLead: "架空の情報を使ってください。デモなので、実際の健康情報は入力しないでください。",
+  fullName: "氏名（パスポート表記）",
+  dob: "生年月日",
+  dobHint: "YYYY-MM-DD（例：2003-05-01）",
+  destination: "留学先はどこですか？",
+  destinationHint: "現地の医師は、あなたの緊急プロフィールを現地の言語で見ることができます。",
+  chooseCountry: "国を選択",
+  otherCountry: "その他の国",
+  otherCountryNote: "一覧にない場合、医師には英語で表示されます。",
+  searchCountries: "国を検索",
+  city: "都市（任意）",
+  continue: "続ける",
+  personalDetails: "個人情報",
+  notRecorded: "未登録",
+  noneYet: "まだ登録がありません。「追加」をタップしてください。",
+  noneYetInsurance: "保険はまだ登録されていません。「編集」をタップしてください。",
+  yourTrip: "渡航先",
+  tripLead: "国を選ぶと、医師に表示される言語が決まります。下で別の言語を選ぶこともできます。",
+  profileLanguage: "医師向けプロフィールの言語",
+  heightCm: "身長（cm）",
+  weightKg: "体重（kg）",
+  sex: "性別",
+  plan: "保険プラン名",
+  memberId: "会員番号",
+  group: "グループ番号",
+  insurancePhone: "保険会社の電話番号",
+  sampleBadge: "サンプルデータ",
 };
 
-export const strings: Record<Language, Strings> = { en, ja };
+export const strings: Record<AppLanguage, Strings> = { en, ja };
+
+/** Shown to the clinician on the full-screen QR, in the doctor-facing language. */
+export const clinicianHint: Record<Language, string> = {
+  en: "Clinicians: please scan this QR code.",
+  ja: "医療関係者の方：QRコードを読み取ってください。",
+  es: "Personal sanitario: escanee este código QR.",
+  fr: "Professionnels de santé : veuillez scanner ce code QR.",
+  it: "Personale sanitario: scansionate questo codice QR.",
+  de: "Medizinisches Personal: Bitte scannen Sie diesen QR-Code.",
+};
 export const hasJapanese = (s: string) => /[぀-ヿ㐀-鿿＀-￯]/.test(s);

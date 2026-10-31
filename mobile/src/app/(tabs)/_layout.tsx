@@ -11,9 +11,11 @@ const icon = (glyph: string) =>
   };
 
 export default function TabsLayout() {
-  const { signedIn, t } = useSession();
+  const { signedIn, me, t } = useSession();
   const { unread, pending } = useActivity();
   if (!signedIn) return <Redirect href="/login" />;
+  // A blank profile picks a name, date of birth and destination before seeing the card.
+  if (me?.traveler.needsSetup) return <Redirect href="/setup" />;
   return (
     <Tabs
       screenOptions={{

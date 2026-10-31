@@ -24,7 +24,12 @@ Expo SDK 58 (React Native 0.88), Expo Router, TypeScript.
    ```
    Scan the QR code with **Expo Go** (Android) or the Camera app (iOS).
    If your Wi-Fi blocks device-to-device traffic (common on campus networks), put the Mac and phone on a phone hotspot, and update `EXPO_PUBLIC_API_URL` to the Mac's new address. Press `i` / `a` for a simulator or emulator if you have Xcode or Android Studio.
-5. On the login screen, tap **Continue as Jordan Rivera**. There are no real accounts.
+5. On the login screen, choose:
+   - **Continue as Jordan Rivera (sample data)**: the seeded traveler studying in Tokyo, or
+   - **Start with a blank profile**: a fresh, empty profile for a user-test participant. It asks for a name, date of birth and destination country first. It lasts until you sign out (or 12 hours). There are no real accounts.
+
+### Destination country and languages
+The destination country sets the language doctors see on the emergency profile: English, Japanese, Spanish, French, Italian or German. Countries outside those fall back to English. Change it under **Privacy → Your trip** or **Health → Personal details**, where you can also override the language. The app's own UI language (English/Japanese) is separate. Anything a traveler types is shown to doctors in English with an **EN** marker; only the sample traveler's data has hand-written translations (see `../TRANSLATION_REVIEW.md`).
 
 After changing `.env`, restart with `npx expo start --clear`. Metro also sometimes misses file changes without watchman; `--clear` fixes that too.
 

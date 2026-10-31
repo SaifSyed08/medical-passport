@@ -1,9 +1,9 @@
 import { Directory, File, Paths } from "expo-file-system";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { Language, Me } from "@shared/tessera";
+import type { Me } from "@shared/tessera";
 import { api, setToken, setUnauthorizedHandler } from "./api";
 import { clearCache } from "./cache";
-import { strings, type Strings } from "./i18n";
+import { strings, type AppLanguage, type Strings } from "./i18n";
 import { storage } from "./storage";
 
 const TOKEN_KEY = "tessera.token";
@@ -25,10 +25,12 @@ type Session = {
   signedIn: boolean;
   me: Me | null;
   setMe: (m: Me) => void;
-  uiLang: Language;
-  setUiLang: (l: Language) => void;
+  uiLang: AppLanguage;
+  setUiLang: (l: AppLanguage) => void;
   t: Strings;
-  signIn: () => Promise<void>;
+  /** "jordan-rivera" = the sample traveler; "blank" = a fresh empty profile. */
+  signIn: (code: "jordan-rivera" | "blank") => Promise<void>;
+  refreshMe: () => Promise<Me>;
   signOut: () => Promise<void>;
 };
 
@@ -38,7 +40,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
   const [me, setMe] = useState<Me | null>(null);
-  const [uiLang, setUiLangState] = useState<Language>("en");
+  const [uiLang, setUiLangState] = useState<AppLanguage>("en");
 
   const signOut = useCallback(async () => {
     api("/auth/logout", { method: "POST", body: {} }).catch(() => {});
@@ -64,22 +66,29 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     })();
   }, [signOut]);
 
-  const signIn = useCallback(async () => {
-    const { token } = await api<{ token: string; expires: string }>("/auth/demo-login", { body: { code: "jordan-rivera" } });
+  const signIn = useCallback(async (code: "jordan-rivera" | "blank") => {
+    clearCache();
+    const { token } = await api<{ token: string; expires: string }>("/auth/demo-login", { body: { code } });
     setToken(token);
     await storage.set(TOKEN_KEY, token);
     setMe(await api<Me>("/me"));
     setSignedIn(true);
   }, []);
 
-  const setUiLang = useCallback((l: Language) => {
+  const refreshMe = useCallback(async () => {
+    const m = await api<Me>("/me");
+    setMe(m);
+    return m;
+  }, []);
+
+  const setUiLang = useCallback((l: AppLanguage) => {
     setUiLangState(l);
     storage.set(UI_LANG_KEY, l).catch(() => {});
   }, []);
 
   const value = useMemo(
-    () => ({ ready, signedIn, me, setMe, uiLang, setUiLang, t: strings[uiLang], signIn, signOut }),
-    [ready, signedIn, me, uiLang, setUiLang, signIn, signOut],
+    () => ({ ready, signedIn, me, setMe, uiLang, setUiLang, t: strings[uiLang], signIn, signOut, refreshMe }),
+    [ready, signedIn, me, uiLang, setUiLang, signIn, signOut, refreshMe],
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

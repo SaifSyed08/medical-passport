@@ -33,6 +33,10 @@ function Root() {
         <Stack.Screen name="emergency-preview" options={{ presentation: "modal" }} />
         <Stack.Screen name="item/[kind]" options={{ presentation: "modal" }} />
         <Stack.Screen name="basics" options={{ presentation: "modal" }} />
+        <Stack.Screen name="setup" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="details" options={{ presentation: "modal" }} />
+        <Stack.Screen name="insurance" options={{ presentation: "modal" }} />
+        <Stack.Screen name="trip" options={{ presentation: "modal" }} />
         <Stack.Screen name="record/[id]" options={{ headerShown: true, title: t.records, headerBackTitle: t.records }} />
       </Stack>
     </>

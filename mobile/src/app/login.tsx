@@ -9,20 +9,20 @@ import { Button, Heading, Logo, Notice, Screen, Segmented, T } from "@/component
 
 export default function Login() {
   const { signedIn, signIn, t, uiLang, setUiLang } = useSession();
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"" | "jordan-rivera" | "blank">("");
   const [error, setError] = useState("");
   if (signedIn) return <Redirect href="/" />;
 
-  async function go() {
-    setBusy(true);
+  async function go(code: "jordan-rivera" | "blank") {
+    setBusy(code);
     setError("");
     try {
-      await signIn();
+      await signIn(code);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (e) {
       setError(e instanceof ApiError && e.offline ? t.offline.split(".")[0] + "." : t.errorGeneric);
     } finally {
-      setBusy(false);
+      setBusy("");
     }
   }
 
@@ -36,7 +36,9 @@ export default function Login() {
       <View style={{ gap: space.m, marginTop: space.xl }}>
         {!API_URL && <Notice tone="error">{t.apiMissing}</Notice>}
         {!!error && <Notice tone="error">{error}</Notice>}
-        <Button onPress={go} busy={busy} disabled={!API_URL}>{t.loginButton}</Button>
+        <Button onPress={() => go("jordan-rivera")} busy={busy === "jordan-rivera"} disabled={!API_URL || !!busy}>{t.loginSample}</Button>
+        <Button secondary onPress={() => go("blank")} busy={busy === "blank"} disabled={!API_URL || !!busy}>{t.loginBlank}</Button>
+        <T style={{ fontSize: 13.5, color: color.muted, lineHeight: 19 }}>{t.loginBlankNote}</T>
         <Notice>{t.loginNote}</Notice>
       </View>
       <View style={{ gap: space.s, marginTop: space.l }}>

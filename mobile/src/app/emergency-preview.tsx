@@ -1,11 +1,11 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
-import type { EmergencyView, Language } from "@shared/tessera";
+import { LANGUAGE_NAMES, LANGUAGES, type EmergencyView, type Language } from "@shared/tessera";
 import { useResource } from "@/lib/cache";
 import { useSession } from "@/lib/session";
 import { color, space } from "@/lib/theme";
-import { Button, Heading, LoadError, Loading, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
+import { Button, Chips, Heading, LoadError, Loading, Notice, Pill, Screen, Section, T } from "@/components/ui";
 
 /**
  * The traveler's preview of what a verified clinician will see in emergency scope.
@@ -13,14 +13,14 @@ import { Button, Heading, LoadError, Loading, Notice, Pill, Screen, Section, Seg
  */
 export default function EmergencyPreview() {
   const { t, me } = useSession();
-  const [lang, setLang] = useState<Language>(me?.language ?? "ja");
+  const [lang, setLang] = useState<Language>(me?.language ?? "en");
   const view = useResource<EmergencyView>(`/profile/emergency-preview?lang=${lang}`);
   const v = view.data;
 
   return (
     <Screen stale={view.stale}>
       <Heading size={28}>{t.previewProfile}</Heading>
-      <Segmented<Language> label={t.doctorLanguage} value={lang} onChange={setLang} options={[{ value: "ja", label: "日本語" }, { value: "en", label: "English" }]} />
+      <Chips<Language> label={t.profileLanguage} value={lang} onChange={setLang} options={LANGUAGES.map(l => ({ value: l, label: LANGUAGE_NAMES[l] }))} />
       {!v && view.loading && <Loading />}
       {!v && view.error && <LoadError onRetry={view.refresh} />}
       {v && (
@@ -31,7 +31,7 @@ export default function EmergencyPreview() {
               {s.items.map((it, i) => (
                 <View key={i} style={{ paddingVertical: 8, gap: 4, borderBottomWidth: i === s.items.length - 1 ? 0 : 1, borderBottomColor: "#edf0f2" }}>
                   <View style={{ flexDirection: "row", gap: space.s, alignItems: "center", flexWrap: "wrap" }}>
-                    <T weight={it.severe ? "700" : undefined} style={{ fontSize: 16, color: it.severe ? color.errorText : color.ink }}>{it.text}</T>
+                    <T weight={it.severe ? "700" : undefined} style={{ fontSize: 16, color: it.severe ? color.errorText : it.empty ? color.subtle : color.ink, fontStyle: it.empty ? "italic" : "normal" }}>{it.text}</T>
                     {it.untranslated && <Pill tone="muted">EN</Pill>}
                   </View>
                   {it.detail && <T style={{ color: color.body, lineHeight: 21 }}>{it.detail}</T>}

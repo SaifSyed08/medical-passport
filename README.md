@@ -47,10 +47,10 @@ Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/env.example`), then run 
 - **Local:** `npm run build && npm run start:lan` at the root, then `http://<mac-LAN-IP>:8787`. A second phone on the same Wi-Fi can open the card QR.
 
 ### Demo script (about 5 minutes)
-1. Open the app, tap **Continue as Jordan Rivera**. The card shows status **Active** and a QR code.
+1. Open the app, tap **Continue as Jordan Rivera (sample data)**. The card shows status **Active** and a QR code. (For a participant's own run, tap **Start with a blank profile** instead: they enter a name, date of birth and destination country, then add allergies, medications, conditions, contacts and insurance themselves.)
 2. Tap **Show to a doctor**. The screen brightens with a large QR. Scan it with a second phone: it opens `/t/{card_id}`, which says "card detected, clinician access coming soon" and shows nothing about the patient.
 3. Back in the app, open **Activity**: "Someone scanned your card" was logged. A local notification fires for new clinician activity.
-4. **Privacy → Preview what a doctor sees**: the emergency profile in Japanese, allergies and medications first. Switch to English. Mark Conditions as Restricted and preview again.
+4. **Privacy → Preview what a doctor sees**: the emergency profile in Japanese, allergies and medications first. Switch between English, Japanese, Spanish, French, Italian and German. Under **Privacy → Your trip**, pick another country (e.g. Spain) and the doctor language follows it. Mark Conditions as Restricted and preview again.
 5. Long-press the **Tessera logo** for presenter tools. Run **Dr. Tanaka requests full record**: a notification arrives and Privacy shows the request. Approve or deny it with biometrics (a tap in Expo Go on iOS).
 6. **Privacy → Freeze card**, then scan again: the page shows the neutral "This card can't be used right now." The log shows a blocked scan. Unfreeze.
 7. **Card → Replace card**, then open the old QR or link: neutral message. The new QR works.
@@ -69,7 +69,8 @@ Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/env.example`), then run 
 - **Clinician web flow is deferred:** ID check (name + DOB), clinician sign-in and verification, authorization statement, 15-minute scoped access sessions, the Japanese emergency profile page for doctors, the source-record viewer, AI Q&A with citations, and the web presenter/metrics page. Their acceptance criteria (stolen-card test, DOB brute-force rate limiting, scope separation, citation validity) are **not met yet**. Until then, clinician activity in the app comes from seeded history, real scans of `/t/`, and presenter simulations, all labelled.
 - **Biometrics** are a client-side gate. The server can't verify them.
 - **Not verified:** the deployed Sites environment (whether it forwards `Authorization` headers and applies migrations; the runtime table creation covers the latter), iOS simulator, Android emulator, Expo Go on a real device, and real-device biometrics, brightness, Photos saving and notifications. Verified locally: the web build, the `/api/v1` end to end, 22 backend tests, mobile typecheck/lint/`expo-doctor`, iOS and Android bundle export, and the UI rendered through Expo web at 390px and 360px.
-- **Japanese translations** are hand-written and unreviewed (see [TRANSLATION_REVIEW.md](TRANSLATION_REVIEW.md)).
+- **Translations** (Japanese, Spanish, French, Italian, German) are hand-written and unreviewed (see [TRANSLATION_REVIEW.md](TRANSLATION_REVIEW.md)). Only the sample traveler's data is translated. Anything a traveler types is shown to doctors in English, marked "EN". Doses aren't translated. Country names in the picker are English only.
+- **Blank profiles** are throwaway: one per sign-in, gone after sign-out or 12 hours. **Reset demo data** wipes everyone's data, including blank profiles in use, which then get signed out.
 - **"Simulated extraction"** of uploaded documents is a placeholder. No text is read.
 
 ## Assumptions (Tessera mobile work)

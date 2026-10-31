@@ -260,6 +260,34 @@ export function Segmented<V extends string>({ value, options, onChange, label }:
   );
 }
 
+/** Wrapping single-choice chips, for option sets too long for a segmented control (e.g. 6 languages). */
+export function Chips<V extends string>({ value, options, onChange, label }: { value: V; options: { value: V; label: string }[]; onChange: (v: V) => void; label: string }) {
+  return (
+    <View accessibilityRole="radiogroup" accessibilityLabel={label} style={{ flexDirection: "row", flexWrap: "wrap", gap: space.s }}>
+      {options.map(o => {
+        const on = o.value === value;
+        return (
+          <Pressable
+            key={o.value}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            accessibilityLabel={`${label}: ${o.label}`}
+            onPress={() => {
+              if (!on) {
+                void Haptics.selectionAsync();
+                onChange(o.value);
+              }
+            }}
+            style={[styles.chip, on && styles.segmentOn]}
+          >
+            <T weight="500" style={{ fontSize: 14, color: on ? "white" : "#30445e" }}>{o.label}</T>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function Loading() {
   const { t } = useSession();
   return (
@@ -299,5 +327,6 @@ const styles = StyleSheet.create({
   input: { minHeight: TOUCH, borderWidth: 1, borderColor: color.fieldLine, borderRadius: radius.field, backgroundColor: "white", paddingHorizontal: 14, paddingVertical: 11, fontSize: 16, color: color.ink },
   segmented: { flexDirection: "row", borderRadius: radius.button, borderWidth: 1, borderColor: "#cdd5dd", overflow: "hidden" },
   segment: { flex: 1, minHeight: TOUCH - 4, alignItems: "center", justifyContent: "center", paddingHorizontal: 10 },
-  segmentOn: { backgroundColor: color.blue },
+  segmentOn: { backgroundColor: color.blue, borderColor: color.blue },
+  chip: { minHeight: TOUCH - 4, minWidth: 64, paddingHorizontal: 14, borderRadius: radius.pill, borderWidth: 1, borderColor: "#cdd5dd", backgroundColor: "white", alignItems: "center", justifyContent: "center" },
 });

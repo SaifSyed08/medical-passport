@@ -2,21 +2,22 @@ import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { useState } from "react";
 import { View } from "react-native";
-import type { AccessRequest, Card, Language, Privacy } from "@shared/tessera";
+import { destinationName, LANGUAGE_NAMES, type AccessRequest, type Card, type Privacy } from "@shared/tessera";
 import { pollActivity } from "@/lib/activity";
 import { api } from "@/lib/api";
 import { primeCache, useResource } from "@/lib/cache";
 import { confirmWithBiometrics } from "@/lib/confirm";
+import type { AppLanguage } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { color, space } from "@/lib/theme";
-import { Button, Heading, Logo, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
+import { Button, Heading, Logo, Notice, Pill, Row, Screen, Section, Segmented, T } from "@/components/ui";
 
 // Categories a clinician can see in emergency scope. Insurance, visits and documents are
 // always restricted to an approved full-record request.
 const EMERGENCY_CATEGORIES = ["allergies", "medications", "conditions", "bloodType", "contacts"] as const;
 
 export default function PrivacyScreen() {
-  const { t, me, setMe, uiLang, setUiLang, signOut } = useSession();
+  const { t, me, uiLang, setUiLang, signOut } = useSession();
   const privacy = useResource<Privacy>("/privacy");
   const requests = useResource<AccessRequest[]>("/requests");
   const card = useResource<Card>("/card");
@@ -39,12 +40,6 @@ export default function PrivacyScreen() {
     run("privacy", async () => {
       if (!privacy.data) return;
       primeCache("/privacy", await api<Privacy>("/privacy", { method: "PUT", body: { ...privacy.data, [c]: v } }));
-    });
-
-  const setDoctorLanguage = (language: Language) =>
-    run("lang", async () => {
-      await api("/prefs", { method: "PUT", body: { language } });
-      if (me) setMe({ ...me, language });
     });
 
   const decide = (r: AccessRequest, decision: "approved" | "denied") =>
@@ -118,9 +113,14 @@ export default function PrivacyScreen() {
         <Button secondary style={{ marginTop: space.m }} onPress={() => router.push("/emergency-preview")}>{t.previewProfile}</Button>
       </Section>
 
-      <Section title={t.doctorLanguage}>
-        <T style={{ color: color.body, marginBottom: space.s }}>{t.doctorLanguageLead}</T>
-        <Segmented<Language> label={t.doctorLanguage} value={me?.language ?? "ja"} onChange={setDoctorLanguage} options={[{ value: "ja", label: "日本語" }, { value: "en", label: "English" }]} />
+      <Section title={t.yourTrip}>
+        <Row
+          title={destinationName(me?.destinationCountry) ?? t.chooseCountry}
+          detail={`${t.profileLanguage}: ${LANGUAGE_NAMES[me?.language ?? "en"]}`}
+          onPress={() => router.push("/trip")}
+          label={`${t.yourTrip}: ${destinationName(me?.destinationCountry) ?? t.chooseCountry}. ${t.profileLanguage}: ${LANGUAGE_NAMES[me?.language ?? "en"]}`}
+          last
+        />
       </Section>
 
       <Section title={card.data?.status === "frozen" ? t.cardFrozen : t.freezeCard}>
@@ -132,7 +132,7 @@ export default function PrivacyScreen() {
 
       <Section title={t.account}>
         <T weight="500" style={{ marginBottom: 6 }}>{t.appLanguage}</T>
-        <Segmented<Language> label={t.appLanguage} value={uiLang} onChange={setUiLang} options={[{ value: "en", label: "English" }, { value: "ja", label: "日本語" }]} />
+        <Segmented<AppLanguage> label={t.appLanguage} value={uiLang} onChange={setUiLang} options={[{ value: "en", label: "English" }, { value: "ja", label: "日本語" }]} />
         <Button secondary style={{ marginTop: space.l }} onPress={() => void signOut()}>{t.signOut}</Button>
       </Section>
     </Screen>

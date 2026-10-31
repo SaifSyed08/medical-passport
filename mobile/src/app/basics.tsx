@@ -15,8 +15,10 @@ export default function Basics() {
   const profile = useResource<Profile>("/profile");
   const p = profile.data;
   const [blood, setBlood] = useState<BloodType>(p?.bloodType ?? "Unknown");
-  const [height, setHeight] = useState(String(p?.basics.heightCm ?? ""));
-  const [weight, setWeight] = useState(String(p?.basics.weightKg ?? ""));
+  const [height, setHeight] = useState(p?.basics.heightCm == null ? "" : String(p.basics.heightCm));
+  const [weight, setWeight] = useState(p?.basics.weightKg == null ? "" : String(p.basics.weightKg));
+  // Blank means "not recorded".
+  const num = (v: string) => (v.trim() === "" ? null : Number(v));
   const [sex, setSex] = useState(p?.basics.sex ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -26,7 +28,7 @@ export default function Basics() {
     setBusy(true);
     setError("");
     try {
-      await saveProfile({ ...p, bloodType: blood, basics: { ...p.basics, sex, heightCm: Number(height), weightKg: Number(weight) } });
+      await saveProfile({ ...p, bloodType: blood, basics: { ...p.basics, sex, heightCm: num(height), weightKg: num(weight) } });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (e) {
@@ -57,9 +59,9 @@ export default function Basics() {
             ))}
           </View>
         </View>
-        <Field label="Height (cm)" keyboardType="number-pad" value={height} onChangeText={setHeight} />
-        <Field label="Weight (kg)" keyboardType="number-pad" value={weight} onChangeText={setWeight} />
-        <Field label="Sex" value={sex} onChangeText={setSex} />
+        <Field label={t.heightCm} keyboardType="number-pad" value={height} onChangeText={setHeight} />
+        <Field label={t.weightKg} keyboardType="number-pad" value={weight} onChangeText={setWeight} />
+        <Field label={t.sex} value={sex} onChangeText={setSex} />
         {!!error && <Notice tone="error">{error}</Notice>}
         <Button busy={busy} disabled={!p} onPress={save}>{busy ? t.saving : t.save}</Button>
         <Button secondary onPress={() => router.back()}>{t.cancel}</Button>
