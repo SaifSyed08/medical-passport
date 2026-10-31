@@ -20,6 +20,7 @@
 | Condition | Type 1 diabetes | 1型糖尿病 | |
 | Condition | Asthma, moderate persistent | 喘息（中等症持続型） | |
 | Severity | Severe / Moderate / Mild | 重度 / 中等度 / 軽度 | |
+| Full-screen QR hint for clinicians | Clinicians: please scan the QR code. | 医療関係者の方：QRコードを読み取ってください。 | `mobile/src/app/show.tsx` |
 | Section titles | Allergies / Medications / Conditions / Blood type / Emergency contacts | アレルギー / 服用中の薬 / 持病 / 血液型 / 緊急連絡先 | |
 
 ## Rules the app already follows
