@@ -106,6 +106,8 @@ function groundingFor({ text, meds, home, local, clientEquivalents }) {
   return [...lines.values()];
 }
 
+const GENERIC_WORDS = /^(antibiotics?|painkillers?|pain relievers?|pain medication|medicines?|medications?|drugs?|pills?|tablets?|vitamins?)$/i;
+
 function locate(haystack, needle) {
   if (!needle) return -1;
   const i = haystack.indexOf(needle);
@@ -154,6 +156,8 @@ app.post("/api/interpret", wrap(async (req, res) => {
   const seen = new Set();
   const drugs = [];
   for (const d of arr(out.drugs, 12)) {
+    // Plain words like "antibiotic" or "pills" aren't worth a highlight.
+    if (GENERIC_WORDS.test(String(d.generic || "").trim())) continue;
     const curated = findCurated(d.generic) || findCurated(d.mentioned) || findCurated(d.home_name) || findCurated(d.local_name);
     if (curated) {
       const fixed = localizeDrug(translation, curated, { home, local, listener });
@@ -315,7 +319,7 @@ if (PROD) {
   app.get(/.*/, (_req, res) => res.sendFile(path.join(dist, "index.html")));
 } else {
   const { createServer } = await import("vite");
-  const vite = await createServer({ root: ROOT, server: { middlewareMode: true, hmr: { port: PORT + 1 } }, appType: "spa" });
+  const vite = await createServer({ root: ROOT, server: { middlewareMode: true, hmr: { port: PORT + 1 }, allowedHosts: true /* tunnels (trycloudflare) and LAN IPs */ }, appType: "spa" });
   app.use(vite.middlewares);
 }
 

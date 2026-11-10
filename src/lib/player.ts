@@ -11,6 +11,7 @@ export class Player {
   private audio: HTMLAudioElement;
   private queue: Item[] = [];
   private current: Item | null = null;
+  private unlocked = false;
   private onBusy: (busy: boolean, text?: string) => void;
 
   constructor(onBusy: (busy: boolean, text?: string) => void) {
@@ -25,6 +26,9 @@ export class Player {
 
   /** Call inside a tap handler once. */
   unlock() {
+    // Swapping the source mid-line would cut off whatever is playing (and its "ended" would skip it).
+    if (this.current || this.unlocked) return;
+    this.unlocked = true;
     this.audio.src = SILENT_WAV;
     this.audio.play().catch(() => {});
   }

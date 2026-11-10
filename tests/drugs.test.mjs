@@ -72,6 +72,11 @@ test("works inside Japanese text, where there are no spaces", () => {
   assert.equal(r.translation, "胸が苦しかったのでサルブタモール (ProAir)を2回使いました。");
 });
 
+test("merges with a bracket the model already wrote instead of nesting", () => {
+  const r = localizeDrug("I took Neo-Melubrina (dipyrone) yesterday.", entry("Neo-Melubrina"), { home: "MX", local: "US", listener: "clinician" });
+  assert.equal(r.translation, "I took metamizole (Neo-Melubrina, dipyrone) yesterday.");
+});
+
 test("does not match a brand inside a longer word", () => {
   assert.equal(localizeDrug("Ventolinex is not a drug", entry("Ventolin"), { home: "MX", local: "US", listener: "clinician" }), null);
 });

@@ -67,8 +67,17 @@ export class Mic {
   /** Must be called from a user gesture (tap) the first time. */
   async start() {
     if (this.ctx) {
+      // Retry after a failed reopen: the audio graph is alive but the mic stream is gone.
+      if (!this.stream) {
+        try {
+          await this.openInput();
+        } catch (err) {
+          this.fail(err);
+          return;
+        }
+      }
       await this.ctx.resume().catch(() => {});
-      if (!this.pauses.size) this.set("listening");
+      this.set(this.pauses.size ? "paused" : "listening");
       return;
     }
     this.set("starting");
@@ -89,14 +98,21 @@ export class Mic {
       await this.ctx.resume();
       this.set(this.pauses.size ? "paused" : "listening");
     } catch (err) {
-      const msg =
-        (err as DOMException)?.name === "NotAllowedError"
-          ? "Microphone permission was denied. Allow it in the browser's site settings."
-          : (err as Error)?.message || "Could not start the microphone";
-      this.teardown();
-      this.set("error");
-      this.h.onError(msg);
+      this.fail(err);
     }
+  }
+
+  /** Any mic failure: release everything so the next tap starts from scratch. */
+  private fail(err: unknown) {
+    const msg =
+      (err as DOMException)?.name === "NotAllowedError"
+        ? "Microphone permission was denied. Allow it in the browser's site settings."
+        : (err as Error)?.message || "Could not start the microphone";
+    this.reset();
+    this.teardown();
+    this.pauses.clear();
+    this.set("error");
+    this.h.onError(msg);
   }
 
   private async openInput() {
@@ -149,8 +165,7 @@ export class Mic {
         try {
           await this.openInput();
         } catch (e) {
-          this.set("error");
-          this.h.onError((e as Error).message || "Microphone lost");
+          this.fail(e);
           return;
         }
       }

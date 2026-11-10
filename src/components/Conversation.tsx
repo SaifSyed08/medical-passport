@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContextItem, DrugMention, Persona, Speaker, Turn } from "../lib/types";
 import { Mic, type MicState } from "../lib/mic";
 import { Player } from "../lib/player";
+import { halfDuplex } from "../lib/duplex";
 import * as api from "../lib/api";
 import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, uniqueEquivalents, type Settings } from "../lib/store";
@@ -58,16 +59,27 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
 
   const playerRef = useRef<Player | null>(null);
   const micRef = useRef<Mic | null>(null);
+  const duplexRef = useRef<ReturnType<typeof halfDuplex> | null>(null);
+  const alive = useRef(true);
   if (!playerRef.current) {
+    duplexRef.current = halfDuplex(() => micRef.current);
     playerRef.current = new Player((busy) => {
       setSpeaking(busy);
-      const mic = micRef.current;
-      if (!mic) return;
-      if (busy) mic.pause("speaking");
-      // A short tail so the end of our own speech isn't picked up as a new utterance.
-      else setTimeout(() => mic.resume("speaking"), 300);
+      duplexRef.current!.onBusy(busy);
     });
   }
+
+  type Line = { text: string; lang: string; voice: string } | null;
+  /** Take a place in the speaking queue now (when the person stops talking), fill it in when the translation lands. */
+  const reserveSpeech = () => {
+    let release: (v: Line) => void = () => {};
+    const ready = new Promise<Line>((r) => (release = r));
+    speechChain.current = speechChain.current.then(async () => {
+      const line = await ready;
+      if (line && speakRef.current && alive.current) await playerRef.current!.say(line.text, line.lang, line.voice);
+    });
+    return release;
+  };
 
   const history = () =>
     turnsRef.current
@@ -90,19 +102,10 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
 
   /** Runs one utterance (already transcribed, or typed) through interpretation, context and speech. */
   const runText = useCallback(
-    async (turnId: string, text: string, forcedSpeaker: Speaker | null, opts: { speak: boolean; context: boolean }) => {
+    async (turnId: string, text: string, forcedSpeaker: Speaker | null, release: (v: Line) => void, opts: { context: boolean }) => {
       const p = pairRef.current;
       const hist = history();
       const trip = loadTrip(p.home, p.local);
-      let release: (v: { text: string; lang: string; voice: string } | null) => void = () => {};
-      if (opts.speak) {
-        const ready = new Promise<{ text: string; lang: string; voice: string } | null>((r) => (release = r));
-        // Speak translations in the order people talked, even if a later one finishes first.
-        speechChain.current = speechChain.current.then(async () => {
-          const line = await ready;
-          if (line && speakRef.current) await playerRef.current!.say(line.text, line.lang, line.voice);
-        });
-      }
       const t0 = performance.now();
       if (opts.context) {
         api
@@ -163,16 +166,20 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
         ...all,
         { id, at: Date.now(), status: "transcribing", raw: "", cleaned: "", translation: "", language: "", speaker: forcedNow, listenerLang: "", forced: forcedNow, drugs: [], timings: {} },
       ]);
+      // Speak translations in the order people talked, even if a later one finishes first.
+      const release = reserveSpeech();
       try {
         const stt = await api.transcribe(wav, pairRef.current, terms);
         if (!stt.text) {
           setTurns((all) => all.filter((t) => t.id !== id));
+          release(null);
           return;
         }
         patch(id, { raw: stt.text, status: "interpreting", timings: { stt: stt.ms, total: Math.round(performance.now() - t0) } });
-        await runText(id, stt.text, forcedNow, { speak: true, context: true });
+        await runText(id, stt.text, forcedNow, release, { context: true });
       } catch (e) {
         patch(id, { status: "error", error: (e as Error).message });
+        release(null);
       }
     },
     [patch, runText, terms],
@@ -200,13 +207,16 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
   }, [settings.speak]);
 
   // Stop everything when leaving the screen.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      // Translations still in flight must not start talking on the home screen.
+      alive.current = false;
+      duplexRef.current?.cancel();
       micRef.current?.stop();
       playerRef.current?.stop();
-    },
-    [],
-  );
+    };
+  }, []);
 
   // Keep the screen awake while the conversation is open.
   useEffect(() => {
@@ -280,13 +290,13 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
       ...all,
       { id, at: Date.now(), status: "interpreting", raw: text, cleaned: "", translation: "", language: "", speaker: forced, listenerLang: "", forced, drugs: [], timings: {} },
     ]);
-    void runText(id, text, forced, { speak: true, context: true });
+    void runText(id, text, forced, reserveSpeech(), { context: true });
   };
 
   const flipSpeaker = (t: Turn) => {
     const next: Speaker = t.speaker === "patient" ? "clinician" : "patient";
     patch(t.id, { status: "interpreting", forced: next, speaker: next });
-    void runText(t.id, t.raw, next, { speak: true, context: false });
+    void runText(t.id, t.raw, next, reserveSpeech(), { context: false });
   };
 
   const replay = (t: Turn) => {

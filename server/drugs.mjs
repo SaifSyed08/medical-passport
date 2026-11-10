@@ -264,8 +264,16 @@ export function localizeDrug(translation, entry, { home, local, listener }) {
     const re = new RegExp(`(?<![A-Za-z0-9À-ɏ])${escapeRe(n)}(?:s)?(?![A-Za-z0-9À-ɏ])`, "iu");
     const m = translation.match(re);
     if (m) {
+      const before = translation.slice(0, m.index);
+      const after = translation.slice(m.index + m[0].length);
+      // The model may already have added its own bracket ("Neo-Melubrina (dipyrone)"): merge instead of nesting.
+      const own = after.match(/^\s*[(（]([^)）]*)[)）]/);
+      if (own) {
+        const label = `${target} (${m[0]}, ${own[1].trim()})`;
+        return { translation: before + label + after.slice(own[0].length), label };
+      }
       const label = `${target} (${m[0]})`;
-      return { translation: translation.slice(0, m.index) + label + translation.slice(m.index + m[0].length), label };
+      return { translation: before + label + after, label };
     }
   }
   return null;
