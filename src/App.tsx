@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { flushSync } from "react-dom";
 import { PERSONAS } from "./data/personas";
 import type { Persona } from "./lib/types";
 import { loadSettings, saveSettings, type Settings } from "./lib/store";
@@ -23,8 +24,22 @@ export default function App() {
   const persona = useMemo(() => effectivePersona(settings), [settings]);
 
   useEffect(() => saveSettings(settings), [settings]);
+
+  // Screen changes morph: the patient card becomes the conversation header, Start becomes the mic button.
+  const go = (next: "home" | "talk", before?: () => void) => {
+    const apply = () => {
+      before?.();
+      setScreen(next);
+    };
+    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+    if (doc.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      document.documentElement.dataset.nav = next === "talk" ? "forward" : "back";
+      doc.startViewTransition(() => flushSync(apply));
+    } else apply();
+  };
   useEffect(() => {
-    if (demoRequest && screen === "home") setScreen("talk");
+    if (demoRequest && screen === "home") go("talk");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [demoRequest, screen]);
   useEffect(() => {
     health()
@@ -65,8 +80,7 @@ export default function App() {
           setSettings={setSettings}
           onStart={() => {
             unlockAudio();
-            setDemoRequest(0);
-            setScreen("talk");
+            go("talk", () => setDemoRequest(0));
           }}
           onDemo={() => {
             unlockAudio();
@@ -81,8 +95,7 @@ export default function App() {
           setSettings={setSettings}
           demoRequest={demoRequest}
           onBack={() => {
-            setDemoRequest(0);
-            setScreen("home");
+            go("home", () => setDemoRequest(0));
           }}
         />
       )}

@@ -6,11 +6,11 @@ export default function Orb({ mode, level, onTap, label }: { mode: string; level
   const lvl = mode === "speech" || mode === "listening" ? level : 0;
   const icon = mode === "speaking" ? "speaker" : mode === "muted" || mode === "paused" ? "pause" : "mic";
   return (
-    <button className={`orb ${mode}`} style={{ "--lvl": lvl } as CSSProperties} onClick={onTap} aria-label={label}>
+    <button className={`orb ${mode}`} style={{ "--lvl": lvl, viewTransitionName: "mic-btn" } as CSSProperties} onClick={onTap} aria-label={label}>
       <span className="orb-ring" />
       <span className="orb-spin" />
       <span className="orb-core">
-        <Icon name={icon} size={28} />
+        <Icon name={icon} size={32} />
       </span>
     </button>
   );

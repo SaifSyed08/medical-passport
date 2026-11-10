@@ -113,6 +113,12 @@ const waitFor = async (page, fn, ms = 30000) => {
   return false;
 };
 const now = (page) => page.evaluate(() => performance.now());
+// Start → conversation runs a 0.6 s screen transition; taps during it land on the transition overlay.
+const openTalk = async (page) => {
+  await page.click(".btn-primary");
+  await page.waitForSelector(".orb");
+  await sleep(900);
+};
 const playedSince = (page, t) => page.evaluate((t) => window.__playing.filter((p) => p.t > t).map((p) => p.src.replace(location.origin, "")), t);
 
 const results = [];
@@ -140,7 +146,7 @@ for (const how of ["esc", "back", "dd"]) {
 // 2. Pressing D while live work is in flight: none of it may leak into the demo.
 {
   const { browser, page } = await launch({ fakeMic: true });
-  await page.click(".btn-primary");
+  await openTalk(page);
   await page.waitForSelector(".orb");
   await page.click(".orb");
   // Wait until a live turn is translating (and a caption exists for the next), then press D.
@@ -169,7 +175,7 @@ for (const how of ["esc", "back", "dd"]) {
     pressed = true;
     setTimeout(() => page.keyboard.press("d").catch(() => {}), 120);
   };
-  await page.click(".btn-primary");
+  await openTalk(page);
   await page.waitForSelector(".orb");
   await page.click(".orb");
   const end = Date.now() + 30000;
@@ -183,7 +189,7 @@ for (const how of ["esc", "back", "dd"]) {
 // 3. A tap on the mic right after D must stop the demo, not start the mic underneath it.
 {
   const { browser, page } = await launch({ fakeMic: true });
-  await page.click(".btn-primary");
+  await openTalk(page);
   await page.waitForSelector(".orb");
   await page.keyboard.press("d");
   await sleep(200);
@@ -191,6 +197,33 @@ for (const how of ["esc", "back", "dd"]) {
   await sleep(3000);
   const gum = await page.evaluate(() => window.__gum);
   check("tap right after D: mic stays off", gum === 0, `${gum} getUserMedia calls`);
+  await browser.close();
+}
+
+// 3b. Half-duplex in a live conversation: the mic sends nothing while the phone is speaking a translation
+// (React's dev double-mount once left the player with no busy handler, so the app heard itself).
+for (const round of ["first visit", "after Back and Start"]) {
+  const { browser, page } = await launch({ fakeMic: true });
+  if (round !== "first visit") {
+    await openTalk(page);
+    await page.click('button[aria-label="Back"]');
+    await sleep(900);
+  }
+  await openTalk(page);
+  await page.click(".orb");
+  const speaking = [];
+  let was = false;
+  const end = Date.now() + 30000;
+  while (Date.now() < end) {
+    const is = await page.evaluate(() => /\bspeaking\b/.test(document.querySelector(".orb")?.className || ""));
+    if (is && !was) speaking.push([Date.now(), Infinity]);
+    if (!is && was) speaking[speaking.length - 1][1] = Date.now();
+    was = is;
+    if (speaking.length >= 1 && !is && Date.now() - speaking[0][1] > 1500) break;
+    await sleep(80);
+  }
+  const during = page.reqs.filter((r) => r.path === "/api/transcribe" && speaking.some(([a, b]) => r.t > a + 200 && r.t < b - 200)).length;
+  check(`half-duplex (${round}): phone speaks and the mic stays quiet meanwhile`, speaking.length > 0 && during === 0, speaking.length ? `${during} transcribe requests while speaking` : "never showed speaking");
   await browser.close();
 }
 

@@ -6,6 +6,7 @@ import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
 import { loadTrip, norm, saveEquivalents, type Settings, type TripCache } from "../lib/store";
 import { Sheet, StatusBadge } from "./bits";
 import Icon from "./Icon";
+import Flag from "./Flag";
 import RecordSheet from "./RecordSheet";
 
 type Props = {
@@ -70,7 +71,7 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         <p>Speak naturally. Each person hears the other in their own language.</p>
       </section>
 
-      <button className="panel patient-card" onClick={() => setSheet("record")}>
+      <button className="panel patient-card" onClick={() => setSheet("record")} style={{ viewTransitionName: "patient-card" }}>
         <span className="pc-head">
           <span className="avatar">{persona.initials}</span>
           <span className="pc-name">
@@ -84,13 +85,15 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         <span className="pc-rows">
           <span className="pc-row">
             <span className="pc-label">Patient</span>
-            <span>
+            <span className="pc-val">
+              <Flag code={home} size={22} />
               {langName(persona.language)} · from {country(home).name}
             </span>
           </span>
           <span className="pc-row">
             <span className="pc-label">Clinician</span>
-            <span>
+            <span className="pc-val">
+              <Flag code={local} size={22} />
               {langName(persona.trip.doctorLanguage)} · {persona.trip.city}
             </span>
           </span>
@@ -110,7 +113,7 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
       </button>
 
       <div className="home-actions">
-        <button className="btn-primary" onClick={onStart}>
+        <button className="btn-primary" onClick={onStart} style={{ viewTransitionName: "mic-btn" }}>
           <Icon name="mic" />
           Start interpreting
         </button>
@@ -132,8 +135,8 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
                 <span className="avatar sm">{p.initials}</span>
                 <span className="row-main">
                   <strong>{p.name}</strong>
-                  <span>
-                    {langName(p.language)} → {langName(p.trip.doctorLanguage)}
+                  <span className="pc-val">
+                    <Flag code={p.home} size={16} /> {langName(p.language)} → <Flag code={p.trip.country} size={16} /> {langName(p.trip.doctorLanguage)}
                   </span>
                 </span>
                 {p.id === persona.id && <Icon name="check" className="accent" />}

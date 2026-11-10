@@ -17,6 +17,7 @@ import RecordSheet from "./RecordSheet";
 import ContextSheet from "./ContextSheet";
 import { Sheet } from "./bits";
 import Icon from "./Icon";
+import Flag from "./Flag";
 
 type Props = {
   persona: Persona;
@@ -91,14 +92,16 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   // Bumped when the demo starts or a new conversation begins: work started before that drops itself.
   const epoch = useRef(0);
   const fresh = (e: number) => alive.current && epoch.current === e;
+  const onPlayerBusy = useRef((busy: boolean) => {
+    setSpeaking(busy);
+    duplexRef.current?.onBusy(busy);
+  }).current;
   if (!playerRef.current) {
     duplexRef.current = halfDuplex(() => micRef.current);
     playerRef.current = sharedPlayer();
-    setPlayerBusyHandler((busy) => {
-      setSpeaking(busy);
-      duplexRef.current!.onBusy(busy);
-    });
   }
+  // The player's busy handler is registered in the mount effect below, on every mount: React's dev double-mount
+  // runs the unmount cleanup in between, and a cleared handler means the mic keeps listening while the phone speaks.
 
   /** Take a place in the speaking queue now (when the person stops talking), fill it in when the translation lands. */
   const reserveSpeech = () => {
@@ -304,6 +307,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   useEffect(() => {
     alive.current = true;
+    setPlayerBusyHandler(onPlayerBusy);
     return () => {
       // Translations still in flight must not start talking on the home screen.
       alive.current = false;
@@ -595,16 +599,16 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         <span className="tint alert" />
       </div>
 
-      <header className="talk-bar panel">
+      <header className="talk-bar panel" style={{ viewTransitionName: "patient-card" }}>
         <button className="icon-btn" onClick={onBack} aria-label="Back">
           <Icon name="back" />
         </button>
         <button className="talk-title" onClick={() => setSheet("record")}>
           <strong>{persona.name}</strong>
           <span>
-            <i className="dot patient" /> {langName(persona.language)}
+            <Flag code={persona.home} size={20} className="pt" /> {langName(persona.language)}
             <span className="sep">↔</span>
-            <i className="dot clinician" /> {langName(persona.trip.doctorLanguage)}
+            <Flag code={persona.trip.country} size={20} className="dr" /> {langName(persona.trip.doctorLanguage)}
           </span>
         </button>
         <button className="icon-btn" onClick={() => setSheet("menu")} aria-label="Options">

@@ -2,6 +2,7 @@ import type { DrugMention, Persona, Speaker } from "../lib/types";
 import { country } from "../lib/langs";
 import { Sheet, StatusBadge } from "./bits";
 import Icon from "./Icon";
+import Flag from "./Flag";
 
 export default function DrugSheet({ drug: d, speaker, persona: p, onClose }: { drug: DrugMention; speaker: Speaker | null; persona: Persona; onClose: () => void }) {
   const home = country(p.home);
@@ -14,7 +15,7 @@ export default function DrugSheet({ drug: d, speaker, persona: p, onClose }: { d
       <StatusBadge status={d.status} />
       <div className="eq-grid">
         <div className="eq-side">
-          <span className="eyebrow">In {home.name}</span>
+          <span className="eyebrow side-label"><Flag code={p.home} size={18} /> {home.name}</span>
           <strong>{d.home_name || "—"}</strong>
           {d.home_strength && <small>{d.home_strength}</small>}
         </div>
@@ -22,7 +23,7 @@ export default function DrugSheet({ drug: d, speaker, persona: p, onClose }: { d
           <Icon name="chevron" size={16} />
         </div>
         <div className={`eq-side ${unavailable ? "danger" : ""}`}>
-          <span className="eyebrow">In {local.name}</span>
+          <span className="eyebrow side-label"><Flag code={p.trip.country} size={18} /> {local.name}</span>
           <strong>{unavailable ? "Not sold here" : d.local_name || "—"}</strong>
           {d.local_brands.length > 0 && <small>{d.local_brands.join(", ")}</small>}
           {d.local_strength && <small>{d.local_strength}</small>}

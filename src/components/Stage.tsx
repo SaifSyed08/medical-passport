@@ -3,6 +3,7 @@ import type { DrugMention, Persona, Turn } from "../lib/types";
 import { dir, langName } from "../lib/langs";
 import { Reveal, StatusBadge, swapLabel } from "./bits";
 import Icon from "./Icon";
+import Flag from "./Flag";
 
 const SPEAK_IN: Record<string, string> = {
   es: "Hable en español", en: "Speak in English", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
@@ -18,9 +19,11 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
         <Icon name="mic" size={26} />
       </div>
       <p className="idle-line patient" lang={persona.language} dir={dir(persona.language)}>
+        <Flag code={persona.home} size={34} />
         {SPEAK_IN[persona.language] || "Speak"}
       </p>
       <p className="idle-line clinician" lang={persona.trip.doctorLanguage} dir={dir(persona.trip.doctorLanguage)}>
+        <Flag code={persona.trip.country} size={34} />
         {SPEAK_IN[persona.trip.doctorLanguage] || "Speak"}
       </p>
       <p className="idle-hint">{live ? "Listening" : "Tap the microphone to begin"}</p>
@@ -66,19 +69,19 @@ export function TurnBlock({
   return (
     <article className={`turn ${who || "unknown"} ${t.status} ${current ? "current" : ""}`}>
       <header className="turn-meta">
-        <span className="dot" />
+        {who ? <Flag code={who === "clinician" ? persona.trip.country : persona.home} size={22} className="turn-flag" /> : <span className="dot" />}
         {name ? <span className="who">{name}</span> : t.status === "live" || t.status === "transcribing" ? <span className="who muted">Listening</span> : null}
         {spokenLang && <span className="lang">{langName(spokenLang)}</span>}
         <span className="spacer" />
         {done && current && t.timings.total ? <span className="timing">{(t.timings.total / 1000).toFixed(1)} s</span> : null}
         {done && (
           <button className="mini" onClick={onFlip} title="Wrong speaker? Swap" aria-label="Swap speaker">
-            <Icon name="swap" size={15} />
+            <Icon name="swap" size={18} />
           </button>
         )}
         {done && current && (
           <button className="mini" onClick={onReplay} aria-label="Play again">
-            <Icon name="speaker" size={15} />
+            <Icon name="speaker" size={18} />
           </button>
         )}
       </header>
@@ -124,7 +127,7 @@ export function TurnBlock({
                       <b>{d.mentioned || d.home_name}</b>
                       {d.status === "not_available_locally" && who !== "clinician" ? " is not sold here" : ` → ${swapLabel(d, swapToward)}`}
                     </span>
-                    <Icon name="chevron" size={14} className="muted" />
+                    <Icon name="chevron" size={18} className="muted" />
                   </button>
                 </li>
               ))}
