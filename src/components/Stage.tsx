@@ -15,9 +15,24 @@ const SPEAK_IN: Record<string, string> = {
 export function IdleHero({ persona, live }: { persona: Persona; live: boolean }) {
   return (
     <div className={`idle ${live ? "live" : ""}`}>
-      <div className="talkers" aria-hidden>
-        <Person side="patient" code={persona.home} />
-        <Person side="clinician" code={persona.trip.country} />
+      <div className="hero-art" aria-hidden>
+        <img src="/illustrations/consult.webp" alt="" draggable={false} />
+        <span className="art-bubble patient">
+          <Flag code={persona.home} size={24} />
+          <span className="typing">
+            <i />
+            <i />
+            <i />
+          </span>
+        </span>
+        <span className="art-bubble clinician">
+          <Flag code={persona.trip.country} size={24} />
+          <span className="typing">
+            <i />
+            <i />
+            <i />
+          </span>
+        </span>
       </div>
       <p className="idle-line patient" lang={persona.language} dir={dir(persona.language)}>
         {SPEAK_IN[persona.language] || "Speak"}
@@ -37,25 +52,6 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
           </>
         )}
       </p>
-    </div>
-  );
-}
-
-function Person({ side, code }: { side: "patient" | "clinician"; code: string }) {
-  return (
-    <div className={`person ${side}`}>
-      <div className="bubble">
-        <Flag code={code} size={22} />
-        <span className="typing">
-          <i />
-          <i />
-          <i />
-        </span>
-      </div>
-      <svg viewBox="0 0 80 84" className="figure">
-        <circle cx="40" cy="24" r="16" />
-        <path d="M8 84c0-24 14-36 32-36s32 12 32 36z" />
-      </svg>
     </div>
   );
 }

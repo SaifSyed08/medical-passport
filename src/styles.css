@@ -576,3 +576,13 @@ i.dot.clinician { background: var(--clinician); }
   .bottom { padding-bottom: 30px; }
   .home { padding-bottom: 34px; }
 }
+
+/* ---------------------------------------------------------------- start screen illustration */
+.hero-art { position: relative; width: min(300px, 78%); margin: 0 auto 10px; animation: rise .6s cubic-bezier(.2, .8, .2, 1) both; }
+/* multiply drops the illustration's white background onto the app's tinted backdrop */
+.hero-art img { display: block; width: 100%; height: auto; user-select: none; animation: floaty 6s ease-in-out infinite; }
+@keyframes floaty { 50% { transform: translateY(-5px); } }
+.art-bubble { position: absolute; display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--line), 0 8px 18px rgb(17 26 34 / 10%); animation: bubble 4s ease-in-out infinite; transform-origin: bottom left; }
+.art-bubble.patient { left: 20%; top: 4%; border-bottom-left-radius: 5px; }
+.art-bubble.clinician { right: 2%; top: 13%; border-bottom-right-radius: 5px; transform-origin: bottom right; animation-delay: 2s; }
+.idle.live .hero-art img { animation-duration: 3s; }
