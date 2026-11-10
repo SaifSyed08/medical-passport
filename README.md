@@ -11,6 +11,12 @@ A patient-aware medical interpreter for travelers. It's a phone web app. The pat
 
 Demo only. The patients are fictional. Not for clinical use.
 
+## Demo mode: press D
+
+Press **D** anywhere, or tap **Watch the demo** on the home screen. It replays a real recorded run of the persona's script: the speakers' voices, transcription, cleanup, drug-name flips, record cards, the alert banner and the spoken translation. It needs no mic, no network and no API calls, so it's safe to run on stage or to rehearse with. **Esc** or tapping the orb stops it. **Space** works the mic in a live conversation.
+
+The recording lives in `public/demo/` and was made with `scripts/build-demo.mjs`. Re-record it after changing prompts or the drug table.
+
 ## Run it
 
 You need Node 22+ and `OPENAI_API_KEY` in the environment.
@@ -64,7 +70,7 @@ phone mic ─► voice-activity detection (AudioWorklet, adaptive noise floor) �
 | `src/lib/player.ts` | Ordered speech playback (one unlocked `<audio>`, which iOS needs) |
 | `src/lib/store.ts` | localStorage: settings and saved medicine equivalents |
 | `src/data/personas.ts` | Demo patients and their records |
-| `src/components/*` | Home (trip prep), Conversation, TurnCard (drug swap), ContextStrip, sheets |
+| `src/components/*` | Home (passport card, trip prep in settings), Conversation (stage, demo player), Stage (word reveal, drug flip), ContextDock + AlertToast, Orb, sheets |
 
 Models can be overridden with `STT_MODEL`, `LLM_MODEL` (default `gpt-4.1`), `CONTEXT_MODEL` (default `gpt-4.1-mini`) and `TTS_MODEL`. Measured on the demo lines, one utterance takes about 2–3 s from end of speech to translation: transcription 0.3–0.8 s, interpretation 1–2 s, with context running in parallel.
 
@@ -75,6 +81,8 @@ npm test                    # unit tests: drug matching and swaps, WAV/VAD helpe
 npm run typecheck
 npm run test:api -- sofia   # live API: TTS voices the demo lines → transcribe → interpret + context, with checks
 npm run test:e2e -- sofia   # headless Chrome with a fake mic playing those lines into the real app; screenshots in .cache/e2e
+node scripts/demo-check.mjs sofia   # plays demo mode headless, checks it finishes with an alert; screenshots in .cache/demo-shots
+node --experimental-strip-types scripts/build-demo.mjs   # re-record public/demo from the live pipeline
 ```
 
 `test:api` caches its voice clips in `.cache/voice`, and `test:e2e` needs them. Add `--speak` to the e2e run to test spoken playback and mic pausing.

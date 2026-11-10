@@ -89,10 +89,10 @@ await page.evaluate((p, speak) => {
   localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
 }, persona, SPEAK);
 await page.reload({ waitUntil: "networkidle0" });
-await page.waitForFunction(() => /of \d+ saved on this phone/.test(document.body.innerText), { timeout: 30000 });
+await page.waitForFunction(() => /medicines ready offline/.test(document.body.innerText), { timeout: 30000 });
 await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
-await page.click(".primary.big");
+await page.click(".start-orb");
 await page.waitForSelector(".orb");
 await page.screenshot({ path: path.join(OUT, `${persona}-empty.png`) });
 const t0 = Date.now();
@@ -100,13 +100,32 @@ await page.click(".orb");
 
 const deadline = Date.now() + (track.seconds + 40) * 1000;
 let last = -1;
+// Only the current turn is a full card; earlier ones shrink into the history. Record each turn while it's on stage.
+const seenTurns = new Map();
+const grab = () =>
+  page.evaluate(() => {
+    const t = document.querySelector(".turn.done");
+    return t
+      ? {
+          status: t.className,
+          who: t.querySelector(".who-pill")?.textContent,
+          said: t.querySelector(".said")?.textContent,
+          translation: t.querySelector(".translation p")?.textContent,
+          marks: [...t.querySelectorAll(".said .drug")].map((d) => d.textContent),
+          chips: [...t.querySelectorAll(".drug-chip")].map((d) => d.textContent),
+          time: t.querySelector(".timing")?.textContent,
+        }
+      : null;
+  });
 for (;;) {
   const s = await page.evaluate(() => ({
-    done: document.querySelectorAll(".turn.done").length,
+    done: document.querySelectorAll(".turn.done").length + document.querySelectorAll(".history-line").length,
     busy: document.querySelectorAll(".turn.transcribing, .turn.interpreting").length,
     errors: [...document.querySelectorAll(".turn.error")].map((e) => e.textContent),
     label: document.querySelector(".orb-label")?.textContent,
   }));
+  const cur = await grab();
+  if (cur?.translation) seenTurns.set(cur.translation, cur);
   if (s.done !== last) {
     console.log(`  t+${((Date.now() - t0) / 1000).toFixed(1)}s turns done ${s.done} (busy ${s.busy}) · ${s.label}`);
     last = s.done;
@@ -115,23 +134,20 @@ for (;;) {
   // Wait for the whole fake-mic track to play out, then for in-flight turns to finish.
   const played = Date.now() - t0 > track.seconds * 1000 + 1500;
   if ((played && s.done >= track.lines && !s.busy) || Date.now() > deadline) break;
-  await new Promise((r) => setTimeout(r, 500));
+  await new Promise((r) => setTimeout(r, 400));
 }
 await new Promise((r) => setTimeout(r, 2500)); // let context cards and animations land
 await page.screenshot({ path: path.join(OUT, `${persona}-talk.png`) });
 
-const result = await page.evaluate(() => ({
-  turns: [...document.querySelectorAll(".turn")].map((t) => ({
-    status: t.className,
-    who: t.querySelector(".who-pill")?.textContent,
-    said: t.querySelector(".said")?.textContent,
-    translation: t.querySelector(".translation p")?.textContent,
-    marks: [...t.querySelectorAll(".said .drug")].map((d) => d.textContent),
-    chips: [...t.querySelectorAll(".drug-chip")].map((d) => d.textContent),
-    time: t.querySelector(".timing")?.textContent,
-  })),
-  context: [...document.querySelectorAll(".ctx-card")].map((c) => c.className.replace("ctx-card ", "") + " | " + c.querySelector("strong")?.textContent),
-}));
+{
+  const cur = await grab();
+  if (cur?.translation) seenTurns.set(cur.translation, cur);
+}
+const result = {
+  turns: [...seenTurns.values()],
+  history: await page.evaluate(() => document.querySelectorAll(".history-line").length),
+  context: await page.evaluate(() => [...document.querySelectorAll(".ctx-card")].map((c) => c.className.replace("ctx-card ", "") + " | " + c.querySelector("strong")?.textContent)),
+};
 for (const t of result.turns) {
   console.log(`\n[${t.who}] ${t.time || ""} ${t.status}`);
   console.log(`  said: ${t.said}`);
@@ -158,8 +174,8 @@ if (alert) {
 await browser.close();
 
 const failures = [];
-const done = result.turns.filter((t) => t.status.includes("done"));
-if (done.length !== track.lines) failures.push(`expected ${track.lines} turns, got ${done.length} (a line was split or merged)`);
+const done = result.turns;
+if (done.length !== track.lines || result.history + 1 !== track.lines) failures.push(`expected ${track.lines} turns, got ${done.length} (a line was split or merged)`);
 if (done.some((t) => !t.translation?.trim())) failures.push("a turn has an empty translation");
 if (persona === "jordan") {
   if (!result.turns.some((t) => t.marks.some((m) => /サルブタモール/.test(m)))) failures.push("ProAir did not swap to サルブタモール");

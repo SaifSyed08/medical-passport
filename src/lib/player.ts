@@ -4,7 +4,7 @@
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
 
-type Item = { text: string; lang: string; voice: string; done: () => void };
+type Item = { url: string; text: string; done: () => void };
 
 export class Player {
   enabled = true;
@@ -33,11 +33,17 @@ export class Player {
     this.audio.play().catch(() => {});
   }
 
-  /** Resolves when the line has finished playing (or was skipped). */
+  /** Speak a translation. Resolves when the line has finished playing (or was skipped). */
   say(text: string, lang: string, voice = "coral"): Promise<void> {
-    if (!this.enabled || !text.trim()) return Promise.resolve();
+    if (!text.trim()) return Promise.resolve();
+    return this.play(`/api/tts?${new URLSearchParams({ text, lang, voice })}`, text);
+  }
+
+  /** Play a recorded clip (demo mode). */
+  play(url: string, text = ""): Promise<void> {
+    if (!this.enabled) return Promise.resolve();
     return new Promise((done) => {
-      this.queue.push({ text, lang, voice, done });
+      this.queue.push({ url, text, done });
       if (!this.current) this.playNext();
     });
   }
@@ -64,8 +70,7 @@ export class Player {
     }
     this.current = item;
     this.onBusy(true, item.text);
-    const q = new URLSearchParams({ text: item.text, lang: item.lang, voice: item.voice });
-    this.audio.src = `/api/tts?${q}`;
+    this.audio.src = item.url;
     this.audio.play().catch(() => this.finish());
   }
 

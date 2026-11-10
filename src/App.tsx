@@ -16,10 +16,15 @@ export function effectivePersona(settings: Settings): Persona {
 export default function App() {
   const [settings, setSettings] = useState<Settings>(loadSettings);
   const [screen, setScreen] = useState<"home" | "talk">(() => (new URLSearchParams(location.search).has("talk") ? "talk" : "home"));
+  // Bumped to start the recorded demo; 0 = a normal conversation.
+  const [demoRequest, setDemoRequest] = useState(() => (new URLSearchParams(location.search).has("demo") ? 1 : 0));
   const [serverIssue, setServerIssue] = useState<string | null>(null);
   const persona = useMemo(() => effectivePersona(settings), [settings]);
 
   useEffect(() => saveSettings(settings), [settings]);
+  useEffect(() => {
+    if (demoRequest && screen === "home") setScreen("talk");
+  }, [demoRequest, screen]);
   useEffect(() => {
     health()
       .then((h) =>
@@ -28,19 +33,49 @@ export default function App() {
             ? "This server is locked. Open the link that ends in ?code=… once on this phone."
             : h.key
               ? null
-              : "The server has no OPENAI_API_KEY, so speech and translation won't work.",
+              : "The server has no OPENAI_API_KEY, so live translation won't work. The demo (D) still does.",
         ),
       )
       .catch(() => setServerIssue("Can't reach the interpreter server."));
+  }, []);
+
+  // D anywhere plays the recorded demo.
+  useEffect(() => {
+    const k = (e: KeyboardEvent) => {
+      const el = e.target as HTMLElement;
+      if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.key === "d" || e.key === "D") setDemoRequest((n) => n + 1);
+    };
+    window.addEventListener("keydown", k);
+    return () => window.removeEventListener("keydown", k);
   }, []);
 
   return (
     <div className="app">
       {serverIssue && <div className="banner">{serverIssue}</div>}
       {screen === "home" ? (
-        <Home persona={persona} settings={settings} setSettings={setSettings} onStart={() => setScreen("talk")} />
+        <Home
+          persona={persona}
+          settings={settings}
+          setSettings={setSettings}
+          onStart={() => {
+            setDemoRequest(0);
+            setScreen("talk");
+          }}
+          onDemo={() => setDemoRequest((n) => n + 1)}
+        />
       ) : (
-        <Conversation persona={persona} settings={settings} setSettings={setSettings} onBack={() => setScreen("home")} />
+        <Conversation
+          key={persona.id}
+          persona={persona}
+          settings={settings}
+          setSettings={setSettings}
+          demoRequest={demoRequest}
+          onBack={() => {
+            setDemoRequest(0);
+            setScreen("home");
+          }}
+        />
       )}
     </div>
   );
