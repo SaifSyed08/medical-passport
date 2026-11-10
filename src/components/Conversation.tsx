@@ -11,7 +11,8 @@ import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, saveEquivalents, uniqueEquivalents, type Settings } from "../lib/store";
 import { dir, langName } from "../lib/langs";
 import { TurnBlock, IdleHero } from "./Stage";
-import ContextTiles from "./ContextDock";
+import ContextTiles, { AlertToast } from "./ContextDock";
+import { kindOf } from "./bits";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
@@ -655,6 +656,9 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         </button>
       </header>
 
+
+      {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
+      {toast && kindOf(toast.id) === "allergy" && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
 
       <div className="transcript" ref={stageRef}>
         {turns.length === 0 ? (

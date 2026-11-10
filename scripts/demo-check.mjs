@@ -32,6 +32,7 @@ const seen = new Set();
 const deadline = Date.now() + 120_000;
 let toastShot = false;
 let captionShot = "";
+let bannerSeen = false;
 for (;;) {
   const s = await page.evaluate(() => ({
     done: document.querySelectorAll(".turn.done").length,
@@ -39,7 +40,9 @@ for (;;) {
     toast: Boolean(document.querySelector(".ctx-tile.flash")),
     label: document.querySelector(".orb-label")?.textContent || "",
     caption: document.querySelector(".turn.live .live-text")?.textContent || "",
+    banner: Boolean(document.querySelector(".toast")),
   }));
+  if (s.banner) bannerSeen = true;
   if (!captionShot && s.caption.length > 18) {
     captionShot = s.caption;
     await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-live-caption.png`) });
@@ -85,6 +88,7 @@ const fails = [];
 if (final.history + 1 !== data.lines.length) fails.push(`expected ${data.lines.length} turns, saw ${final.history + 1}`);
 if (!final.cards.length) fails.push("no context cards");
 if (!captionShot) fails.push("no live caption while the recording played");
+if (!bannerSeen) fails.push("no allergy banner (both demos end on a penicillin allergy)");
 if (hiddenAfterAll !== null && hiddenAfterAll > 2) fails.push(`after "All", the latest translation is ${hiddenAfterAll}px under the bottom panel`);
 if (persona === "sofia" && !toastShot) fails.push("no alert toast");
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);

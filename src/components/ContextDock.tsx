@@ -59,3 +59,23 @@ export default function ContextTiles({ items: unsorted, persona, flashId, onOpen
     </section>
   );
 }
+
+/** Only for the worst news (an allergy to something just mentioned): a banner drops in over the transcript. */
+export function AlertToast({ item, onOpen, onClose }: { item: ContextItem; onOpen: () => void; onClose: () => void }) {
+  return (
+    <div className="toast panel" role="alert">
+      <button className="toast-body" onClick={onOpen}>
+        <span className="toast-icon">
+          <Icon name="alert" size={26} />
+        </span>
+        <span className="toast-text">
+          <strong>{item.title}</strong>
+          <span>{item.why || item.detail}</span>
+        </span>
+      </button>
+      <button className="icon-btn" onClick={onClose} aria-label="Dismiss">
+        <Icon name="close" size={20} />
+      </button>
+    </div>
+  );
+}
