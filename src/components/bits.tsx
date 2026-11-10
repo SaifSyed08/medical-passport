@@ -15,7 +15,7 @@ export function StatusBadge({ status, compact }: { status: DrugStatus; compact?:
   const s = STATUS[status] || STATUS.uncertain;
   return (
     <span className={`status ${s.tone}`} title={s.label}>
-      <Icon name={s.icon} size={compact ? 16 : 15} />
+      <Icon name={s.icon} size={compact ? 22 : 18} />
       {!compact && <span>{s.label}</span>}
     </span>
   );

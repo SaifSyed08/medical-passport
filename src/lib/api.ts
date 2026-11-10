@@ -78,6 +78,10 @@ export function equivalents(body: { home: string; local: string; items: { id: st
   return post<{ items: Equivalent[] }>("/api/equivalents", body);
 }
 
+export function translateRecord<T>(record: T, to: string) {
+  return post<{ record: T; cached: boolean }>("/api/translate-record", { record, to });
+}
+
 export async function health() {
   const r = await fetch("/api/health");
   return (await r.json()) as { ok: boolean; key: boolean; locked?: boolean; models: Record<string, string> };

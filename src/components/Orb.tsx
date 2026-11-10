@@ -1,16 +1,32 @@
 import type { CSSProperties } from "react";
 import Icon from "./Icon";
 
-/** The microphone button. A soft ring follows the voice level; a thin arc spins while translating. */
+/**
+ * The microphone button. Listening: a soft ring follows the voice level. Translating: a light orbits it.
+ * Speaking a translation: the icon becomes moving voice bars and waves roll outward.
+ */
 export default function Orb({ mode, level, onTap, label }: { mode: string; level: number; onTap: () => void; label: string }) {
   const lvl = mode === "speech" || mode === "listening" ? level : 0;
-  const icon = mode === "speaking" ? "speaker" : mode === "muted" || mode === "paused" ? "pause" : "mic";
   return (
-    <button className={`orb ${mode}`} style={{ "--lvl": lvl, viewTransitionName: "mic-btn" } as CSSProperties} onClick={onTap} aria-label={label}>
+    <button className={`orb ${mode}`} style={{ "--lvl": lvl } as CSSProperties} onClick={onTap} aria-label={label}>
+      <span className="orb-wave w1" />
+      <span className="orb-wave w2" />
       <span className="orb-ring" />
-      <span className="orb-spin" />
+      <span className="orb-orbit">
+        <i />
+      </span>
       <span className="orb-core">
-        <Icon name={icon} size={32} />
+        {mode === "speaking" ? (
+          <span className="eq" aria-hidden>
+            <i />
+            <i />
+            <i />
+            <i />
+            <i />
+          </span>
+        ) : (
+          <Icon name={mode === "muted" || mode === "paused" ? "pause" : "mic"} size={32} />
+        )}
       </span>
     </button>
   );

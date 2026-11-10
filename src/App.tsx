@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { flushSync } from "react-dom";
 import { PERSONAS } from "./data/personas";
 import type { Persona } from "./lib/types";
 import { loadSettings, saveSettings, type Settings } from "./lib/store";
@@ -25,18 +24,14 @@ export default function App() {
 
   useEffect(() => saveSettings(settings), [settings]);
 
-  // Screen changes morph: the patient card becomes the conversation header, Start becomes the mic button.
+  // Screen changes animate inside the phone (the incoming screen and its header/mic glide in, clipped by the frame).
+  const [nav, setNav] = useState<"forward" | "back" | "none">("none");
   const go = (next: "home" | "talk", before?: () => void) => {
-    const apply = () => {
-      before?.();
-      setScreen(next);
-    };
-    const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
-    if (doc.startViewTransition && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      document.documentElement.dataset.nav = next === "talk" ? "forward" : "back";
-      doc.startViewTransition(() => flushSync(apply));
-    } else apply();
+    before?.();
+    setNav(next === "talk" ? "forward" : "back");
+    setScreen(next);
   };
+
   useEffect(() => {
     if (demoRequest && screen === "home") go("talk");
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -71,7 +66,28 @@ export default function App() {
   }, []);
 
   return (
-    <div className="app">
+    <div className={`app nav-${nav}`}>
+      {/* Desktop only: a phone status bar with the Dynamic Island, so the screen reads like the real device. */}
+      <div className="device-bar" aria-hidden>
+        <span className="device-time">9:41</span>
+        <span className="island" />
+        <span className="device-icons">
+          <svg viewBox="0 0 18 12" width="18" height="12">
+            <rect x="0" y="8" width="3" height="4" rx="1" fill="currentColor" />
+            <rect x="5" y="5.5" width="3" height="6.5" rx="1" fill="currentColor" />
+            <rect x="10" y="3" width="3" height="9" rx="1" fill="currentColor" />
+            <rect x="15" y="0" width="3" height="12" rx="1" fill="currentColor" />
+          </svg>
+          <svg viewBox="0 0 16 12" width="16" height="12">
+            <path d="M8 11.5 5.6 9a3.4 3.4 0 0 1 4.8 0zM3.4 6.8a6.5 6.5 0 0 1 9.2 0l-1.4 1.4a4.5 4.5 0 0 0-6.4 0zM1 4.4a9.9 9.9 0 0 1 14 0l-1.4 1.4a7.9 7.9 0 0 0-11.2 0z" fill="currentColor" />
+          </svg>
+          <svg viewBox="0 0 27 12" width="27" height="12">
+            <rect x=".5" y=".5" width="23" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4" />
+            <rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor" />
+            <rect x="24.5" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".4" />
+          </svg>
+        </span>
+      </div>
       {serverIssue && <div className="banner">{serverIssue}</div>}
       {screen === "home" ? (
         <Home

@@ -94,6 +94,7 @@ await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
 await page.click(".btn-primary");
 await page.waitForSelector(".orb");
+await new Promise((r) => setTimeout(r, 900)); // let the screen transition finish
 await page.screenshot({ path: path.join(OUT, `${persona}-empty.png`) });
 const t0 = Date.now();
 await page.click(".orb");

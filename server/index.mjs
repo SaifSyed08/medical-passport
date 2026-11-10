@@ -7,7 +7,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { MODELS, HttpError, transcribe, chatJSON, speech } from "./openai.mjs";
+import { MODELS, HttpError, transcribe, chatJSON, chatJSONObject, speech } from "./openai.mjs";
+import { createHash } from "node:crypto";
 import {
   INTERPRET_SCHEMA, interpretPrompt, interpretUser,
   CONTEXT_SCHEMA, contextPrompt, contextUser,
@@ -224,7 +225,7 @@ app.post("/api/context", wrap(async (req, res) => {
     model: MODELS.context,
   });
   const ids = recordIds(record);
-  const items = arr(out.items, 4).filter((i) => ids.has(i.id));
+  const items = arr(out.items, 3).filter((i) => ids.has(i.id));
   res.json({ items, ms: Date.now() - t0 });
 }));
 
@@ -307,6 +308,38 @@ app.post("/api/equivalents", wrap(async (req, res) => {
     saveCache();
   }
   res.json({ items: out.filter(Boolean) });
+}));
+
+/* ---------------------------------------------------------------- record translation */
+
+// The record is written in the patient's language; the doctor can read it in theirs. Cached per record + language.
+const RECORD_CACHE_FILE = path.join(ROOT, "data", "record-translations.json");
+let recordCache = {};
+try {
+  recordCache = JSON.parse(fs.readFileSync(RECORD_CACHE_FILE, "utf8"));
+} catch {
+  recordCache = {};
+}
+
+app.post("/api/translate-record", wrap(async (req, res) => {
+  const record = req.body?.record;
+  const to = code(req.body?.to, "en");
+  if (!record || typeof record !== "object") throw new HttpError(400, "record required");
+  const body = JSON.stringify(record).slice(0, 60_000);
+  const ck = `${to}:${createHash("sha256").update(body).digest("hex").slice(0, 24)}`;
+  if (recordCache[ck]) return res.json({ record: recordCache[ck], cached: true });
+  const out = await chatJSONObject({
+    system: `You translate a patient's health record into ${langName(to)} for a clinician. Return the SAME JSON structure with the same keys, arrays and item order. Translate every human-readable string value (names of conditions, allergies, reactions, notes, document titles and bodies, lab names, schedules, purposes, relationships) into clear clinical ${langName(to)}. Keep unchanged: "id" values, dates, numbers, units, reference ranges, flags, phone numbers, person names, facility names, and medicine brand names (you may add the ${langName(to)} generic name in parentheses). Do not add, drop or summarise information.`,
+    user: body,
+  });
+  recordCache[ck] = out;
+  try {
+    fs.mkdirSync(path.dirname(RECORD_CACHE_FILE), { recursive: true });
+    fs.writeFileSync(RECORD_CACHE_FILE, JSON.stringify(recordCache));
+  } catch (e) {
+    console.warn("could not write record cache:", e.message);
+  }
+  res.json({ record: out, cached: false });
 }));
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));

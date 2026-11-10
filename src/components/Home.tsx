@@ -8,6 +8,7 @@ import { Sheet, StatusBadge } from "./bits";
 import Icon from "./Icon";
 import Flag from "./Flag";
 import RecordSheet from "./RecordSheet";
+import { loadTranslatedRecord } from "../lib/recordTranslation";
 
 type Props = {
   persona: Persona;
@@ -57,6 +58,17 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
 
   const severe = persona.allergies.filter((a) => a.severity === "severe");
 
+  // Get the record's translation for the clinician ready before anyone opens it.
+  useEffect(() => {
+    if (persona.recordLanguage !== persona.trip.doctorLanguage) loadTranslatedRecord(persona, persona.trip.doctorLanguage).catch(() => {});
+  }, [persona]);
+
+  const setDoctorLang = (doctorLang: string) =>
+    setSettings((s) => {
+      const cur = s.pairs[persona.id] || { patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, local: persona.trip.country };
+      return { ...s, pairs: { ...s.pairs, [persona.id]: { ...cur, doctorLang } } };
+    });
+
   return (
     <main className="home">
       <header className="home-top">
@@ -66,12 +78,7 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         </button>
       </header>
 
-      <section className="home-intro">
-        <h1>Medical interpreter</h1>
-        <p>Speak naturally. Each person hears the other in their own language.</p>
-      </section>
-
-      <button className="panel patient-card" onClick={() => setSheet("record")} style={{ viewTransitionName: "patient-card" }}>
+      <button className="panel patient-card" onClick={() => setSheet("record")}>
         <span className="pc-head">
           <span className="avatar">{persona.initials}</span>
           <span className="pc-name">
@@ -91,10 +98,10 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
             </span>
           </span>
           <span className="pc-row">
-            <span className="pc-label">Clinician</span>
+            <span className="pc-label">Now in</span>
             <span className="pc-val">
               <Flag code={local} size={22} />
-              {langName(persona.trip.doctorLanguage)} · {persona.trip.city}
+              {persona.trip.city}
             </span>
           </span>
           <span className="pc-row">
@@ -112,8 +119,26 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         </span>
       </button>
 
+      <div className="panel translate-to">
+        <Flag code={local} size={26} />
+        <span>
+          You're in {["US", "GB", "PH"].includes(local) ? "the " : ""}
+          {country(local).name}, so we'll translate to{" "}
+          <label className="inline-select">
+            <select value={persona.trip.doctorLanguage} onChange={(e) => setDoctorLang(e.target.value)} aria-label="Clinician's language">
+              {Object.entries(LANGS).map(([c, l]) => (
+                <option key={c} value={c}>
+                  {l.name}
+                </option>
+              ))}
+            </select>
+            <Icon name="chevron" size={14} className="chev-down" />
+          </label>
+        </span>
+      </div>
+
       <div className="home-actions">
-        <button className="btn-primary" onClick={onStart} style={{ viewTransitionName: "mic-btn" }}>
+        <button className="btn-primary" onClick={onStart}>
           <Icon name="mic" />
           Start interpreting
         </button>
@@ -123,7 +148,6 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         </button>
       </div>
 
-      <p className="fine center">Demo with fictional patients. Not for clinical use.</p>
 
       {sheet === "record" && <RecordSheet persona={persona} onClose={() => setSheet("none")} />}
       {sheet === "settings" && (

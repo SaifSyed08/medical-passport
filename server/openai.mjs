@@ -77,6 +77,27 @@ export async function chatJSON({ system, user, schema, name, model = MODELS.llm,
   return JSON.parse(msg?.content || "{}");
 }
 
+/** Chat completion in plain JSON mode (no schema), for free-form shapes like a whole record. */
+export async function chatJSONObject({ system, user, model = MODELS.llm }) {
+  const res = await fetch(`${BASE}/chat/completions`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model,
+      temperature: 0.1,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user },
+      ],
+    }),
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!res.ok) await fail(res, "record translation");
+  const j = await res.json();
+  return JSON.parse(j.choices?.[0]?.message?.content || "{}");
+}
+
 /** Text to speech. Returns the fetch Response so the caller can stream the body. */
 export async function speech(text, { voice = "coral", instructions, format = "mp3" } = {}) {
   const body = { model: MODELS.tts, input: text, voice, response_format: format };

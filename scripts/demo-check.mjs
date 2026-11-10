@@ -55,7 +55,7 @@ for (;;) {
     await new Promise((r) => setTimeout(r, 700));
     await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-alert.png`) });
   }
-  if ((s.done >= data.lines.length && !/Demo/.test(s.label)) || Date.now() > deadline) break;
+  if ((s.done >= data.lines.length && /Tap to start/.test(s.label)) || Date.now() > deadline) break;
   await new Promise((r) => setTimeout(r, 300));
 }
 const seconds = ((Date.now() - t0) / 1000).toFixed(1);

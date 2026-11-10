@@ -134,7 +134,7 @@ What counts:
 - Small talk, greetings, thanks, logistics: return no items.
 
 Rules:
-- Cite only ids that exist in the record. At most 4 items, most important first. Zero is fine.
+- Cite only ids that exist in the record. At most 3 items, most important first; usually 1 or 2. Zero is fine. Leave out anything the clinician would not act on right now: a busy clinician reads every item you return.
 - level "alert" is rare and only for a safety issue triggered by a medicine, treatment, test or procedure named in the LATEST utterance: an allergy or cross-reactivity match, a contraindication, a dangerous interaction, or a result or record note that changes whether it is safe. Examples that ARE alerts: amoxicillin or any penicillin with a penicillin allergy; a cephalosporin with penicillin anaphylaxis; ibuprofen or another NSAID, or IV contrast, when the record shows kidney disease or says to avoid them; metformin plus IV contrast with low eGFR; a sulfonamide with a sulfa allergy. Symptoms alone, history and current medicines are "relevant", never "alert".
 - Items already on screen are listed. Do not return them again unless the latest utterance itself names something that makes them an alert.
 - Write title, detail and why in ${D} ONLY, translating from the record's language. The record and the conversation may be in other languages; your output never is. title: up to 6 words. detail: the key facts with values and dates, up to 22 words. why: up to 16 words linking it to what was just said.

@@ -18,6 +18,7 @@ const PATHS: Record<string, string> = {
   swap: "M4 8h13l-3-3 M20 16H7l3 3",
   settings: "M4 7h10 M18 7h2 M4 17h4 M12 17h8 M16 5v4 M10 15v4",
   sparkle: "M12 4v4 M12 16v4 M4 12h4 M16 12h4",
+  info: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z M12 11v5 M12 7.5h.01",
   chevron: "M9 6l6 6-6 6",
   refresh: "M20 11a8 8 0 1 0-2.3 5.7 M20 5v6h-6",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4.5 20a7.5 7.5 0 0 1 15 0",

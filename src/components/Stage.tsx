@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { DrugMention, Persona, Turn } from "../lib/types";
 import { dir, langName } from "../lib/langs";
 import { Reveal, StatusBadge, swapLabel } from "./bits";
@@ -11,23 +11,86 @@ const SPEAK_IN: Record<string, string> = {
   ar: "تحدث بالعربية", vi: "Hãy nói tiếng Việt", ru: "Говорите по-русски", tl: "Magsalita sa Tagalog", tr: "Türkçe konuşun", fa: "فارسی صحبت کنید",
 };
 
-/** Before anyone talks: one line per language, nothing else. */
+/** Before anyone talks: two people in conversation (an illustration, not a button), one line per language. */
 export function IdleHero({ persona, live }: { persona: Persona; live: boolean }) {
   return (
-    <div className="idle">
-      <div className={`idle-mark ${live ? "live" : ""}`}>
-        <Icon name="mic" size={26} />
+    <div className={`idle ${live ? "live" : ""}`}>
+      <div className="talkers" aria-hidden>
+        <Person side="patient" code={persona.home} />
+        <Person side="clinician" code={persona.trip.country} />
       </div>
       <p className="idle-line patient" lang={persona.language} dir={dir(persona.language)}>
-        <Flag code={persona.home} size={34} />
         {SPEAK_IN[persona.language] || "Speak"}
       </p>
       <p className="idle-line clinician" lang={persona.trip.doctorLanguage} dir={dir(persona.trip.doctorLanguage)}>
-        <Flag code={persona.trip.country} size={34} />
         {SPEAK_IN[persona.trip.doctorLanguage] || "Speak"}
       </p>
-      <p className="idle-hint">{live ? "Listening" : "Tap the microphone to begin"}</p>
+      <p className="idle-hint">
+        {live ? (
+          "Listening. Go ahead."
+        ) : (
+          <>
+            Tap the microphone below to begin
+            <span className="hint-arrow">
+              <Icon name="chevron" size={18} />
+            </span>
+          </>
+        )}
+      </p>
     </div>
+  );
+}
+
+function Person({ side, code }: { side: "patient" | "clinician"; code: string }) {
+  return (
+    <div className={`person ${side}`}>
+      <div className="bubble">
+        <Flag code={code} size={22} />
+        <span className="typing">
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
+      <svg viewBox="0 0 80 84" className="figure">
+        <circle cx="40" cy="24" r="16" />
+        <path d="M8 84c0-24 14-36 32-36s32 12 32 36z" />
+      </svg>
+    </div>
+  );
+}
+
+/**
+ * Live caption: new words drift in softly as the recogniser catches up (no dictation caret),
+ * and a small voice wave trails the text while the person is still talking.
+ */
+function LiveCaption({ text, lang }: { text: string; lang: string }) {
+  const words = text ? (/\s/.test(text) ? text.split(/(\s+)/) : [...text]) : [];
+  const prev = useRef(0);
+  const firstNew = Math.min(prev.current, words.length);
+  useEffect(() => {
+    prev.current = words.length;
+  });
+  let n = 0;
+  return (
+    <p className="live-text" dir={dir(lang)} lang={lang}>
+      {words.map((w, i) => {
+        if (/^\s+$/.test(w)) return w;
+        const isNew = i >= firstNew;
+        const delay = isNew ? n++ * 70 : 0;
+        return (
+          <span key={`${i}:${w}`} className={isNew ? "cw new" : "cw"} style={isNew ? { animationDelay: `${delay}ms` } : undefined}>
+            {w}
+          </span>
+        );
+      })}
+      <span className="voice-wave" aria-hidden>
+        <i />
+        <i />
+        <i />
+        <i />
+      </span>
+    </p>
   );
 }
 
@@ -65,6 +128,8 @@ export function TurnBlock({
   const cleanedDiffers = t.status === "done" && t.raw && normSpace(t.cleaned) !== normSpace(t.raw);
   const name = who === "clinician" ? "Clinician" : who === "patient" ? persona.name.split(" ")[0] : "";
   const done = t.status === "done";
+  // Renames already show inline (the word flips to the local name), so only real warnings get a note.
+  const notable = t.drugs.filter((d) => d.status === "not_available_locally" || d.status === "different_strength" || d.status === "uncertain");
 
   return (
     <article className={`turn ${who || "unknown"} ${t.status} ${current ? "current" : ""}`}>
@@ -87,10 +152,7 @@ export function TurnBlock({
       </header>
 
       {(t.status === "live" || t.status === "transcribing") && (
-        <p className="live-text" dir={dir(spokenLang)} lang={spokenLang}>
-          {t.raw || <span className="muted">…</span>}
-          <span className="caret" />
-        </p>
+        <LiveCaption text={t.raw} lang={spokenLang} />
       )}
 
       {t.status === "interpreting" && (
@@ -98,9 +160,9 @@ export function TurnBlock({
           <p className="original" dir={dir(spokenLang)}>
             {t.raw}
           </p>
-          <div className="pending">
-            <span />
-            <span />
+          <div className="pending" dir={dir(listenerLang)}>
+            <span className="pending-orb" aria-hidden />
+            <span className="pending-text">Translating to {langName(listenerLang)}</span>
           </div>
         </>
       )}
@@ -117,9 +179,9 @@ export function TurnBlock({
               <Reveal text={t.translation} lang={listenerLang} drugs={t.drugs} field="translated" onDrug={onDrug} step={0} budget={0} />
             )}
           </p>
-          {current && t.drugs.length > 0 && (
+          {current && notable.length > 0 && (
             <ul className="med-notes">
-              {t.drugs.map((d) => (
+              {notable.map((d) => (
                 <li key={d.key}>
                   <button onClick={() => onDrug(d)}>
                     <StatusBadge status={d.status} compact />

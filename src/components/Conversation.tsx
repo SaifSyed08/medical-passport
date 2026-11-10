@@ -517,9 +517,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   };
 
   const orbLabel = (() => {
-    if (demo === "voice") return "Demo · listening";
-    if (demo === "loading") return "Demo · starting";
-    if (demo === "working") return speaking ? "Demo · speaking the translation" : "Demo · translating";
+    // The demo reads exactly like a real conversation.
+    if (demo === "voice") return "Hearing you…";
+    if (demo === "loading") return "Listening";
+    if (demo === "working") return speaking ? "Speaking · tap to skip" : "Translating…";
     if (micState === "off") return "Tap to start listening";
     if (micState === "starting") return "Starting the mic…";
     if (micState === "error") return "Mic problem · tap to retry";
@@ -599,7 +600,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         <span className="tint alert" />
       </div>
 
-      <header className="talk-bar panel" style={{ viewTransitionName: "patient-card" }}>
+      <header className="talk-bar panel">
         <button className="icon-btn" onClick={onBack} aria-label="Back">
           <Icon name="back" />
         </button>
@@ -664,22 +665,28 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           )}
           <div className="control-row">
             <button className={`tool ${typing ? "on" : ""}`} onClick={() => setTyping((v) => !v)} aria-label="Type instead">
-              <Icon name="keyboard" />
+              <span className="tool-icon">
+                <Icon name="keyboard" />
+              </span>
+              <span className="tool-label">Type</span>
             </button>
             <div className="mic-wrap">
               <Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />
-              <div className="orb-label" aria-live="polite">
-                {orbLabel}
-                {forced && demo === "off" && <span className="forced"> · {forced === "patient" ? first : "clinician"}</span>}
-              </div>
             </div>
             <button
               className={`tool ${settings.speak ? "" : "off"}`}
               onClick={() => setSettings((s) => ({ ...s, speak: !s.speak }))}
               aria-label={settings.speak ? "Mute spoken translation" : "Speak translations aloud"}
             >
-              <Icon name={settings.speak ? "speaker" : "mute"} />
+              <span className="tool-icon">
+                <Icon name={settings.speak ? "speaker" : "mute"} />
+              </span>
+              <span className="tool-label">{settings.speak ? "Voice on" : "Voice off"}</span>
             </button>
+          </div>
+          <div className="orb-label" aria-live="polite">
+            {orbLabel}
+            {forced && demo === "off" && <span className="forced"> · {forced === "patient" ? first : "clinician"}</span>}
           </div>
         </footer>
       </div>
