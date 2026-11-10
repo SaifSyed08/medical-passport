@@ -31,3 +31,19 @@ test("a later 'relevant' mention keeps the alert's level and wording", () => {
   assert.equal(m.title, "Metformin + contrast");
   assert.equal(m.turnId, "t4");
 });
+
+test("common words shared with the why don't flash (thank you doctor, severe)", () => {
+  const r1 = mergeContext(afterLine3, [{ ...pen, why: "Severe allergy; tell the doctor before any antibiotic" }], "t4", 2000, "Thank you doctor, the pain is severe");
+  assert.equal(r1.flash, null);
+});
+
+test("the strongest match wins, not the first listed", () => {
+  const r = mergeContext(afterLine3, [{ ...metContrast, why: "Metformin with kidney disease" }, { ...ckdContrast, why: "Avoid ibuprofen with kidney disease" }], "t4", 2000, "Can you take ibuprofen for your kidney pain?");
+  assert.equal(r.flash?.id, "cnd_erc");
+});
+
+test("Japanese reasons match English drug names", () => {
+  const prev = mergeContext([], [{ id: "med_proair", level: "alert", title: "プロエア", detail: "", why: "喘息の既往" }], "t1", 1000, "").next;
+  const r = mergeContext(prev, [{ id: "med_proair", level: "alert", title: "プロエア", detail: "", why: "胸の締め付け感とProAir使用" }], "t2", 2000, "I used my ProAir twice");
+  assert.equal(r.flash?.id, "med_proair");
+});

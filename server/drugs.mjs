@@ -253,6 +253,8 @@ export function localizeNames(text, home, local) {
     const h = e.by[home];
     const l = e.by[local];
     if (!h || !l || l.unavailable || norm(h.name) === norm(l.name)) continue;
+    // Already says it the local way ("Albuterol (salbutamol in Mexico)"): swapping would duplicate the name.
+    if (out.toLowerCase().includes(l.name.toLowerCase())) continue;
     const re = new RegExp(`(?<![A-Za-z0-9À-ɏ])${escapeRe(h.name)}(?![A-Za-z0-9À-ɏ])`, "giu");
     out = out.replace(re, (m) => (m[0] === m[0].toUpperCase() ? l.name[0].toUpperCase() + l.name.slice(1) : l.name));
   }

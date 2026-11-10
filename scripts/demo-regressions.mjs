@@ -227,6 +227,33 @@ for (const round of ["first visit", "after Back and Start"]) {
   await browser.close();
 }
 
+// 3c. A clinician who scrolls up to reread is not yanked back down by the next turn; "Latest" brings them back.
+{
+  const { browser, page } = await launch();
+  await page.keyboard.press("d");
+  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 2, 60000);
+  const box = await page.$eval(".transcript", (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+  });
+  await page.mouse.move(box.x, box.y);
+  for (let i = 0; i < 6; i++) await page.mouse.wheel({ deltaY: -400 });
+  await sleep(400);
+  const before = await page.$eval(".transcript", (el) => el.scrollTop);
+  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 3, 60000);
+  await sleep(1500);
+  const after = await page.$eval(".transcript", (el) => el.scrollTop);
+  const pill = await page.$(".latest-pill");
+  check("scrolled up: the next turn doesn't yank the reader down", Math.abs(after - before) < 40 && Boolean(pill), `scrollTop ${before} -> ${after}, Latest button ${pill ? "shown" : "missing"}`);
+  if (pill) {
+    await pill.click();
+    await sleep(900);
+    const atBottom = await page.$eval(".transcript", (el) => el.scrollHeight - el.scrollTop - el.clientHeight < 10);
+    check('"Latest" returns to the newest turn', atBottom);
+  }
+  await browser.close();
+}
+
 // 4. Rehearsing (D, Back, repeat) must not pile up AudioContexts.
 {
   const { browser, page } = await launch();

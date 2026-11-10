@@ -329,17 +329,51 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     };
   }, []);
 
+  // Follow the conversation only while the reader is at the bottom. Someone who scrolled up to reread is left alone
+  // and gets a "Latest" button instead of being yanked down by every caption update.
+  const pinned = useRef(true);
+  const autoUntil = useRef(0);
+  const [showLatest, setShowLatest] = useState(false);
+  const toBottom = useCallback((smooth: boolean) => {
+    const el = stageRef.current;
+    if (!el) return;
+    autoUntil.current = performance.now() + 700;
+    el.scrollTo({ top: el.scrollHeight, behavior: smooth ? "smooth" : "auto" });
+  }, []);
   useEffect(() => {
     const el = stageRef.current;
-    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [turns]);
+    if (!el) return;
+    const onScroll = () => {
+      if (performance.now() < autoUntil.current) return;
+      const near = el.scrollHeight - el.scrollTop - el.clientHeight < 90;
+      pinned.current = near;
+      setShowLatest(!near);
+    };
+    const userScroll = () => (autoUntil.current = 0);
+    el.addEventListener("scroll", onScroll, { passive: true });
+    el.addEventListener("wheel", userScroll, { passive: true });
+    el.addEventListener("touchmove", userScroll, { passive: true });
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      el.removeEventListener("wheel", userScroll);
+      el.removeEventListener("touchmove", userScroll);
+    };
+  }, []);
+  useEffect(() => {
+    if (pinned.current) toBottom(true);
+  }, [turns, toBottom]);
   useEffect(() => {
     const el = stageRef.current;
     if (!el || typeof ResizeObserver === "undefined") return;
-    const ro = new ResizeObserver(() => el.scrollTo({ top: el.scrollHeight }));
+    const ro = new ResizeObserver(() => pinned.current && toBottom(false));
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [toBottom]);
+  const jumpToLatest = () => {
+    pinned.current = true;
+    setShowLatest(false);
+    toBottom(true);
+  };
 
   /* ---------------------------------------------------------------- recorded demo */
 
@@ -392,6 +426,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   /** Forget the current conversation. Anything still in flight from it is ignored when it lands. */
   const resetConversation = () => {
+    pinned.current = true;
+    setShowLatest(false);
     epoch.current++;
     segTurns.current.clear();
     segFinal.current.clear();
@@ -639,6 +675,12 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       </div>
 
       <div className="bottom">
+        {showLatest && turns.length > 0 && (
+          <button className="latest-pill" onClick={jumpToLatest}>
+            Latest
+            <Icon name="chevron" size={16} className="down" />
+          </button>
+        )}
         <footer className="controls panel">
           {/* The record lives inside the bottom bar: one panel, so the translation keeps the screen. */}
           <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />

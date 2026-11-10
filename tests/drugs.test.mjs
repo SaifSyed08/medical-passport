@@ -87,3 +87,8 @@ test("record cards name medicines the local way for the clinician", () => {
   assert.equal(localizeNames("Metamizole use", "MX", "US"), "Metamizole use"); // not sold in the US: left as is
   assert.equal(localizeNames("Salbutamol inhaler", "MX", "MX"), "Salbutamol inhaler");
 });
+
+test("no duplicated names when the card already uses the local one", () => {
+  assert.equal(localizeNames("Albuterol (salbutamol in Mexico)", "MX", "US"), "Albuterol (salbutamol in Mexico)");
+  assert.equal(localizeNames("Paracetamol (acetaminophen) as needed", "MX", "US"), "Paracetamol (acetaminophen) as needed");
+});
