@@ -37,6 +37,8 @@ export async function transcribe(wav: Blob, pair: Pair, terms: string[]) {
 }
 
 export type InterpretResult = {
+  /** Filler-only fragment: nothing to show or say. */
+  empty?: boolean;
   language: string;
   speaker: Speaker;
   listenerLang: string;

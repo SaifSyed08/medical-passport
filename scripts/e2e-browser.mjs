@@ -112,7 +112,9 @@ for (;;) {
     last = s.done;
   }
   if (s.errors.length) console.log("  errors:", s.errors);
-  if ((s.done >= track.lines && !s.busy) || Date.now() > deadline) break;
+  // Wait for the whole fake-mic track to play out, then for in-flight turns to finish.
+  const played = Date.now() - t0 > track.seconds * 1000 + 1500;
+  if ((played && s.done >= track.lines && !s.busy) || Date.now() > deadline) break;
   await new Promise((r) => setTimeout(r, 500));
 }
 await new Promise((r) => setTimeout(r, 2500)); // let context cards and animations land
@@ -156,7 +158,13 @@ if (alert) {
 await browser.close();
 
 const failures = [];
-if (result.turns.filter((t) => t.status.includes("done")).length < track.lines) failures.push(`expected ${track.lines} turns`);
+const done = result.turns.filter((t) => t.status.includes("done"));
+if (done.length !== track.lines) failures.push(`expected ${track.lines} turns, got ${done.length} (a line was split or merged)`);
+if (done.some((t) => !t.translation?.trim())) failures.push("a turn has an empty translation");
+if (persona === "jordan") {
+  if (!result.turns.some((t) => t.marks.some((m) => /サルブタモール/.test(m)))) failures.push("ProAir did not swap to サルブタモール");
+  if (!result.context.some((c) => c.startsWith("alert"))) failures.push("no penicillin alert");
+}
 if (persona === "sofia") {
   if (!result.turns.some((t) => t.marks.some((m) => /metamizol/i.test(m)))) failures.push("Neo-Melubrina did not swap to metamizole");
   if (!result.turns.some((t) => t.marks.some((m) => /albuterol/i.test(m)))) failures.push("Ventolin did not swap to albuterol");

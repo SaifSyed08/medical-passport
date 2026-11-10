@@ -16,7 +16,7 @@ type Handlers = {
 const FRAME_MS = 20;
 const PREROLL = 15; // 300 ms kept from before speech starts
 const START_FRAMES = 3; // 60 ms above threshold starts an utterance
-const END_SILENCE = 40; // 800 ms of quiet ends it
+const END_SILENCE = 55; // 1.1 s of quiet ends it (shorter splits sentences at "um…" pauses)
 const MIN_VOICED = 12; // ignore blips shorter than ~240 ms of voice
 const MAX_FRAMES = 1500; // 30 s cap
 const TARGET_RATE = 16000;
@@ -248,7 +248,7 @@ export class Mic {
       this.silent = 0;
     } else this.silent++;
     if (this.silent >= END_SILENCE || this.seg.length >= MAX_FRAMES) {
-      const keep = this.seg.slice(0, this.seg.length - Math.max(0, this.silent - 15));
+      const keep = this.seg.slice(0, this.seg.length - Math.max(0, this.silent - 20));
       this.emit(keep, this.voiced >= MIN_VOICED);
       this.reset();
       this.set("listening");

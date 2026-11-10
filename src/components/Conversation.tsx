@@ -127,6 +127,11 @@ export default function Conversation({ persona, settings, setSettings, onBack }:
           equivalents: uniqueEquivalents(trip).slice(0, 30),
           history: hist,
         });
+        if (r.empty) {
+          setTurns((all) => all.filter((t) => t.id !== turnId));
+          release(null);
+          return;
+        }
         const drugs = r.drugs.map((d) => ({ ...d, cached: isCached(trip, d) }));
         rememberMentions(p.home, p.local, r.drugs);
         patch(turnId, (t) => ({

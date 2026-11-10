@@ -142,8 +142,12 @@ app.post("/api/interpret", wrap(async (req, res) => {
   if (forced) speaker = forced;
   else if (language === doctorLang && language !== patientLang) speaker = "clinician";
   else if (language === patientLang && language !== doctorLang) speaker = "patient";
-  const cleaned = String(out.cleaned || text);
-  let translation = String(out.translation || "");
+  const cleaned = String(out.cleaned ?? "").trim();
+  let translation = String(out.translation ?? "").trim();
+  // Filler-only fragments ("Um,") come back empty: tell the client to drop the turn.
+  if (!/[\p{L}\p{N}]/u.test(cleaned) || !/[\p{L}\p{N}]/u.test(translation)) {
+    return res.json({ empty: true, raw: text, ms: Date.now() - t0 });
+  }
   const listenerLang = speaker === "patient" ? doctorLang : patientLang;
   const listener = speaker === "patient" ? "clinician" : "patient";
 
