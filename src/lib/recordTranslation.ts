@@ -1,7 +1,7 @@
 // The patient's record, translated into the doctor's language on demand and kept on the phone.
 import { useEffect, useState } from "react";
 import type { Persona } from "./types";
-import { translateRecord } from "./api";
+import { translateRecord } from "./api.ts";
 
 export type RecordBody = Pick<Persona, "allergies" | "medications" | "conditions" | "labs" | "documents" | "contacts">;
 
