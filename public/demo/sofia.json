@@ -1,6 +1,6 @@
 {
  "persona": "sofia",
- "recordedAt": "2026-11-11T21:18:07.002Z",
+ "recordedAt": "2026-11-11T21:39:41.490Z",
  "equivalents": [
   {
    "key": "metformin",
@@ -96,40 +96,40 @@
    "audioMs": 7850,
    "speech": "/demo/sofia-0-tr.mp3",
    "stt": {
-    "text": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
-    "ms": 539
+    "text": "Hola doctor. Eh, desde anoche me duele mucho el pecho y... me cuesta respirar.",
+    "ms": 516
    },
    "interpret": {
     "language": "es",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
-    "cleaned": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
-    "translation": "Hello doctor, since last night my chest hurts a lot and it's hard for me to breathe.",
+    "raw": "Hola doctor. Eh, desde anoche me duele mucho el pecho y... me cuesta respirar.",
+    "cleaned": "Hola doctor. Desde anoche me duele mucho el pecho y me cuesta respirar.",
+    "translation": "Hello doctor. Since last night my chest hurts a lot and it's hard for me to breathe.",
     "drugs": [],
-    "ms": 977
+    "ms": 1148
    },
    "context": [
     {
      "id": "cnd_asma",
      "level": "relevant",
      "title": "Asthma history",
-     "detail": "Mild persistent asthma since childhood, triggered by infections and cold, ER visit for crisis in March 2025.",
-     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation."
+     "detail": "Mild persistent asthma since childhood, recent ER visit March 2025 for exacerbation",
+     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation"
     },
     {
      "id": "doc_urgencias_2025",
      "level": "relevant",
      "title": "Asthma ER visit 2025",
-     "detail": "Dyspnea and wheezing after respiratory infection, improved with salbutamol and prednisone.",
-     "why": "Recent severe asthma episode relevant to current chest pain and breathing difficulty."
+     "detail": "ER visit for asthma exacerbation with dyspnea and wheezing, improved with albuterol and prednisone",
+     "why": "Recent severe asthma episode relevant to current chest pain and breathing difficulty"
     },
     {
      "id": "med_ventolin",
      "level": "relevant",
-     "title": "Salbutamol inhaler",
-     "detail": "2 puffs as needed for wheezing, up to every 4 hours.",
-     "why": "Current rescue medication for asthma symptoms."
+     "title": "Albuterol inhaler",
+     "detail": "Rescue inhaler for asthma, 2 puffs up to every 4 hours as needed",
+     "why": "Current breathing difficulty may require rescue inhaler use"
     }
    ]
   },
@@ -140,7 +140,7 @@
    "speech": "/demo/sofia-1-tr.mp3",
    "stt": {
     "text": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
-    "ms": 455
+    "ms": 350
    },
    "interpret": {
     "language": "es",
@@ -188,36 +188,36 @@
       ],
       "local_strength": "90 mcg per puff",
       "status": "different_name",
-      "note_listener": "In the US, Ventolin contains albuterol and is labelled as 90 mcg per puff instead of 100 mcg.",
-      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff (ex-mouthpiece), not 100 mcg (valve).",
+      "note_listener": "Same medicine, but in the US it's called albuterol and the inhaler states 90 mcg per puff instead of 100 mcg.",
+      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff (mouthpiece), Mexico states 100 mcg (valve).",
       "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       "med_id": "med_ventolin",
       "source": "curated"
      }
     ],
-    "ms": 2116
+    "ms": 2540
    },
    "context": [
     {
      "id": "cnd_erc",
      "level": "relevant",
-     "title": "CKD Stage 3b",
+     "title": "CKD stage 3b",
      "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
      "why": "Kidney disease affects medication safety and symptom evaluation"
     },
     {
      "id": "med_neomelubrina",
      "level": "relevant",
-     "title": "Metamizole Use",
+     "title": "Metamizole use",
      "detail": "500 mg every 8 hours as needed for pain or fever",
      "why": "Patient took metamizole for chest pain; monitor for effectiveness and safety"
     },
     {
      "id": "med_cozaar",
      "level": "relevant",
-     "title": "Losartan for Hypertension",
-     "detail": "50 mg daily in the morning",
-     "why": "Current antihypertensive may interact with kidney function and potassium levels"
+     "title": "Losartan use",
+     "detail": "50 mg daily for hypertension",
+     "why": "Losartan affects potassium and kidney function relevant to symptoms"
     }
    ]
   },
@@ -227,16 +227,16 @@
    "audioMs": 6650,
    "speech": "/demo/sofia-2-tr.mp3",
    "stt": {
-    "text": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "ms": 331
+    "text": "I'd like to start you on amoxicilina and get a CT scan with contrast.",
+    "ms": 309
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "es",
-    "raw": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "cleaned": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "translation": "Bien, me gustaría empezar con amoxicilina y hacer una tomografía computarizada con contraste.",
+    "raw": "I'd like to start you on amoxicilina and get a CT scan with contrast.",
+    "cleaned": "I'd like to start you on amoxicillin and get a CT scan with contrast.",
+    "translation": "Me gustaría empezar a tratarla con amoxicilina y hacer una tomografía computarizada con contraste.",
     "drugs": [
      {
       "key": "amoxicillin",
@@ -254,14 +254,14 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "El nombre es el mismo en México y en Estados Unidos.",
+      "note_listener": "El nombre es el mismo en ambos países.",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 2761
+    "ms": 1331
    },
    "context": [
     {
@@ -276,14 +276,14 @@
      "level": "alert",
      "title": "CKD stage 3b",
      "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
-     "why": "Contrast CT scan risk due to reduced kidney function"
+     "why": "Contrast CT and metformin require caution with reduced kidney function"
     },
     {
      "id": "med_glucophage",
      "level": "alert",
      "title": "Metformin + contrast",
      "detail": "Metformin 850 mg twice daily, monitor kidney function before contrast",
-     "why": "Risk of lactic acidosis with metformin and contrast in CKD"
+     "why": "Risk of lactic acidosis with contrast in CKD; dosing needs review"
     }
    ]
   },
@@ -294,7 +294,7 @@
    "speech": "/demo/sofia-3-tr.mp3",
    "stt": {
     "text": "Can you take ibuprofen for the pain?",
-    "ms": 295
+    "ms": 348
    },
    "interpret": {
     "language": "en",
@@ -321,14 +321,14 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "El nombre y la dosis son iguales en ambos países.",
+      "note_listener": "",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 1118
+    "ms": 983
    },
    "context": [
     {
@@ -342,15 +342,15 @@
      "id": "cnd_erc",
      "level": "alert",
      "title": "CKD stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
-     "why": "Avoid NSAIDs like ibuprofen due to kidney disease and hyperkalemia risk"
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L in August 2026",
+     "why": "Avoid NSAIDs like ibuprofen due to kidney disease"
     },
     {
      "id": "med_glucophage",
-     "level": "relevant",
-     "title": "Metformin use",
-     "detail": "850 mg twice daily for type 2 diabetes",
-     "why": "Metformin dosing must be monitored with kidney disease and contrast use"
+     "level": "alert",
+     "title": "Metformin + contrast",
+     "detail": "Metformin 850 mg twice daily, eGFR 44",
+     "why": "Risk with contrast; monitor kidney function and adjust metformin"
     }
    ]
   }

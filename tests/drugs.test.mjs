@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { findCurated, curatedEquivalent, curatedMentionedIn, localizeDrug, norm } from "../server/drugs.mjs";
+import { findCurated, curatedEquivalent, curatedMentionedIn, localizeDrug, localizeNames, norm } from "../server/drugs.mjs";
 
 const entry = (name) => {
   const e = findCurated(name);
@@ -79,4 +79,11 @@ test("merges with a bracket the model already wrote instead of nesting", () => {
 
 test("does not match a brand inside a longer word", () => {
   assert.equal(localizeDrug("Ventolinex is not a drug", entry("Ventolin"), { home: "MX", local: "US", listener: "clinician" }), null);
+});
+
+test("record cards name medicines the local way for the clinician", () => {
+  assert.equal(localizeNames("Salbutamol inhaler, 2 puffs", "MX", "US"), "Albuterol inhaler, 2 puffs");
+  assert.equal(localizeNames("Uses salbutamol as needed", "MX", "US"), "Uses albuterol as needed");
+  assert.equal(localizeNames("Metamizole use", "MX", "US"), "Metamizole use"); // not sold in the US: left as is
+  assert.equal(localizeNames("Salbutamol inhaler", "MX", "MX"), "Salbutamol inhaler");
 });

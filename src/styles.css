@@ -613,3 +613,6 @@ i.dot.clinician { background: var(--clinician); }
 .tile-icon { width: 30px; height: 30px; border-radius: 9px; }
 .tile-icon .icon { width: 18px; height: 18px; }
 .tile-title { font-size: 14px; }
+
+.tiles.open .tile-grid { max-height: min(34vh, 260px); }
+.tile-title:lang(ja), .tile-title:lang(zh), .tile-title:lang(ko) { -webkit-line-clamp: 3; }

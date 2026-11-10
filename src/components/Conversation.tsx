@@ -5,6 +5,7 @@ import type { Player } from "../lib/player";
 import { demoVoice, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
 import { PERSONAS } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
+import { mergeContext } from "../lib/contextMerge";
 import * as api from "../lib/api";
 import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, saveEquivalents, uniqueEquivalents, type Settings } from "../lib/store";
@@ -121,17 +122,11 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       .slice(-4)
       .map((t) => ({ speaker: t.speaker as string, text: t.cleaned }));
 
-  const addContext = useCallback((turnId: string, items: api.ContextResult["items"]) => {
+  const addContext = useCallback((turnId: string, items: api.ContextResult["items"], said = "") => {
     if (!items.length) return;
     const cur = ctxRef.current;
-    const now = Date.now();
-    const fresh = items.map((i, n) => {
-      const prev = cur.find((c) => c.id === i.id);
-      return { ...i, level: prev?.level === "alert" ? "alert" : i.level, turnId, at: now - n } as ContextItem;
-    });
-    const newAlert = fresh.find((f) => f.level === "alert" && cur.find((c) => c.id === f.id)?.level !== "alert");
-    const ids = new Set(fresh.map((f) => f.id));
-    setCtx([...fresh, ...cur.filter((c) => !ids.has(c.id))]);
+    const { next, flash: newAlert } = mergeContext(cur, items, turnId, Date.now(), said);
+    setCtx(next);
     if (newAlert) {
       setToast(newAlert);
       navigator.vibrate?.([70, 50, 70]);
@@ -159,7 +154,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
             history: hist,
             shown: ctxRef.current.map((c) => c.id),
           })
-          .then((r) => fresh(e) && addContext(turnId, r.items))
+          .then((r) => fresh(e) && addContext(turnId, r.items, text))
           .catch((e) => console.warn("context failed", e));
       }
       try {
@@ -338,6 +333,13 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const el = stageRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
   }, [turns]);
+  useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => el.scrollTo({ top: el.scrollHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   /* ---------------------------------------------------------------- recorded demo */
 
@@ -474,7 +476,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         drugs: r.drugs.map((d) => ({ ...d, cached: isCached(trip, d) })),
         timings: { total: (line.stt.ms || 500) + r.ms },
       });
-      window.setTimeout(() => !token.cancelled && addContext(id, line.context), 900);
+      window.setTimeout(() => !token.cancelled && addContext(id, line.context, line.interpret.cleaned), 900);
       await sleep(500);
       // Stopped while the words were landing: don't start this line's speech after the stop.
       if (token.cancelled) break;

@@ -66,12 +66,26 @@ const final = await page.evaluate(() => ({
   label: document.querySelector(".orb-label")?.textContent,
 }));
 await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-end.png`) });
+// Expanding "All N" grows the bottom panel; the latest translation must stay fully visible above it.
+let hiddenAfterAll = null;
+const allBtn = await page.$$eval(".tiles-link", (bs) => bs.findIndex((b) => /^All/.test(b.textContent || "")));
+if (allBtn >= 0) {
+  await page.evaluate((i) => document.querySelectorAll(".tiles-link")[i].click(), allBtn);
+  await new Promise((r) => setTimeout(r, 900));
+  hiddenAfterAll = await page.evaluate(() => {
+    const tr = document.querySelector(".turn.current .translation")?.getBoundingClientRect();
+    const bottom = document.querySelector(".bottom")?.getBoundingClientRect();
+    return tr && bottom ? Math.round(tr.bottom - bottom.top) : null;
+  });
+  await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-all-open.png`) });
+}
 await browser.close();
 
 const fails = [];
 if (final.history + 1 !== data.lines.length) fails.push(`expected ${data.lines.length} turns, saw ${final.history + 1}`);
 if (!final.cards.length) fails.push("no context cards");
 if (!captionShot) fails.push("no live caption while the recording played");
+if (hiddenAfterAll !== null && hiddenAfterAll > 2) fails.push(`after "All", the latest translation is ${hiddenAfterAll}px under the bottom panel`);
 if (persona === "sofia" && !toastShot) fails.push("no alert toast");
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);
 console.log(`demo ran ${seconds}s · ${final.history + 1} turns · ${final.cards.length} cards · alert toast ${toastShot} · last: ${final.current}`);

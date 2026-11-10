@@ -45,7 +45,7 @@ Sofía is from Guadalajara and is visiting her son in Austin. Her record is in S
 
 1. **Patient:** *"Hola doctor, eh, desde anoche me duele mucho el pecho y, um, me cuesta respirar."* Cleaned up, spoken in English. Cards appear: asthma, the March 2025 ER visit for an asthma attack, the rescue inhaler.
 2. **Patient:** *"Tomé dos Neo-Melubrinas y usé mi Ventolin pero no me ayudó."* Neo-Melubrina turns into **metamizole** with a red "!" (not sold in the US). Ventolin turns into **albuterol**. The doctor hears "metamizole (Neo-Melubrina)… albuterol (Ventolin)".
-3. **Doctor:** *"Okay. I'd like to start you on amoxicillin and get a CT scan with contrast."* Sofía hears it in Spanish. **Alerts:** penicillin anaphylaxis (2018), and kidney disease with eGFR 44 plus the note to avoid contrast. Metformin also shows, since it matters with contrast.
+3. **Doctor:** *"Okay. I'd like to start you on amoxicillin and get a CT scan with contrast."* Sofía hears it in Spanish. **Alerts:** penicillin anaphylaxis (2018), and kidney disease with eGFR 44 plus the note to avoid contrast. Metformin + contrast is the third alert (under **All**).
 4. **Doctor:** *"Can you take ibuprofen for the pain?"* An NSAID with CKD gets flagged.
 
 Tap any highlighted medicine for both countries' names, brands, strengths and notes. Tap any card for the original record entry. The second persona, **Jordan Rivera**, is the Tessera medical-passport traveler: an English speaker seeing a Japanese doctor. The languages and current country can be changed on the home screen.

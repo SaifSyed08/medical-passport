@@ -14,7 +14,7 @@ import {
   CONTEXT_SCHEMA, contextPrompt, contextUser,
   EQUIV_SCHEMA, equivPrompt, langName,
 } from "./prompts.mjs";
-import { findCurated, curatedMentionedIn, curatedEquivalent, equivalentLine, norm, localizeDrug } from "./drugs.mjs";
+import { findCurated, curatedMentionedIn, curatedEquivalent, equivalentLine, norm, localizeDrug, localizeNames } from "./drugs.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const PROD = process.argv.includes("--prod") || process.env.NODE_ENV === "production";
@@ -225,7 +225,11 @@ app.post("/api/context", wrap(async (req, res) => {
     model: MODELS.context,
   });
   const ids = recordIds(record);
-  const items = arr(out.items, 3).filter((i) => ids.has(i.id));
+  // Medicine names on the cards read the local way (salbutamol -> albuterol for a US clinician).
+  const home = code(record?.patient?.homeCountry, local).toUpperCase();
+  const items = arr(out.items, 3)
+    .filter((i) => ids.has(i.id))
+    .map((i) => ({ ...i, title: localizeNames(i.title, home, local), detail: localizeNames(i.detail, home, local), why: localizeNames(i.why, home, local) }));
   res.json({ items, ms: Date.now() - t0 });
 }));
 

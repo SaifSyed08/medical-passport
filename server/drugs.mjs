@@ -243,6 +243,23 @@ export function equivalentLine(eq) {
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /**
+ * Clinician-facing text (record cards) names medicines the local way: "Salbutamol inhaler" becomes
+ * "Albuterol inhaler" for a US doctor. Only generic names are swapped; brands and unavailable drugs are left alone.
+ */
+export function localizeNames(text, home, local) {
+  if (!text || home === local) return text;
+  let out = text;
+  for (const e of CURATED) {
+    const h = e.by[home];
+    const l = e.by[local];
+    if (!h || !l || l.unavailable || norm(h.name) === norm(l.name)) continue;
+    const re = new RegExp(`(?<![A-Za-z0-9À-ɏ])${escapeRe(h.name)}(?![A-Za-z0-9À-ɏ])`, "giu");
+    out = out.replace(re, (m) => (m[0] === m[0].toUpperCase() ? l.name[0].toUpperCase() + l.name.slice(1) : l.name));
+  }
+  return out;
+}
+
+/**
  * Make sure the listener hears the drug under the name used where they are.
  * Patient -> clinician: "Ventolin" becomes "albuterol (Ventolin)"; clinician -> patient: "albuterol" becomes "salbutamol (albuterol)".
  * Returns { translation, label } where label is the text to highlight, or null if nothing changed.
