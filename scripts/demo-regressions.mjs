@@ -156,7 +156,7 @@ for (const how of ["esc", "back", "dd"]) {
   await sleep(9000);
   const dom = await page.evaluate(() => ({
     text: document.querySelector(".transcript")?.textContent || "",
-    cards: [...document.querySelectorAll(".ctx-row strong")].map((s) => s.textContent),
+    cards: [...document.querySelectorAll(".ctx-tile .tile-title")].map((s) => s.textContent),
     mic: document.querySelector(".orb")?.className,
   }));
   const ttsAfter = page.reqs.filter((r) => r.path === "/api/tts" && r.t > tD).length;

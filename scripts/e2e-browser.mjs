@@ -154,7 +154,7 @@ await page.screenshot({ path: path.join(OUT, `${persona}-talk.png`) });
 const result = {
   turns: [...seenTurns.values()],
   history: await page.evaluate(() => document.querySelectorAll(".turn.done").length - 1),
-  context: await page.evaluate(() => [...document.querySelectorAll(".ctx-row")].map((c) => c.className.replace("ctx-row ", "") + " | " + c.querySelector("strong")?.textContent)),
+  context: await page.evaluate(() => [...document.querySelectorAll(".ctx-tile")].map((c) => c.className.replace("ctx-tile ", "") + " | " + c.querySelector(".tile-title")?.textContent)),
 };
 for (const t of result.turns) {
   console.log(`\n[${t.who}] ${t.time || ""} ${t.status}`);
@@ -173,7 +173,7 @@ if (drug) {
   await page.screenshot({ path: path.join(OUT, `${persona}-drug.png`) });
   await page.click(".sheet .icon-btn");
 }
-const alert = await page.$(".ctx-row.alert");
+const alert = await page.$(".ctx-tile.alert");
 if (alert) {
   await alert.click();
   await new Promise((r) => setTimeout(r, 500));

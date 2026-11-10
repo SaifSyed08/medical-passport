@@ -1,6 +1,6 @@
 {
  "persona": "sofia",
- "recordedAt": "2026-11-11T17:24:45.811Z",
+ "recordedAt": "2026-11-11T21:18:07.002Z",
  "equivalents": [
   {
    "key": "metformin",
@@ -97,7 +97,7 @@
    "speech": "/demo/sofia-0-tr.mp3",
    "stt": {
     "text": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
-    "ms": 1410
+    "ms": 539
    },
    "interpret": {
     "language": "es",
@@ -107,29 +107,29 @@
     "cleaned": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
     "translation": "Hello doctor, since last night my chest hurts a lot and it's hard for me to breathe.",
     "drugs": [],
-    "ms": 2028
+    "ms": 977
    },
    "context": [
     {
      "id": "cnd_asma",
      "level": "relevant",
      "title": "Asthma history",
-     "detail": "Mild persistent asthma since childhood, crisis in March 2025 requiring emergency care",
-     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation"
+     "detail": "Mild persistent asthma since childhood, triggered by infections and cold, ER visit for crisis in March 2025.",
+     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation."
     },
     {
      "id": "doc_urgencias_2025",
      "level": "relevant",
-     "title": "Emergency visit for asthma crisis",
-     "detail": "March 2025: dyspnea and wheezing after respiratory infection, improved with salbutamol and prednisone",
-     "why": "Previous severe asthma episode relevant to current chest symptoms"
+     "title": "Asthma ER visit 2025",
+     "detail": "Dyspnea and wheezing after respiratory infection, improved with salbutamol and prednisone.",
+     "why": "Recent severe asthma episode relevant to current chest pain and breathing difficulty."
     },
     {
      "id": "med_ventolin",
      "level": "relevant",
-     "title": "Rescue inhaler for asthma",
-     "detail": "Salbutamol inhaler, 2 puffs as needed for wheezing, up to every 4 hours",
-     "why": "Current asthma medication relevant to chest pain and breathing difficulty"
+     "title": "Salbutamol inhaler",
+     "detail": "2 puffs as needed for wheezing, up to every 4 hours.",
+     "why": "Current rescue medication for asthma symptoms."
     }
    ]
   },
@@ -140,7 +140,7 @@
    "speech": "/demo/sofia-1-tr.mp3",
    "stt": {
     "text": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
-    "ms": 706
+    "ms": 455
    },
    "interpret": {
     "language": "es",
@@ -165,7 +165,7 @@
       "local_strength": "",
       "status": "not_available_locally",
       "note_listener": "Neo-Melubrina (metamizole) is not approved or available in the US; closest options are acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
-      "note_doctor": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen or ibuprofen.",
+      "note_doctor": "Not approved in the US; closest options acetaminophen or ibuprofen.",
       "curated_note": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
       "med_id": "med_neomelubrina",
       "source": "curated"
@@ -188,36 +188,36 @@
       ],
       "local_strength": "90 mcg per puff",
       "status": "different_name",
-      "note_listener": "In the US, this medicine is called albuterol (Ventolin HFA).",
-      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff; Mexico states 100 mcg.",
+      "note_listener": "In the US, Ventolin contains albuterol and is labelled as 90 mcg per puff instead of 100 mcg.",
+      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff (ex-mouthpiece), not 100 mcg (valve).",
       "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       "med_id": "med_ventolin",
       "source": "curated"
      }
     ],
-    "ms": 2804
+    "ms": 2116
    },
    "context": [
     {
      "id": "cnd_erc",
      "level": "relevant",
-     "title": "Chronic kidney disease stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m², August 2026; potassium 5.2 mmol/L",
-     "why": "Kidney function affects safety of metamizole (Neo-Melubrina) and respiratory symptoms"
+     "title": "CKD Stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
+     "why": "Kidney disease affects medication safety and symptom evaluation"
     },
     {
      "id": "med_neomelubrina",
      "level": "relevant",
-     "title": "Neo-Melubrina (metamizol) use",
+     "title": "Metamizole Use",
      "detail": "500 mg every 8 hours as needed for pain or fever",
-     "why": "Patient took Neo-Melubrina for chest pain and breathing difficulty"
+     "why": "Patient took metamizole for chest pain; monitor for effectiveness and safety"
     },
     {
-     "id": "lab_potasio",
+     "id": "med_cozaar",
      "level": "relevant",
-     "title": "Elevated potassium level",
-     "detail": "5.2 mmol/L, August 2026",
-     "why": "High potassium may affect cardiac and respiratory status, relevant to chest pain and breathing difficulty"
+     "title": "Losartan for Hypertension",
+     "detail": "50 mg daily in the morning",
+     "why": "Current antihypertensive may interact with kidney function and potassium levels"
     }
    ]
   },
@@ -228,7 +228,7 @@
    "speech": "/demo/sofia-2-tr.mp3",
    "stt": {
     "text": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "ms": 399
+    "ms": 331
    },
    "interpret": {
     "language": "en",
@@ -254,36 +254,36 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "El nombre es el mismo en ambos países.",
+      "note_listener": "El nombre es el mismo en México y en Estados Unidos.",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 1827
+    "ms": 2761
    },
    "context": [
     {
      "id": "alg_penicilina",
      "level": "alert",
-     "title": "Penicillin Allergy",
+     "title": "Penicillin anaphylaxis",
      "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
-     "why": "Amoxicillin is a penicillin and contraindicated due to severe allergy"
+     "why": "Amoxicillin is contraindicated due to severe penicillin allergy"
     },
     {
      "id": "cnd_erc",
      "level": "alert",
-     "title": "Chronic Kidney Disease Stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L (Aug 2026)",
-     "why": "Contrast and metformin require caution due to kidney function"
+     "title": "CKD stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
+     "why": "Contrast CT scan risk due to reduced kidney function"
     },
     {
      "id": "med_glucophage",
      "level": "alert",
-     "title": "Metformin Use",
-     "detail": "850 mg twice daily for type 2 diabetes",
-     "why": "Metformin dosing and contrast use need careful monitoring due to kidney disease"
+     "title": "Metformin + contrast",
+     "detail": "Metformin 850 mg twice daily, monitor kidney function before contrast",
+     "why": "Risk of lactic acidosis with metformin and contrast in CKD"
     }
    ]
   },
@@ -294,7 +294,7 @@
    "speech": "/demo/sofia-3-tr.mp3",
    "stt": {
     "text": "Can you take ibuprofen for the pain?",
-    "ms": 1017
+    "ms": 295
    },
    "interpret": {
     "language": "en",
@@ -321,36 +321,36 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "El nombre y la dosis de ibuprofeno son iguales en México y Estados Unidos.",
+      "note_listener": "El nombre y la dosis son iguales en ambos países.",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 1382
+    "ms": 1118
    },
    "context": [
     {
      "id": "alg_penicilina",
      "level": "alert",
-     "title": "Penicillin Allergy",
+     "title": "Penicillin anaphylaxis",
      "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
-     "why": "Amoxicillin is contraindicated due to severe allergy"
+     "why": "Amoxicillin is contraindicated due to severe penicillin allergy"
     },
     {
      "id": "cnd_erc",
      "level": "alert",
-     "title": "Chronic Kidney Disease Stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L (Aug 2026)",
-     "why": "Avoid NSAIDs like ibuprofen due to kidney disease risk"
+     "title": "CKD stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
+     "why": "Avoid NSAIDs like ibuprofen due to kidney disease and hyperkalemia risk"
     },
     {
      "id": "med_glucophage",
-     "level": "alert",
-     "title": "Metformin Use",
-     "detail": "850 mg twice daily, monitor dosing with kidney function",
-     "why": "Kidney function affects metformin safety with contrast and NSAIDs"
+     "level": "relevant",
+     "title": "Metformin use",
+     "detail": "850 mg twice daily for type 2 diabetes",
+     "why": "Metformin dosing must be monitored with kidney disease and contrast use"
     }
    ]
   }

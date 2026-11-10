@@ -10,7 +10,7 @@ import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, saveEquivalents, uniqueEquivalents, type Settings } from "../lib/store";
 import { dir, langName } from "../lib/langs";
 import { TurnBlock, IdleHero } from "./Stage";
-import ContextDock, { AlertToast } from "./ContextDock";
+import ContextTiles from "./ContextDock";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
@@ -617,7 +617,6 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         </button>
       </header>
 
-      {toast && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
 
       <div className="transcript" ref={stageRef}>
         {turns.length === 0 ? (
@@ -638,9 +637,9 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       </div>
 
       <div className="bottom">
-        <ContextDock items={ctx} persona={persona} onOpen={setOpenCtx} />
-
         <footer className="controls panel">
+          {/* The record lives inside the bottom bar: one panel, so the translation keeps the screen. */}
+          <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />
           {micError && <div className="mic-error">{micError}</div>}
           {typing && (
             <form

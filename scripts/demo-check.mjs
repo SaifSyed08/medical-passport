@@ -36,7 +36,7 @@ for (;;) {
   const s = await page.evaluate(() => ({
     done: document.querySelectorAll(".turn.done").length,
     statuses: [...document.querySelectorAll(".turn")].map((t) => t.className),
-    toast: Boolean(document.querySelector(".toast")),
+    toast: Boolean(document.querySelector(".ctx-tile.flash")),
     label: document.querySelector(".orb-label")?.textContent || "",
     caption: document.querySelector(".turn.live .live-text")?.textContent || "",
   }));
@@ -62,7 +62,7 @@ const seconds = ((Date.now() - t0) / 1000).toFixed(1);
 const final = await page.evaluate(() => ({
   history: document.querySelectorAll(".turn.done").length - 1,
   current: document.querySelector(".turn.current .translation")?.textContent,
-  cards: [...document.querySelectorAll(".ctx-row")].map((c) => c.className.replace("ctx-row ", "")),
+  cards: [...document.querySelectorAll(".ctx-tile")].map((c) => c.className.replace("ctx-tile ", "")),
   label: document.querySelector(".orb-label")?.textContent,
 }));
 await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-end.png`) });

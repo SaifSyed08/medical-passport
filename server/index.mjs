@@ -221,7 +221,7 @@ app.post("/api/context", wrap(async (req, res) => {
     name: "record_context",
     schema: CONTEXT_SCHEMA,
     system: contextPrompt({ doctorLang, local }),
-    user: contextUser({ record, text, speaker: str(req.body?.speaker, 20), history, shown }),
+    user: contextUser({ record, text, speaker: str(req.body?.speaker, 20), history, shown, doctorLang }),
     model: MODELS.context,
   });
   const ids = recordIds(record);
