@@ -14,7 +14,7 @@ Demo only. The patients are fictional. Not for clinical use.
 
 ## Demo mode: press D
 
-Press **D** anywhere, or tap **Watch the demo** on the home screen. It replays a real recorded run of the persona's script: the speakers' voices, transcription, cleanup, drug-name flips, record cards, the alert banner and the spoken translation. It needs no mic, no network and no API calls, so it's safe to run on stage or to rehearse with. **Esc** or tapping the orb stops it. **Space** works the mic in a live conversation.
+Press **D** anywhere, or tap **Play demo conversation** on the home screen. It replays a real recorded run of the persona's script: the speakers' voices, transcription, cleanup, drug-name flips, record cards, the alert banner and the spoken translation. It needs no mic, no network and no API calls, so it's safe to run on stage or to rehearse with. **Esc** or tapping the orb stops it. **Space** works the mic in a live conversation.
 
 The recording lives in `public/demo/` and was made with `scripts/build-demo.mjs`. Re-record it after changing prompts or the drug table.
 

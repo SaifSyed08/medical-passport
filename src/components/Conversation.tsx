@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContextItem, DrugMention, Equivalent, Persona, Speaker, Turn } from "../lib/types";
 import { Mic, type MicState } from "../lib/mic";
-import { Player } from "../lib/player";
+import type { Player } from "../lib/player";
+import { demoVoice, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
+import { PERSONAS } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
 import * as api from "../lib/api";
 import { recordForContext, sttTerms } from "../lib/record";
@@ -53,7 +55,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const [typing, setTyping] = useState(false);
   const [draft, setDraft] = useState("");
   const [toast, setToast] = useState<ContextItem | null>(null);
-  const [demo, setDemo] = useState<"off" | "voice" | "working">("off");
+  const [demo, setDemo] = useState<"off" | "loading" | "voice" | "working">("off");
 
   const pair = useMemo<api.Pair>(
     () => ({ patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, home: persona.home, local: persona.trip.country }),
@@ -77,8 +79,6 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const stageRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef<number | undefined>(undefined);
   const demoToken = useRef<{ cancelled: boolean } | null>(null);
-  const voiceRef = useRef<HTMLAudioElement | null>(null);
-  const meterRef = useRef<{ ctx: AudioContext; analyser: AnalyserNode } | null>(null);
 
   const patch = useCallback((id: string, p: Partial<Turn> | ((t: Turn) => Partial<Turn>)) => {
     setTurns((all) => all.map((t) => (t.id === id ? { ...t, ...(typeof p === "function" ? p(t) : p) } : t)));
@@ -88,9 +88,13 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const micRef = useRef<Mic | null>(null);
   const duplexRef = useRef<ReturnType<typeof halfDuplex> | null>(null);
   const alive = useRef(true);
+  // Bumped when the demo starts or a new conversation begins: work started before that drops itself.
+  const epoch = useRef(0);
+  const fresh = (e: number) => alive.current && epoch.current === e;
   if (!playerRef.current) {
     duplexRef.current = halfDuplex(() => micRef.current);
-    playerRef.current = new Player((busy) => {
+    playerRef.current = sharedPlayer();
+    setPlayerBusyHandler((busy) => {
       setSpeaking(busy);
       duplexRef.current!.onBusy(busy);
     });
@@ -98,11 +102,12 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   /** Take a place in the speaking queue now (when the person stops talking), fill it in when the translation lands. */
   const reserveSpeech = () => {
+    const e = epoch.current;
     let release: (v: Line) => void = () => {};
     const ready = new Promise<Line>((r) => (release = r));
     speechChain.current = speechChain.current.then(async () => {
       const line = await ready;
-      if (line && speakRef.current && alive.current) await playerRef.current!.say(line.text, line.lang, line.voice);
+      if (line && speakRef.current && fresh(e)) await playerRef.current!.say(line.text, line.lang, line.voice);
     });
     return release;
   };
@@ -136,6 +141,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const runText = useCallback(
     async (turnId: string, text: string, forcedSpeaker: Speaker | null, release: (v: Line) => void, opts: { context: boolean }) => {
       const p = pairRef.current;
+      const e = epoch.current;
       const hist = history();
       const trip = loadTrip(p.home, p.local);
       const t0 = performance.now();
@@ -150,7 +156,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
             history: hist,
             shown: ctxRef.current.map((c) => c.id),
           })
-          .then((r) => alive.current && addContext(turnId, r.items))
+          .then((r) => fresh(e) && addContext(turnId, r.items))
           .catch((e) => console.warn("context failed", e));
       }
       try {
@@ -162,6 +168,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           equivalents: uniqueEquivalents(trip).slice(0, 30),
           history: hist,
         });
+        if (!fresh(e)) {
+          release(null);
+          return;
+        }
         if (r.empty) {
           setTurns((all) => all.filter((t) => t.id !== turnId));
           release(null);
@@ -181,11 +191,12 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           timings: { ...t.timings, llm: r.ms, total: Math.round((t.timings.total || 0) + performance.now() - t0) },
         }));
         release({ text: r.translation, lang: r.listenerLang, voice: r.speaker === "patient" ? "coral" : "sage" });
-      } catch (e) {
-        patch(turnId, { status: "error", error: (e as Error).message });
+      } catch (err) {
+        if (fresh(e)) patch(turnId, { status: "error", error: (err as Error).message });
         release(null);
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [addContext, patch, persona.medications, record],
   );
 
@@ -209,10 +220,11 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     async (seg: number, wav: Blob) => {
       // One caption request per utterance at a time; drop snapshots while one is out.
       if (segInFlight.current.has(seg) || segFinal.current.has(seg)) return;
+      const e = epoch.current;
       segInFlight.current.add(seg);
       try {
         const r = await api.transcribe(wav, pairRef.current, terms, { fast: true });
-        if (!r.text || segFinal.current.has(seg) || !alive.current) return;
+        if (!r.text || segFinal.current.has(seg) || !fresh(e)) return;
         const existing = segTurns.current.get(seg);
         if (existing) patch(existing, (t) => (t.status === "live" ? { raw: r.text } : {}));
         else segTurns.current.set(seg, newTurn("live", forcedRef.current, r.text));
@@ -236,6 +248,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     async (wav: Blob, _ms?: number, seg?: number) => {
       const forcedNow = forcedRef.current;
       const t0 = performance.now();
+      const e = epoch.current;
       let id = seg !== undefined ? segTurns.current.get(seg) : undefined;
       if (seg !== undefined) segFinal.current.add(seg);
       if (id) patch(id, { status: "transcribing" });
@@ -244,6 +257,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       const release = reserveSpeech();
       try {
         const stt = await api.transcribe(wav, pairRef.current, terms);
+        if (!fresh(e)) {
+          release(null);
+          return;
+        }
         if (!stt.text) {
           setTurns((all) => all.filter((t) => t.id !== id));
           release(null);
@@ -251,8 +268,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         }
         patch(id, { raw: stt.text, status: "interpreting", timings: { stt: stt.ms, total: Math.round(performance.now() - t0) } });
         await runText(id, stt.text, forcedNow, release, { context: true });
-      } catch (e) {
-        patch(id, { status: "error", error: (e as Error).message });
+      } catch (err) {
+        if (fresh(e)) patch(id, { status: "error", error: (err as Error).message });
         release(null);
       }
     },
@@ -295,7 +312,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       window.clearTimeout(toastTimer.current);
       micRef.current?.stop();
       playerRef.current?.stop();
-      voiceRef.current?.pause();
+      setPlayerBusyHandler(() => {});
+      demoVoice().el.pause();
     };
   }, []);
 
@@ -322,27 +340,13 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   /** Play one recorded voice clip, driving the orb from its real loudness. */
   const playVoice = (url: string, token: { cancelled: boolean }, onProgress?: (fraction: number) => void) =>
     new Promise<void>((resolve) => {
-      if (!voiceRef.current) {
-        voiceRef.current = new Audio();
-        voiceRef.current.setAttribute("playsinline", "");
-        try {
-          const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-          const ctx = new AC();
-          const analyser = ctx.createAnalyser();
-          analyser.fftSize = 1024;
-          ctx.createMediaElementSource(voiceRef.current).connect(analyser).connect(ctx.destination);
-          meterRef.current = { ctx, analyser };
-        } catch {
-          meterRef.current = null;
-        }
-      }
-      const el = voiceRef.current;
-      void meterRef.current?.ctx.resume();
+      const { el, meter } = demoVoice();
+      void meter?.ctx.resume().catch(() => {});
       const buf = new Float32Array(1024);
       let raf = 0;
       const tick = () => {
-        if (meterRef.current) {
-          meterRef.current.analyser.getFloatTimeDomainData(buf);
+        if (meter) {
+          meter.analyser.getFloatTimeDomainData(buf);
           let s = 0;
           for (const v of buf) s += v * v;
           const rms = Math.sqrt(s / buf.length);
@@ -374,35 +378,57 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const stopDemo = useCallback(() => {
     if (demoToken.current) demoToken.current.cancelled = true;
     demoToken.current = null;
-    voiceRef.current?.pause();
+    demoVoice().el.pause();
     playerRef.current?.stop();
     setLevel(0);
     setDemo("off");
   }, []);
 
+  /** Forget the current conversation. Anything still in flight from it is ignored when it lands. */
+  const resetConversation = () => {
+    epoch.current++;
+    segTurns.current.clear();
+    segFinal.current.clear();
+    segInFlight.current.clear();
+    speechChain.current = Promise.resolve();
+    playerRef.current!.stop();
+    setTurns([]);
+    setCtx([]);
+    setToast(null);
+    setDrug(null);
+    setOpenCtx(null);
+  };
+
   const runDemo = useCallback(async () => {
     stopDemo();
+    const token = { cancelled: false };
+    demoToken.current = token;
+    // "loading" right away, so a tap or Space during the fetch stops the demo instead of starting the mic.
+    setDemo("loading");
     micRef.current?.stop();
+    resetConversation();
     setTyping(false);
     setSheet("none");
     setMicError("");
-    const token = { cancelled: false };
-    demoToken.current = token;
     let data: { equivalents: Equivalent[]; lines: DemoLine[] };
     try {
       const r = await fetch(`/demo/${persona.id}.json`);
       if (!r.ok) throw new Error();
       data = await r.json();
     } catch {
-      setMicError(`No recorded demo for ${persona.name}.`);
+      if (demoToken.current === token) {
+        demoToken.current = null;
+        setDemo("off");
+        setMicError(`No recorded demo for ${persona.name}.`);
+      }
       return;
     }
-    setTurns([]);
-    setCtx([]);
-    setToast(null);
+    if (token.cancelled) return;
     playerRef.current!.enabled = true;
-    saveEquivalents(persona.home, persona.trip.country, data.equivalents);
-    const trip = loadTrip(persona.home, persona.trip.country);
+    // The recording was made for the persona's own language pair; file its medicine names there.
+    const base = PERSONAS.find((p) => p.id === persona.id) || persona;
+    saveEquivalents(base.home, base.trip.country, data.equivalents);
+    const trip = loadTrip(base.home, base.trip.country);
     await sleep(700);
     for (const line of data.lines) {
       if (token.cancelled) break;
@@ -429,6 +455,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       setDemo("working");
       patch(id, { raw: line.stt.text, status: "transcribing" });
       await sleep(450);
+      if (token.cancelled) break;
       patch(id, { raw: line.stt.text, status: "interpreting" });
       await sleep(Math.min(1400, 500 + line.stt.text.length * 9));
       if (token.cancelled) break;
@@ -445,14 +472,18 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       });
       window.setTimeout(() => !token.cancelled && addContext(id, line.context), 900);
       await sleep(500);
+      // Stopped while the words were landing: don't start this line's speech after the stop.
+      if (token.cancelled) break;
       if (speakRef.current) await playerRef.current!.play(line.speech);
       else await sleep(2600);
+      if (token.cancelled) break;
       await sleep(1100);
     }
     if (demoToken.current === token) {
       demoToken.current = null;
       setDemo("off");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addContext, patch, persona, stopDemo]);
 
   useEffect(() => {
@@ -468,9 +499,9 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   const orbTap = async () => {
     setMicError("");
-    if (demo !== "off") return stopDemo();
+    if (demo !== "off" || demoToken.current) return stopDemo();
     if (micState === "off" || micState === "error") {
-      playerRef.current!.unlock();
+      unlockAudio();
       await mic.start();
       return;
     }
@@ -483,6 +514,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   const orbLabel = (() => {
     if (demo === "voice") return "Demo · listening";
+    if (demo === "loading") return "Demo · starting";
     if (demo === "working") return speaking ? "Demo · speaking the translation" : "Demo · translating";
     if (micState === "off") return "Tap to start listening";
     if (micState === "starting") return "Starting the mic…";
@@ -495,7 +527,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     return "Listening";
   })();
 
-  const orbMode = demo === "voice" ? "speech" : demo === "working" ? (speaking ? "speaking" : "busy") : speaking ? "speaking" : muted ? "muted" : micState === "speech" ? "speech" : busy ? "busy" : micState;
+  const orbMode = demo === "voice" ? "speech" : demo === "working" || demo === "loading" ? (speaking ? "speaking" : "busy") : speaking ? "speaking" : muted ? "muted" : micState === "speech" ? "speech" : busy ? "busy" : micState;
 
   // Keyboard: D = demo, Space = the orb, Esc = stop the demo.
   const orbTapRef = useRef(orbTap);
@@ -517,7 +549,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const text = draft.trim();
     if (!text) return;
     setDraft("");
-    playerRef.current!.unlock();
+    unlockAudio();
     const id = uid();
     setTurns((all) => [
       ...all,
@@ -534,7 +566,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   const replay = (t: Turn) => {
     if (!t.translation) return;
-    playerRef.current!.unlock();
+    unlockAudio();
     playerRef.current!.enabled = true;
     void playerRef.current!.say(t.translation, t.listenerLang, t.speaker === "patient" ? "coral" : "sage").then(() => {
       playerRef.current!.enabled = speakRef.current;
@@ -543,10 +575,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   const newConversation = () => {
     stopDemo();
-    playerRef.current!.stop();
-    setTurns([]);
-    setCtx([]);
-    setToast(null);
+    resetConversation();
     setSheet("none");
   };
 

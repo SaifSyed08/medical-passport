@@ -150,7 +150,8 @@ export class Mic {
   }
 
   stop() {
-    this.reset();
+    // An utterance in progress is dropped, so its live caption doesn't linger.
+    this.drop();
     this.teardown();
     this.pauses.clear();
     this.set("off");

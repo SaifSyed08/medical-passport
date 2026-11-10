@@ -67,7 +67,7 @@ export function TurnBlock({
     <article className={`turn ${who || "unknown"} ${t.status} ${current ? "current" : ""}`}>
       <header className="turn-meta">
         <span className="dot" />
-        {name ? <span className="who">{name}</span> : <span className="who muted">Listening</span>}
+        {name ? <span className="who">{name}</span> : t.status === "live" || t.status === "transcribing" ? <span className="who muted">Listening</span> : null}
         {spokenLang && <span className="lang">{langName(spokenLang)}</span>}
         <span className="spacer" />
         {done && current && t.timings.total ? <span className="timing">{(t.timings.total / 1000).toFixed(1)} s</span> : null}

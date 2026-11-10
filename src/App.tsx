@@ -5,6 +5,7 @@ import { loadSettings, saveSettings, type Settings } from "./lib/store";
 import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
+import { unlockAudio } from "./lib/audioSession";
 
 export function effectivePersona(settings: Settings): Persona {
   const base = PERSONAS.find((p) => p.id === settings.personaId) || PERSONAS[0];
@@ -44,7 +45,11 @@ export default function App() {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
-      if (e.key === "d" || e.key === "D") setDemoRequest((n) => n + 1);
+      if (e.key === "d" || e.key === "D") {
+        // Unlock audio inside the key press itself: iOS/Chrome block playback that starts later otherwise.
+        unlockAudio();
+        setDemoRequest((n) => n + 1);
+      }
     };
     window.addEventListener("keydown", k);
     return () => window.removeEventListener("keydown", k);
@@ -59,10 +64,14 @@ export default function App() {
           settings={settings}
           setSettings={setSettings}
           onStart={() => {
+            unlockAudio();
             setDemoRequest(0);
             setScreen("talk");
           }}
-          onDemo={() => setDemoRequest((n) => n + 1)}
+          onDemo={() => {
+            unlockAudio();
+            setDemoRequest((n) => n + 1);
+          }}
         />
       ) : (
         <Conversation
