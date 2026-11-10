@@ -1,31 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type { DrugMention, Persona, Turn } from "../lib/types";
-import { dir, langNative } from "../lib/langs";
+import { dir, langName } from "../lib/langs";
 import { Reveal, StatusBadge, swapLabel } from "./bits";
+import Icon from "./Icon";
 
-const SPEAK: Record<string, string> = {
-  es: "Hable.", en: "Speak.", ja: "話してください。", fr: "Parlez.", de: "Sprechen Sie.", it: "Parli.", pt: "Fale.",
-  zh: "请说。", ko: "말씀하세요.", hi: "बोलिए।", ur: "بولیے۔", ar: "تكلم.", vi: "Hãy nói.", ru: "Говорите.",
-  tl: "Magsalita.", tr: "Konuşun.", fa: "صحبت کنید.",
+const SPEAK_IN: Record<string, string> = {
+  es: "Hable en español", en: "Speak in English", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
+  it: "Parli in italiano", pt: "Fale em português", zh: "请说中文", ko: "한국어로 말씀하세요", hi: "हिंदी में बोलिए", ur: "اردو میں بولیں",
+  ar: "تحدث بالعربية", vi: "Hãy nói tiếng Việt", ru: "Говорите по-русски", tl: "Magsalita sa Tagalog", tr: "Türkçe konuşun", fa: "فارسی صحبت کنید",
 };
 
-/** Before anyone talks: "Hable. / Speak." trading places, big. */
+/** Before anyone talks: one line per language, nothing else. */
 export function IdleHero({ persona, live }: { persona: Persona; live: boolean }) {
-  const langs = [persona.language, persona.trip.doctorLanguage];
-  const [i, setI] = useState(0);
-  useEffect(() => {
-    const t = setInterval(() => setI((n) => n + 1), 2200);
-    return () => clearInterval(t);
-  }, []);
-  const lang = langs[i % 2];
   return (
     <div className="idle">
-      <div className="idle-word" key={i} lang={lang} dir={dir(lang)} data-who={i % 2 ? "clinician" : "patient"}>
-        {SPEAK[lang] || "Speak."}
+      <div className={`idle-mark ${live ? "live" : ""}`}>
+        <Icon name="mic" size={26} />
       </div>
-      <p className="idle-sub">
-        {live ? "Listening. " : ""}Either of you can talk. It knows who from the language, and the doctor sees what matters from {persona.name.split(" ")[0]}'s record.
+      <p className="idle-line patient" lang={persona.language} dir={dir(persona.language)}>
+        {SPEAK_IN[persona.language] || "Speak"}
       </p>
+      <p className="idle-line clinician" lang={persona.trip.doctorLanguage} dir={dir(persona.trip.doctorLanguage)}>
+        {SPEAK_IN[persona.trip.doctorLanguage] || "Speak"}
+      </p>
+      <p className="idle-hint">{live ? "Listening" : "Tap the microphone to begin"}</p>
     </div>
   );
 }
@@ -33,23 +31,24 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
 function sizeFor(text: string) {
   // A CJK character takes about two Latin letters of width.
   const n = [...text].reduce((w, ch) => w + (/[　-鿿가-힯＀-￯]/.test(ch) ? 1.9 : 1), 0);
-  if (n < 48) return "xl";
-  if (n < 95) return "lg";
-  if (n < 160) return "md";
+  if (n < 60) return "lg";
+  if (n < 130) return "md";
   return "sm";
 }
 
 const normSpace = (s: string) => s.replace(/[\s.,!?¡¿;:"“”'’、。！？-]+/g, " ").trim().toLowerCase();
 
-export function TurnView({
+export function TurnBlock({
   turn: t,
   persona,
+  current,
   onDrug,
   onFlip,
   onReplay,
 }: {
   turn: Turn;
   persona: Persona;
+  current: boolean;
   onDrug: (d: DrugMention) => void;
   onFlip: () => void;
   onReplay: () => void;
@@ -61,48 +60,79 @@ export function TurnView({
   // In the speaker's own words, drug names turn into what the listener's side calls them.
   const swapToward = who === "clinician" ? "home" : "local";
   const cleanedDiffers = t.status === "done" && t.raw && normSpace(t.cleaned) !== normSpace(t.raw);
-  const whoLabel = who === "clinician" ? "Doctor" : who === "patient" ? persona.name.split(" ")[0] : "Listening";
+  const name = who === "clinician" ? "Clinician" : who === "patient" ? persona.name.split(" ")[0] : "";
+  const done = t.status === "done";
 
   return (
-    <article className={`turn ${who || "unknown"} ${t.status}`}>
-      <div className="turn-label">
-        <button className="who-pill" onClick={t.status === "done" ? onFlip : undefined} title={t.status === "done" ? "Wrong person? Tap to swap" : undefined}>
-          <span className="dot" />
-          {whoLabel}
-          {spokenLang && <span className="lang"> · {langNative(spokenLang)}</span>}
-        </button>
-        {t.status === "done" && t.timings.total ? <span className="timing">{(t.timings.total / 1000).toFixed(1)}s</span> : null}
-      </div>
+    <article className={`turn ${who || "unknown"} ${t.status} ${current ? "current" : ""}`}>
+      <header className="turn-meta">
+        <span className="dot" />
+        {name ? <span className="who">{name}</span> : <span className="who muted">Listening</span>}
+        {spokenLang && <span className="lang">{langName(spokenLang)}</span>}
+        <span className="spacer" />
+        {done && current && t.timings.total ? <span className="timing">{(t.timings.total / 1000).toFixed(1)} s</span> : null}
+        {done && (
+          <button className="mini" onClick={onFlip} title="Wrong speaker? Swap" aria-label="Swap speaker">
+            <Icon name="swap" size={15} />
+          </button>
+        )}
+        {done && current && (
+          <button className="mini" onClick={onReplay} aria-label="Play again">
+            <Icon name="speaker" size={15} />
+          </button>
+        )}
+      </header>
 
-      {t.status === "transcribing" && (
-        <div className="hearing" aria-label="Hearing">
-          {Array.from({ length: 5 }, (_, i) => (
-            <span key={i} style={{ animationDelay: `${i * 0.12}s` }} />
-          ))}
-        </div>
-      )}
-
-      {t.raw && t.status !== "done" && t.status !== "error" && (
-        <p className="said raw-live" dir={dir(spokenLang)} lang={spokenLang}>
-          <Reveal text={t.raw} lang={spokenLang} step={60} />
+      {(t.status === "live" || t.status === "transcribing") && (
+        <p className="live-text" dir={dir(spokenLang)} lang={spokenLang}>
+          {t.raw || <span className="muted">…</span>}
+          <span className="caret" />
         </p>
       )}
 
       {t.status === "interpreting" && (
-        <div className="translating">
-          <span className="shimmer-bar" />
-          <span className="shimmer-bar short" />
-        </div>
+        <>
+          <p className="original" dir={dir(spokenLang)}>
+            {t.raw}
+          </p>
+          <div className="pending">
+            <span />
+            <span />
+          </div>
+        </>
       )}
 
-      {t.status === "done" && (
+      {done && (
         <>
-          <p className="said" dir={dir(spokenLang)} lang={spokenLang}>
-            <Reveal key={t.cleaned} text={t.cleaned} lang={spokenLang} drugs={t.drugs} field="mentioned" swap={swapToward} onDrug={onDrug} step={45} budget={900} />
+          <p className="original" dir={dir(spokenLang)} lang={spokenLang}>
+            {current ? <Reveal key={t.cleaned} text={t.cleaned} lang={spokenLang} drugs={t.drugs} field="mentioned" swap={swapToward} onDrug={onDrug} step={30} budget={500} /> : t.cleaned}
           </p>
-          {cleanedDiffers && (
-            <button className="cleaned-tag" onClick={() => setShowRaw((v) => !v)}>
-              ✦ cleaned up{showRaw ? "" : " · see what was said"}
+          <p className={`translation ${current ? sizeFor(t.translation) : "past"}`} dir={dir(listenerLang)} lang={listenerLang}>
+            {current ? (
+              <Reveal key={t.translation} text={t.translation} lang={listenerLang} drugs={t.drugs} field="translated" onDrug={onDrug} start={250} step={70} budget={1400} />
+            ) : (
+              <Reveal text={t.translation} lang={listenerLang} drugs={t.drugs} field="translated" onDrug={onDrug} step={0} budget={0} />
+            )}
+          </p>
+          {current && t.drugs.length > 0 && (
+            <ul className="med-notes">
+              {t.drugs.map((d) => (
+                <li key={d.key}>
+                  <button onClick={() => onDrug(d)}>
+                    <StatusBadge status={d.status} compact />
+                    <span>
+                      <b>{d.mentioned || d.home_name}</b>
+                      {d.status === "not_available_locally" && who !== "clinician" ? " is not sold here" : ` → ${swapLabel(d, swapToward)}`}
+                    </span>
+                    <Icon name="chevron" size={14} className="muted" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          {current && cleanedDiffers && (
+            <button className="link small" onClick={() => setShowRaw((v) => !v)}>
+              {showRaw ? "Hide original speech" : "Cleaned up · show original speech"}
             </button>
           )}
           {showRaw && (
@@ -110,54 +140,10 @@ export function TurnView({
               {t.raw}
             </p>
           )}
-          <div className="to-line">
-            <span className="to-arrow" />
-            <span className="to-lang">{langNative(listenerLang)}</span>
-            <button className="replay" onClick={onReplay} aria-label="Say it again">
-              ▶
-            </button>
-          </div>
-          <div className={`translation ${sizeFor(t.translation)}`} dir={dir(listenerLang)} lang={listenerLang}>
-            <p>
-              <Reveal key={t.translation} text={t.translation} lang={listenerLang} drugs={t.drugs} field="translated" onDrug={onDrug} start={500} step={95} budget={2200} />
-            </p>
-          </div>
-          {t.drugs.length > 0 && (
-            <div className="drug-chips">
-              {t.drugs.map((d, i) => (
-                <button key={d.key} className={`drug-chip ${d.status}`} onClick={() => onDrug(d)} style={{ animationDelay: `${1600 + i * 140}ms` }}>
-                  <StatusBadge status={d.status} compact />
-                  <span className="chip-from">{d.mentioned || d.home_name}</span>
-                  <span aria-hidden>→</span>
-                  <strong>{d.status === "not_available_locally" && who !== "clinician" ? "not sold here" : swapLabel(d, swapToward)}</strong>
-                  {d.cached && (
-                    <span className="saved" title="Saved on this phone">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
         </>
       )}
 
-      {t.status === "error" && (
-        <p className="error-text">
-          Couldn't translate that. <small>{t.error}</small>
-        </p>
-      )}
+      {t.status === "error" && <p className="error-text small">Couldn't translate this. {t.error}</p>}
     </article>
-  );
-}
-
-/** An earlier turn, shrunk to one line of its translation. */
-export function HistoryLine({ turn: t }: { turn: Turn }) {
-  if (t.status !== "done") return null;
-  return (
-    <div className={`history-line ${t.speaker}`} dir={dir(t.listenerLang)}>
-      <span className="dot" />
-      <span>{t.translation}</span>
-    </div>
   );
 }

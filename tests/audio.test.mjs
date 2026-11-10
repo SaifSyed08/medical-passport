@@ -112,6 +112,27 @@ test("start() on a live graph whose stream is gone reopens the stream", async ()
   assert.ok(mic.stream);
 });
 
+test("live caption snapshots arrive while talking and share the final utterance's id", () => {
+  const { mic } = fakeMic();
+  const partials = [];
+  const finals = [];
+  const discards = [];
+  mic.h.onPartial = (seg, wav) => partials.push({ seg, size: wav.size });
+  mic.h.onUtterance = (_wav, _ms, seg) => finals.push(seg);
+  mic.h.onDiscard = (seg) => discards.push(seg);
+  for (let i = 0; i < 20; i++) mic.frame(new Float32Array(320)); // room noise floor
+  for (let i = 0; i < 150; i++) mic.frame(LOUD()); // 3 s of speech
+  assert.ok(partials.length >= 2, `expected live snapshots, got ${partials.length}`);
+  assert.ok(partials[1].size > partials[0].size, "each snapshot should hold more audio");
+  for (let i = 0; i < 60; i++) mic.frame(new Float32Array(320)); // 1.2 s quiet ends it
+  assert.deepEqual(finals, [partials[0].seg]);
+  assert.equal(discards.length, 0);
+  // A blip too short to be speech is discarded, so its caption can be removed.
+  for (let i = 0; i < 5; i++) mic.frame(LOUD());
+  for (let i = 0; i < 60; i++) mic.frame(new Float32Array(320));
+  assert.equal(discards.length, 1);
+});
+
 test("unlock() does not cut off a line that is playing", async () => {
   const player = new Player(() => {});
   player.unlock();

@@ -3,6 +3,7 @@
 A patient-aware medical interpreter for travelers. It's a phone web app. The patient hands it to a doctor who doesn't speak their language, and then they both just talk.
 
 - **Hears who's talking from the language.** No buttons. Spanish means the patient is talking, English means the doctor. There's a manual Patient / Doctor override for the odd case.
+- **Shows live captions while someone is talking.** About once a second, the audio so far goes to `gpt-4o-mini-transcribe` and the caption grows. When they stop, `gpt-4o-transcribe` makes the final pass.
 - **Cleans up speech before translating.** Fillers, stutters and self-corrections come out ("two, no, three pills" becomes "three pills"). The meaning never changes. Tap "show what was heard" to see the raw text.
 - **Swaps medicine names live.** A medicine name lights up in the transcript and turns into the name used where the patient is now: *Ventolin → albuterol*, *Neo-Melubrina → metamizole (not sold in the US)*, *ProAir → サルブタモール*. The translation the doctor hears uses the local name too.
 - **Brings up the patient's record while they talk.** It shows the record items that matter right now, in the doctor's language, including ones the patient wouldn't think to mention. If the doctor says "amoxicillin" and the patient had penicillin anaphylaxis, a red alert appears. A CT with contrast brings up eGFR 44 and the note to avoid contrast.

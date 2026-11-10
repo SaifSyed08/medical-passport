@@ -31,13 +31,19 @@ let shot = 1;
 const seen = new Set();
 const deadline = Date.now() + 120_000;
 let toastShot = false;
+let captionShot = "";
 for (;;) {
   const s = await page.evaluate(() => ({
-    done: document.querySelectorAll(".turn.done").length + document.querySelectorAll(".history-line").length,
+    done: document.querySelectorAll(".turn.done").length,
     statuses: [...document.querySelectorAll(".turn")].map((t) => t.className),
     toast: Boolean(document.querySelector(".toast")),
     label: document.querySelector(".orb-label")?.textContent || "",
+    caption: document.querySelector(".turn.live .live-text")?.textContent || "",
   }));
+  if (!captionShot && s.caption.length > 18) {
+    captionShot = s.caption;
+    await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-live-caption.png`) });
+  }
   const key = `${s.done}`;
   if (!seen.has(key) && s.statuses.some((c) => c.includes("done"))) {
     seen.add(key);
@@ -54,9 +60,9 @@ for (;;) {
 }
 const seconds = ((Date.now() - t0) / 1000).toFixed(1);
 const final = await page.evaluate(() => ({
-  history: document.querySelectorAll(".history-line").length,
-  current: document.querySelector(".turn .translation p")?.textContent,
-  cards: [...document.querySelectorAll(".ctx-card")].map((c) => c.className.replace("ctx-card ", "")),
+  history: document.querySelectorAll(".turn.done").length - 1,
+  current: document.querySelector(".turn.current .translation")?.textContent,
+  cards: [...document.querySelectorAll(".ctx-row")].map((c) => c.className.replace("ctx-row ", "")),
   label: document.querySelector(".orb-label")?.textContent,
 }));
 await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-end.png`) });
@@ -65,6 +71,7 @@ await browser.close();
 const fails = [];
 if (final.history + 1 !== data.lines.length) fails.push(`expected ${data.lines.length} turns, saw ${final.history + 1}`);
 if (!final.cards.length) fails.push("no context cards");
+if (!captionShot) fails.push("no live caption while the recording played");
 if (persona === "sofia" && !toastShot) fails.push("no alert toast");
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);
 console.log(`demo ran ${seconds}s · ${final.history + 1} turns · ${final.cards.length} cards · alert toast ${toastShot} · last: ${final.current}`);

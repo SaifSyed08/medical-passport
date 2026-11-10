@@ -3,6 +3,8 @@ const BASE = "https://api.openai.com/v1";
 
 export const MODELS = {
   stt: process.env.STT_MODEL || "gpt-4o-transcribe",
+  /** Live captions while someone is still talking: speed over accuracy; the final pass uses `stt`. */
+  sttFast: process.env.STT_FAST_MODEL || "gpt-4o-mini-transcribe",
   llm: process.env.LLM_MODEL || "gpt-4.1",
   context: process.env.CONTEXT_MODEL || "gpt-4.1-mini",
   tts: process.env.TTS_MODEL || "gpt-4o-mini-tts",
@@ -33,10 +35,10 @@ async function fail(res, what) {
 }
 
 /** Speech to text. `audio` is a Buffer holding a WAV file. */
-export async function transcribe(audio, { prompt, mime = "audio/wav", filename = "utterance.wav" } = {}) {
+export async function transcribe(audio, { prompt, mime = "audio/wav", filename = "utterance.wav", model = MODELS.stt } = {}) {
   const fd = new FormData();
   fd.append("file", new Blob([audio], { type: mime }), filename);
-  fd.append("model", MODELS.stt);
+  fd.append("model", model);
   fd.append("response_format", "json");
   if (prompt) fd.append("prompt", prompt);
   const res = await fetch(`${BASE}/audio/transcriptions`, {

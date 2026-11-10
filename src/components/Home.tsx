@@ -2,9 +2,10 @@ import { useCallback, useEffect, useState } from "react";
 import { PERSONAS } from "../data/personas";
 import type { Equivalent, Persona } from "../lib/types";
 import { equivalents } from "../lib/api";
-import { COUNTRIES, LANGS, country, dir, langNative } from "../lib/langs";
+import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
 import { loadTrip, norm, saveEquivalents, type Settings, type TripCache } from "../lib/store";
-import { Sheet, StatusBadge, Tag } from "./bits";
+import { Sheet, StatusBadge } from "./bits";
+import Icon from "./Icon";
 import RecordSheet from "./RecordSheet";
 
 type Props = {
@@ -15,12 +16,13 @@ type Props = {
   onDemo: () => void;
 };
 
-const HELLO: Record<string, string> = {
-  es: "Hola", en: "Hi", ja: "こんにちは", fr: "Bonjour", de: "Hallo", it: "Ciao", pt: "Olá", zh: "你好", ko: "안녕하세요",
-  hi: "नमस्ते", ur: "سلام", ar: "مرحبا", vi: "Xin chào", ru: "Привет", tl: "Kumusta", tr: "Merhaba", fa: "سلام",
-};
+function age(dob: string) {
+  const d = new Date(dob);
+  const n = new Date();
+  return n.getFullYear() - d.getFullYear() - (n < new Date(n.getFullYear(), d.getMonth(), d.getDate()) ? 1 : 0);
+}
 
-export default function Home({ persona, settings, setSettings, onStart, onDemo }: Props) {
+export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
   const home = persona.home;
   const local = persona.trip.country;
   const [trip, setTrip] = useState<TripCache>(() => loadTrip(home, local));
@@ -44,10 +46,6 @@ export default function Home({ persona, settings, setSettings, onStart, onDemo }
   const sameCountry = home === local;
   const eqFor = (name: string): Equivalent | undefined => trip.items[norm(name)];
   const ready = persona.medications.filter((m) => eqFor(m.name)).length;
-  const renamed = persona.medications.filter((m) => {
-    const e = eqFor(m.name);
-    return e && e.status !== "same_name";
-  }).length;
 
   useEffect(() => {
     const t = loadTrip(home, local);
@@ -56,147 +54,117 @@ export default function Home({ persona, settings, setSettings, onStart, onDemo }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [home, local, persona.id]);
 
-  const first = persona.name.split(" ")[0];
-  const severe = persona.allergies.filter((a) => a.severity === "severe").length;
+  const severe = persona.allergies.filter((a) => a.severity === "severe");
 
   return (
     <main className="home">
       <header className="home-top">
         <Wordmark />
-        <button className="icon-btn glass" onClick={() => setSheet("settings")} aria-label="Settings">
-          <GearIcon />
+        <button className="icon-btn" onClick={() => setSheet("settings")} aria-label="Settings">
+          <Icon name="settings" />
         </button>
       </header>
 
-      <section className="hero">
-        <h1 className="hello" dir={dir(persona.language)} lang={persona.language}>
-          {HELLO[persona.language] || "Hi"}, {first}.
-        </h1>
-        <p className="hero-sub">
-          Your interpreter in {persona.trip.city}. Hand the phone to the doctor and just talk.
-        </p>
+      <section className="home-intro">
+        <h1>Medical interpreter</h1>
+        <p>Speak naturally. Each person hears the other in their own language.</p>
       </section>
 
-      <button className="passport" onClick={() => setSheet("record")}>
-        <span className="pp-shine" aria-hidden />
-        <span className="pp-top">
+      <button className="panel patient-card" onClick={() => setSheet("record")}>
+        <span className="pc-head">
           <span className="avatar">{persona.initials}</span>
-          <span className="pp-name">
+          <span className="pc-name">
             <strong>{persona.name}</strong>
-            <small>
-              {persona.dob} · blood {persona.bloodType}
-            </small>
+            <span>
+              {age(persona.dob)} years · blood type {persona.bloodType}
+            </span>
           </span>
-          <span className="pp-mark">TESSERA</span>
+          <Icon name="chevron" className="muted" />
         </span>
-        <span className="pp-route">
-          <span className="pp-end">
-            <Tag code={home} />
-            <small>{langNative(persona.language)}</small>
+        <span className="pc-rows">
+          <span className="pc-row">
+            <span className="pc-label">Patient</span>
+            <span>
+              {langName(persona.language)} · from {country(home).name}
+            </span>
           </span>
-          <span className="route-line" aria-hidden>
-            <span className="route-dot" />
+          <span className="pc-row">
+            <span className="pc-label">Clinician</span>
+            <span>
+              {langName(persona.trip.doctorLanguage)} · {persona.trip.city}
+            </span>
           </span>
-          <span className="pp-end right">
-            <Tag code={local} />
-            <small>{langNative(persona.trip.doctorLanguage)}</small>
+          <span className="pc-row">
+            <span className="pc-label">Medicines</span>
+            <span className={prep === "busy" ? "muted" : ""}>
+              {sameCountry ? "No changes needed" : prep === "busy" ? "Matching local names…" : `${ready} of ${persona.medications.length} matched to local names`}
+            </span>
           </span>
-        </span>
-        <span className="pp-stats">
-          <span className={`stat ${prep === "busy" ? "busy" : ""}`}>
-            {sameCountry ? "Medicines: same country" : prep === "busy" ? "Saving local medicine names…" : `✓ ${ready}/${persona.medications.length} medicines ready offline`}
-          </span>
-          {renamed > 0 && <span className="stat">⇄ {renamed} named differently here</span>}
-          {severe > 0 && <span className="stat danger">⚠ {severe} severe allerg{severe > 1 ? "ies" : "y"}</span>}
+          {severe.length > 0 && (
+            <span className="pc-row">
+              <span className="pc-label">Allergy</span>
+              <span className="danger-text">{severe.map((a) => a.substance.replace(/\s*\(.*\)/, "")).join(", ")}</span>
+            </span>
+          )}
         </span>
       </button>
 
-      <div className="how">
-        <div>
-          <b aria-hidden>⇄</b>
-          <strong>Just talk</strong>
-          Knows who's speaking.
-        </div>
-        <div>
-          <b aria-hidden>℞</b>
-          <strong>Local medicines</strong>
-          Names switch to what's sold here.
-        </div>
-        <div>
-          <b aria-hidden>!</b>
-          <strong>Warns the doctor</strong>
-          Allergies and labs, when they matter.
-        </div>
-      </div>
-
-      <div className="start-wrap">
-        <button className="start-orb" onClick={onStart} aria-label="Start conversation">
-          <span className="start-glow" aria-hidden />
-          <span className="start-core">
-            <MicGlyph />
-            <span>Start</span>
-          </span>
+      <div className="home-actions">
+        <button className="btn-primary" onClick={onStart}>
+          <Icon name="mic" />
+          Start interpreting
         </button>
-        <button className="demo-link" onClick={onDemo}>
-          ▶ Watch the demo <kbd>D</kbd>
+        <button className="btn-quiet" onClick={onDemo}>
+          <Icon name="play" size={16} />
+          Play demo conversation <kbd>D</kbd>
         </button>
       </div>
 
-      <p className="fine center">Demo with fictional patients · not for clinical use</p>
+      <p className="fine center">Demo with fictional patients. Not for clinical use.</p>
 
       {sheet === "record" && <RecordSheet persona={persona} onClose={() => setSheet("none")} />}
       {sheet === "settings" && (
         <Sheet title="Settings" onClose={() => setSheet("none")}>
-          <div className="field">
-            <div className="eyebrow">Patient</div>
-            <div className="persona-switch">
-              {PERSONAS.map((p) => (
-                <button key={p.id} className={`persona ${p.id === persona.id ? "on" : ""}`} onClick={() => setSettings((s) => ({ ...s, personaId: p.id }))}>
-                  <span className="avatar sm">{p.initials}</span>
+          <div className="group">
+            <div className="group-title">Patient</div>
+            {PERSONAS.map((p) => (
+              <button key={p.id} className="row" onClick={() => setSettings((s) => ({ ...s, personaId: p.id }))}>
+                <span className="avatar sm">{p.initials}</span>
+                <span className="row-main">
+                  <strong>{p.name}</strong>
                   <span>
-                    <strong>{p.name}</strong>
-                    <small>
-                      {p.home} → {p.trip.country}
-                    </small>
+                    {langName(p.language)} → {langName(p.trip.doctorLanguage)}
                   </span>
-                </button>
-              ))}
-            </div>
+                </span>
+                {p.id === persona.id && <Icon name="check" className="accent" />}
+              </button>
+            ))}
           </div>
           <LanguageFields persona={persona} setSettings={setSettings} />
-          <div className="field">
-            <div className="row-between">
-              <div className="eyebrow">
-                Medicines in {country(local).name}
-              </div>
+          <div className="group">
+            <div className="group-title row-between">
+              <span>Medicines in {country(local).name}</span>
               {!sameCountry && (
-                <button className="chip-btn" onClick={prepare} disabled={prep === "busy"}>
-                  {prep === "busy" ? "Saving…" : "Refresh"}
+                <button className="link" onClick={prepare} disabled={prep === "busy"}>
+                  {prep === "busy" ? "Matching…" : "Refresh"}
                 </button>
               )}
             </div>
             {prepError && <p className="error-text small">{prepError}</p>}
-            <ul className="med-list">
-              {persona.medications.map((m) => {
-                const eq = eqFor(m.name);
-                return (
-                  <li key={m.id}>
-                    <span className="med-home">
-                      <strong>{m.name}</strong>
-                      <small>{m.generic}</small>
+            {persona.medications.map((m) => {
+              const eq = eqFor(m.name);
+              return (
+                <div key={m.id} className="row static">
+                  <span className="row-main">
+                    <strong>{m.name}</strong>
+                    <span className={eq?.status === "not_available_locally" ? "danger-text" : ""}>
+                      {!eq ? "…" : eq.status === "not_available_locally" ? `Not sold here (${eq.generic})` : `${eq.local_name}${eq.local_brands[0] ? ` · ${eq.local_brands[0]}` : ""}`}
                     </span>
-                    <span className="med-arrow">→</span>
-                    <span className="med-local">
-                      <strong className={eq?.status === "not_available_locally" ? "danger-text" : ""}>
-                        {!eq ? "…" : eq.status === "not_available_locally" ? "Not sold here" : eq.local_name}
-                      </strong>
-                      <small>{eq ? (eq.status === "not_available_locally" ? eq.generic : eq.local_brands.slice(0, 2).join(", ")) : ""}</small>
-                    </span>
-                    {eq && <StatusBadge status={eq.status} compact />}
-                  </li>
-                );
-              })}
-            </ul>
+                  </span>
+                  {eq && <StatusBadge status={eq.status} compact />}
+                </div>
+              );
+            })}
           </div>
         </Sheet>
       )}
@@ -210,37 +178,36 @@ function LanguageFields({ persona, setSettings }: { persona: Persona; setSetting
       const cur = s.pairs[persona.id] || { patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, local: persona.trip.country };
       return { ...s, pairs: { ...s.pairs, [persona.id]: { ...cur, ...patch } } };
     });
+  const select = (value: string, onChange: (v: string) => void, options: [string, string][]) => (
+    <select value={value} onChange={(e) => onChange(e.target.value)}>
+      {options.map(([c, label]) => (
+        <option key={c} value={c}>
+          {label}
+        </option>
+      ))}
+    </select>
+  );
+  const langs = Object.entries(LANGS).map(([c, l]) => [c, l.name] as [string, string]);
   return (
-    <div className="field grid3">
-      <label>
-        <span className="eyebrow">Patient speaks</span>
-        <select value={persona.language} onChange={(e) => setPair({ patientLang: e.target.value })}>
-          {Object.entries(LANGS).map(([c, l]) => (
-            <option key={c} value={c}>
-              {l.native}
-            </option>
-          ))}
-        </select>
+    <div className="group">
+      <div className="group-title">Languages</div>
+      <label className="row static">
+        <span className="row-main">
+          <strong>Patient speaks</strong>
+        </span>
+        {select(persona.language, (v) => setPair({ patientLang: v }), langs)}
       </label>
-      <label>
-        <span className="eyebrow">Doctor speaks</span>
-        <select value={persona.trip.doctorLanguage} onChange={(e) => setPair({ doctorLang: e.target.value })}>
-          {Object.entries(LANGS).map(([c, l]) => (
-            <option key={c} value={c}>
-              {l.native}
-            </option>
-          ))}
-        </select>
+      <label className="row static">
+        <span className="row-main">
+          <strong>Clinician speaks</strong>
+        </span>
+        {select(persona.trip.doctorLanguage, (v) => setPair({ doctorLang: v }), langs)}
       </label>
-      <label>
-        <span className="eyebrow">Now in</span>
-        <select value={persona.trip.country} onChange={(e) => setPair({ local: e.target.value })}>
-          {Object.entries(COUNTRIES).map(([c, x]) => (
-            <option key={c} value={c}>
-              {x.name}
-            </option>
-          ))}
-        </select>
+      <label className="row static">
+        <span className="row-main">
+          <strong>Current country</strong>
+        </span>
+        {select(persona.trip.country, (v) => setPair({ local: v }), Object.entries(COUNTRIES).map(([c, x]) => [c, x.name] as [string, string]))}
       </label>
     </div>
   );
@@ -249,38 +216,13 @@ function LanguageFields({ persona, setSettings }: { persona: Persona; setSetting
 export function Wordmark() {
   return (
     <span className="wordmark">
-      <svg viewBox="0 0 32 32" aria-hidden>
-        <defs>
-          <linearGradient id="wm" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#ff8a5b" />
-            <stop offset="1" stopColor="#6c7bff" />
-          </linearGradient>
-        </defs>
-        <rect x="2" y="2" width="12" height="12" rx="3.5" fill="url(#wm)" />
-        <rect x="18" y="2" width="12" height="12" rx="3.5" fill="currentColor" opacity=".9" />
-        <rect x="2" y="18" width="12" height="12" rx="3.5" fill="currentColor" opacity=".9" />
-        <rect x="18" y="18" width="12" height="12" rx="6" fill="url(#wm)" />
+      <svg viewBox="0 0 28 28" aria-hidden>
+        <rect x="1" y="1" width="12" height="12" rx="3.5" fill="var(--accent)" />
+        <rect x="15" y="1" width="12" height="12" rx="3.5" fill="var(--accent)" opacity=".35" />
+        <rect x="1" y="15" width="12" height="12" rx="3.5" fill="var(--accent)" opacity=".35" />
+        <rect x="15" y="15" width="12" height="12" rx="6" fill="var(--accent)" />
       </svg>
-      <span>tessera</span>
+      Tessera
     </span>
-  );
-}
-
-function GearIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden>
-      <path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="16" cy="7" r="2.4" fill="none" stroke="currentColor" strokeWidth="2" />
-      <circle cx="10" cy="17" r="2.4" fill="none" stroke="currentColor" strokeWidth="2" />
-    </svg>
-  );
-}
-
-export function MicGlyph() {
-  return (
-    <svg viewBox="0 0 24 24" width="30" height="30" aria-hidden>
-      <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
-      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" />
-    </svg>
   );
 }

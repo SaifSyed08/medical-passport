@@ -9,9 +9,17 @@ export type MicState = "off" | "starting" | "listening" | "speech" | "paused" | 
 type Handlers = {
   onState: (s: MicState) => void;
   onLevel: (level: number) => void;
-  onUtterance: (wav: Blob, ms: number) => void;
+  /** A finished utterance. `seg` matches the onPartial calls made while it was being spoken. */
+  onUtterance: (wav: Blob, ms: number, seg: number) => void;
   onError: (message: string) => void;
+  /** Audio so far, about once a second while someone is still talking: for live captions. */
+  onPartial?: (seg: number, wav: Blob) => void;
+  /** The utterance in progress was dropped (too short, paused, mode change). */
+  onDiscard?: (seg: number) => void;
 };
+
+const PARTIAL_FIRST = 40; // first live caption after 0.8 s of speech
+const PARTIAL_EVERY = 50; // then every 1 s
 
 const FRAME_MS = 20;
 const PREROLL = 15; // 300 ms kept from before speech starts
@@ -44,6 +52,8 @@ export class Mic {
   private silent = 0;
   private voiced = 0;
   private pushing = false;
+  private segId = 0;
+  private partialAt = 0;
   private lastLevelAt = 0;
   private restoring: Promise<void> | null = null;
 
@@ -152,7 +162,7 @@ export class Mic {
     if (was) return;
     // A tap-to-talk recording in progress is sent rather than lost.
     if (this.pushing) this.endPush();
-    else this.reset();
+    else this.drop();
     if (this.state !== "off" && this.state !== "error") this.set("paused");
     if (this.releaseWhilePaused && reason === "speaking") this.closeInput();
   }
@@ -181,7 +191,7 @@ export class Mic {
 
   setMode(m: MicMode) {
     this.mode = m;
-    this.reset();
+    this.drop();
     if (this.state === "speech") this.set("listening");
   }
 
@@ -189,7 +199,15 @@ export class Mic {
     if (this.pauses.size || !this.ctx) return;
     this.reset();
     this.pushing = true;
+    this.segId++;
     this.set("speech");
+  }
+
+  /** Throw away an utterance in progress, telling the app so its live caption goes away. */
+  private drop() {
+    const had = this.state === "speech" && this.seg.length > 0;
+    this.reset();
+    if (had) this.h.onDiscard?.(this.segId);
   }
 
   endPush() {
@@ -216,6 +234,16 @@ export class Mic {
     this.silent = 0;
     this.voiced = 0;
     this.pushing = false;
+    this.partialAt = 0;
+  }
+
+  private maybePartial() {
+    if (!this.h.onPartial) return;
+    const due = this.partialAt ? this.partialAt + PARTIAL_EVERY : PARTIAL_FIRST;
+    if (this.seg.length < due) return;
+    this.partialAt = this.seg.length;
+    const wav = this.encode(this.seg);
+    if (wav) this.h.onPartial(this.segId, wav);
   }
 
   private frame(f: Float32Array) {
@@ -233,6 +261,7 @@ export class Mic {
       if (this.pushing) {
         this.seg.push(f);
         if (this.seg.length >= MAX_FRAMES) this.endPush();
+        else this.maybePartial();
       }
       return;
     }
@@ -251,6 +280,8 @@ export class Mic {
         this.seg = [...this.pre];
         this.voiced = this.loud;
         this.silent = 0;
+        this.partialAt = 0;
+        this.segId++;
         this.set("speech");
       }
       return;
@@ -267,11 +298,11 @@ export class Mic {
       this.emit(keep, this.voiced >= MIN_VOICED);
       this.reset();
       this.set("listening");
-    }
+    } else if (this.voiced >= MIN_VOICED) this.maybePartial();
   }
 
-  private emit(frames: Float32Array[], ok: boolean) {
-    if (!ok || !frames.length || !this.ctx) return;
+  private encode(frames: Float32Array[]): Blob | null {
+    if (!frames.length || !this.ctx) return null;
     const rate = this.ctx.sampleRate;
     const total = frames.reduce((n, f) => n + f.length, 0);
     const all = new Float32Array(total);
@@ -280,8 +311,17 @@ export class Mic {
       all.set(f, o);
       o += f.length;
     }
-    const pcm = downsample(all, rate, TARGET_RATE);
-    this.h.onUtterance(encodeWav(pcm, TARGET_RATE), Math.round((total / rate) * 1000));
+    return encodeWav(downsample(all, rate, TARGET_RATE), TARGET_RATE);
+  }
+
+  private emit(frames: Float32Array[], ok: boolean) {
+    const wav = ok ? this.encode(frames) : null;
+    if (!wav || !this.ctx) {
+      this.h.onDiscard?.(this.segId);
+      return;
+    }
+    const total = frames.reduce((n, f) => n + f.length, 0);
+    this.h.onUtterance(wav, Math.round((total / this.ctx.sampleRate) * 1000), this.segId);
   }
 }
 

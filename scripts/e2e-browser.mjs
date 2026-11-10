@@ -89,10 +89,10 @@ await page.evaluate((p, speak) => {
   localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
 }, persona, SPEAK);
 await page.reload({ waitUntil: "networkidle0" });
-await page.waitForFunction(() => /medicines ready offline/.test(document.body.innerText), { timeout: 30000 });
+await page.waitForFunction(() => /matched to local names/.test(document.body.innerText), { timeout: 30000 });
 await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
-await page.click(".start-orb");
+await page.click(".btn-primary");
 await page.waitForSelector(".orb");
 await page.screenshot({ path: path.join(OUT, `${persona}-empty.png`) });
 const t0 = Date.now();
@@ -102,16 +102,18 @@ const deadline = Date.now() + (track.seconds + 40) * 1000;
 let last = -1;
 // Only the current turn is a full card; earlier ones shrink into the history. Record each turn while it's on stage.
 const seenTurns = new Map();
+const captions = [];
 const grab = () =>
   page.evaluate(() => {
-    const t = document.querySelector(".turn.done");
+    const all = document.querySelectorAll(".turn.done");
+    const t = all[all.length - 1];
     return t
       ? {
           status: t.className,
           who: t.querySelector(".who-pill")?.textContent,
-          said: t.querySelector(".said")?.textContent,
-          translation: t.querySelector(".translation p")?.textContent,
-          marks: [...t.querySelectorAll(".said .drug")].map((d) => d.textContent),
+          said: t.querySelector(".original")?.textContent,
+          translation: t.querySelector(".translation")?.textContent,
+          marks: [...t.querySelectorAll(".original .drug")].map((d) => d.textContent),
           chips: [...t.querySelectorAll(".drug-chip")].map((d) => d.textContent),
           time: t.querySelector(".timing")?.textContent,
         }
@@ -119,13 +121,18 @@ const grab = () =>
   });
 for (;;) {
   const s = await page.evaluate(() => ({
-    done: document.querySelectorAll(".turn.done").length + document.querySelectorAll(".history-line").length,
+    done: document.querySelectorAll(".turn.done").length,
     busy: document.querySelectorAll(".turn.transcribing, .turn.interpreting").length,
     errors: [...document.querySelectorAll(".turn.error")].map((e) => e.textContent),
     label: document.querySelector(".orb-label")?.textContent,
   }));
   const cur = await grab();
   if (cur?.translation) seenTurns.set(cur.translation, cur);
+  const caption = await page.evaluate(() => document.querySelector(".turn.live .live-text")?.textContent || "");
+  if (caption && !captions.includes(caption)) {
+    captions.push(caption);
+    console.log(`  live caption: ${caption}`);
+  }
   if (s.done !== last) {
     console.log(`  t+${((Date.now() - t0) / 1000).toFixed(1)}s turns done ${s.done} (busy ${s.busy}) · ${s.label}`);
     last = s.done;
@@ -145,8 +152,8 @@ await page.screenshot({ path: path.join(OUT, `${persona}-talk.png`) });
 }
 const result = {
   turns: [...seenTurns.values()],
-  history: await page.evaluate(() => document.querySelectorAll(".history-line").length),
-  context: await page.evaluate(() => [...document.querySelectorAll(".ctx-card")].map((c) => c.className.replace("ctx-card ", "") + " | " + c.querySelector("strong")?.textContent)),
+  history: await page.evaluate(() => document.querySelectorAll(".turn.done").length - 1),
+  context: await page.evaluate(() => [...document.querySelectorAll(".ctx-row")].map((c) => c.className.replace("ctx-row ", "") + " | " + c.querySelector("strong")?.textContent)),
 };
 for (const t of result.turns) {
   console.log(`\n[${t.who}] ${t.time || ""} ${t.status}`);
@@ -158,14 +165,14 @@ for (const t of result.turns) {
 console.log(`\ncontext cards (${result.context.length}):\n  ${result.context.join("\n  ")}`);
 
 // Open the first drug and the first alert so their sheets get screenshotted too.
-const drug = await page.$(".said .drug");
+const drug = await page.$(".original .drug");
 if (drug) {
   await drug.click();
   await new Promise((r) => setTimeout(r, 500));
   await page.screenshot({ path: path.join(OUT, `${persona}-drug.png`) });
   await page.click(".sheet .icon-btn");
 }
-const alert = await page.$(".ctx-card.alert");
+const alert = await page.$(".ctx-row.alert");
 if (alert) {
   await alert.click();
   await new Promise((r) => setTimeout(r, 500));
@@ -177,6 +184,7 @@ const failures = [];
 const done = result.turns;
 if (done.length !== track.lines || result.history + 1 !== track.lines) failures.push(`expected ${track.lines} turns, got ${done.length} (a line was split or merged)`);
 if (done.some((t) => !t.translation?.trim())) failures.push("a turn has an empty translation");
+if (!captions.some((c) => c.trim().split(/\s+/).length >= 3)) failures.push("no live captions appeared while lines were being spoken");
 if (persona === "jordan") {
   if (!result.turns.some((t) => t.marks.some((m) => /サルブタモール/.test(m)))) failures.push("ProAir did not swap to サルブタモール");
   if (!result.context.some((c) => c.startsWith("alert"))) failures.push("no penicillin alert");

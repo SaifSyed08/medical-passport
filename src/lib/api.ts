@@ -26,13 +26,14 @@ async function blobToBase64(b: Blob): Promise<string> {
 
 export type Pair = { patientLang: string; doctorLang: string; home: string; local: string };
 
-export async function transcribe(wav: Blob, pair: Pair, terms: string[]) {
+export async function transcribe(wav: Blob, pair: Pair, terms: string[], opts: { fast?: boolean } = {}) {
   return post<{ text: string; ms?: number; dropped?: string }>("/api/transcribe", {
     audio: await blobToBase64(wav),
     mime: wav.type || "audio/wav",
     patientLang: pair.patientLang,
     doctorLang: pair.doctorLang,
     terms,
+    fast: Boolean(opts.fast),
   });
 }
 

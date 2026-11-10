@@ -78,7 +78,7 @@ app.post("/api/transcribe", wrap(async (req, res) => {
   // Patient-aware recognition: prime the model with the patient's own medicine and condition names.
   const prompt = `A medical consultation between a ${langName(patientLang)}-speaking patient and a ${langName(doctorLang)}-speaking clinician. Transcribe exactly what is said, in the language it is spoken; do not translate. Keep filler words, hesitations, repetitions and self-corrections verbatim (um, uh, eh, este, I mean).${terms.length ? ` Names that may come up: ${terms.join(", ")}.` : ""}`;
   const t0 = Date.now();
-  const text = await transcribe(audio, { prompt, mime: str(req.body?.mime, 40) || "audio/wav" });
+  const text = await transcribe(audio, { prompt, mime: str(req.body?.mime, 40) || "audio/wav", model: req.body?.fast ? MODELS.sttFast : MODELS.stt });
   const ms = Date.now() - t0;
   // The model sometimes echoes its own prompt back on near-silent audio.
   if (!text || PHANTOMS.some((re) => re.test(text.trim())) || text.includes("Transcribe exactly what is said")) {

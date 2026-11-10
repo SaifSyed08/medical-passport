@@ -72,7 +72,8 @@ export type DrugMention = {
   cached?: boolean;
 };
 
-export type TurnStatus = "transcribing" | "interpreting" | "done" | "error";
+/** live = still being spoken (captions update); then transcribing → interpreting → done. */
+export type TurnStatus = "live" | "transcribing" | "interpreting" | "done" | "error";
 
 export type Turn = {
   id: string;

@@ -6,14 +6,15 @@ import { halfDuplex } from "../lib/duplex";
 import * as api from "../lib/api";
 import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, saveEquivalents, uniqueEquivalents, type Settings } from "../lib/store";
-import { dir, langNative } from "../lib/langs";
-import { TurnView, HistoryLine, IdleHero } from "./Stage";
+import { dir, langName } from "../lib/langs";
+import { TurnBlock, IdleHero } from "./Stage";
 import ContextDock, { AlertToast } from "./ContextDock";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
 import ContextSheet from "./ContextSheet";
 import { Sheet } from "./bits";
+import Icon from "./Icon";
 
 type Props = {
   persona: Persona;
@@ -188,15 +189,57 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     [addContext, patch, persona.medications, record],
   );
 
+  /* ---------------------------------------------------------------- live captions */
+
+  // Mic segment id → turn id, so captions shown while someone talks become that utterance's turn.
+  const segTurns = useRef(new Map<number, string>());
+  const segFinal = useRef(new Set<number>());
+  const segInFlight = useRef(new Set<number>());
+
+  const newTurn = (status: Turn["status"], forcedNow: Speaker | null, raw = ""): string => {
+    const id = uid();
+    setTurns((all) => [
+      ...all,
+      { id, at: Date.now(), status, raw, cleaned: "", translation: "", language: "", speaker: forcedNow, listenerLang: "", forced: forcedNow, drugs: [], timings: {} },
+    ]);
+    return id;
+  };
+
+  const onPartial = useCallback(
+    async (seg: number, wav: Blob) => {
+      // One caption request per utterance at a time; drop snapshots while one is out.
+      if (segInFlight.current.has(seg) || segFinal.current.has(seg)) return;
+      segInFlight.current.add(seg);
+      try {
+        const r = await api.transcribe(wav, pairRef.current, terms, { fast: true });
+        if (!r.text || segFinal.current.has(seg) || !alive.current) return;
+        const existing = segTurns.current.get(seg);
+        if (existing) patch(existing, (t) => (t.status === "live" ? { raw: r.text } : {}));
+        else segTurns.current.set(seg, newTurn("live", forcedRef.current, r.text));
+      } catch {
+        /* captions are best effort */
+      } finally {
+        segInFlight.current.delete(seg);
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [patch, terms],
+  );
+
+  const onDiscard = useCallback((seg: number) => {
+    const id = segTurns.current.get(seg);
+    segFinal.current.add(seg);
+    if (id) setTurns((all) => all.filter((t) => !(t.id === id && t.status === "live")));
+  }, []);
+
   const onUtterance = useCallback(
-    async (wav: Blob) => {
-      const id = uid();
+    async (wav: Blob, _ms?: number, seg?: number) => {
       const forcedNow = forcedRef.current;
       const t0 = performance.now();
-      setTurns((all) => [
-        ...all,
-        { id, at: Date.now(), status: "transcribing", raw: "", cleaned: "", translation: "", language: "", speaker: forcedNow, listenerLang: "", forced: forcedNow, drugs: [], timings: {} },
-      ]);
+      let id = seg !== undefined ? segTurns.current.get(seg) : undefined;
+      if (seg !== undefined) segFinal.current.add(seg);
+      if (id) patch(id, { status: "transcribing" });
+      else id = newTurn("transcribing", forcedNow);
       // Speak translations in the order people talked, even if a later one finishes first.
       const release = reserveSpeech();
       try {
@@ -219,11 +262,15 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
   const onUtteranceRef = useRef(onUtterance);
   onUtteranceRef.current = onUtterance;
+  const onPartialRef = useRef(onPartial);
+  onPartialRef.current = onPartial;
   if (!micRef.current) {
     micRef.current = new Mic({
       onState: setMicState,
       onLevel: setLevel,
-      onUtterance: (wav) => void onUtteranceRef.current(wav),
+      onUtterance: (wav, ms, seg) => void onUtteranceRef.current(wav, ms, seg),
+      onPartial: (seg, wav) => void onPartialRef.current(seg, wav),
+      onDiscard: (seg) => onDiscard(seg),
       onError: setMicError,
     });
     micRef.current.mode = settings.mode;
@@ -273,7 +320,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   /* ---------------------------------------------------------------- recorded demo */
 
   /** Play one recorded voice clip, driving the orb from its real loudness. */
-  const playVoice = (url: string, token: { cancelled: boolean }) =>
+  const playVoice = (url: string, token: { cancelled: boolean }, onProgress?: (fraction: number) => void) =>
     new Promise<void>((resolve) => {
       if (!voiceRef.current) {
         voiceRef.current = new Audio();
@@ -301,6 +348,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           const rms = Math.sqrt(s / buf.length);
           setLevel(Math.min(1, Math.max(0, (20 * Math.log10(rms + 1e-9) + 62) / 46)));
         } else setLevel(0.35 + Math.random() * 0.4);
+        if (onProgress && el.duration > 0) onProgress(el.currentTime / el.duration);
         raf = requestAnimationFrame(tick);
       };
       const done = () => {
@@ -361,12 +409,25 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       const id = uid();
       setTurns((all) => [
         ...all,
-        { id, at: Date.now(), status: "transcribing", raw: "", cleaned: "", translation: "", language: "", speaker: line.speaker, listenerLang: "", forced: null, drugs: [], timings: {} },
+        { id, at: Date.now(), status: "live", raw: "", cleaned: "", translation: "", language: "", speaker: line.speaker, listenerLang: "", forced: null, drugs: [], timings: {} },
       ]);
       setDemo("voice");
-      await playVoice(line.audio, token);
+      // Live captions: words appear in step with the recording, trailing it slightly like real captions do.
+      // Spaced languages reveal by word; Japanese/Chinese (no spaces) by character.
+      const words = /\s/.test(line.stt.text) ? line.stt.text.split(/(\s+)/) : [...line.stt.text];
+      const wordCount = words.filter((w) => w.trim()).length;
+      let shownWords = 0;
+      await playVoice(line.audio, token, (f) => {
+        const n = Math.max(0, Math.floor((f - 0.08) * wordCount * 1.05));
+        if (n <= shownWords) return;
+        shownWords = Math.min(n, wordCount);
+        let seen = 0;
+        const partial = words.filter((w) => (w.trim() ? ++seen <= shownWords : seen < shownWords)).join("");
+        patch(id, { raw: partial });
+      });
       if (token.cancelled) break;
       setDemo("working");
+      patch(id, { raw: line.stt.text, status: "transcribing" });
       await sleep(450);
       patch(id, { raw: line.stt.text, status: "interpreting" });
       await sleep(Math.min(1400, 500 + line.stt.text.length * 9));
@@ -489,109 +550,121 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     setSheet("none");
   };
 
-  const current = turns[turns.length - 1];
-  const older = turns.slice(0, -1);
-  const mood = toast ? "alert" : current?.speaker || (micState === "speech" || demo === "voice" ? "hearing" : "idle");
+
+  const live = micState === "listening" || micState === "speech";
+  const lastSpeaker = [...turns].reverse().find((t) => t.speaker)?.speaker;
+  // The latest finished turn stays large while the next person's live caption builds below it.
+  const lastDone = turns.map((t) => t.status).lastIndexOf("done");
+  const mood = toast ? "alert" : lastSpeaker || "idle";
   const first = persona.name.split(" ")[0];
 
   return (
     <main className="talk" data-mood={mood}>
-      <div className="aura" aria-hidden>
-        <span className="aura-layer idle" />
-        <span className="aura-layer patient" />
-        <span className="aura-layer clinician" />
-        <span className="aura-layer alert" />
-        <span className="grain" />
+      <div className="backdrop" aria-hidden>
+        <span className="tint patient" />
+        <span className="tint clinician" />
+        <span className="tint alert" />
       </div>
 
-      <header className="talk-bar">
-        <button className="icon-btn glass" onClick={onBack} aria-label="Back">
-          ‹
+      <header className="talk-bar panel">
+        <button className="icon-btn" onClick={onBack} aria-label="Back">
+          <Icon name="back" />
         </button>
-        <button className="who-chip" onClick={() => setSheet("record")}>
-          <span className="avatar xs">{persona.initials}</span>
-          <span className="who-name">{first}</span>
-          <span className="who-langs">
-            <b className="pt">{persona.language.toUpperCase()}</b>
-            <i>⇄</i>
-            <b className="dr">{persona.trip.doctorLanguage.toUpperCase()}</b>
+        <button className="talk-title" onClick={() => setSheet("record")}>
+          <strong>{persona.name}</strong>
+          <span>
+            <i className="dot patient" /> {langName(persona.language)}
+            <span className="sep">↔</span>
+            <i className="dot clinician" /> {langName(persona.trip.doctorLanguage)}
           </span>
         </button>
-        <button className="icon-btn glass" onClick={() => setSheet("menu")} aria-label="Options">
-          ⋯
+        <button className="icon-btn" onClick={() => setSheet("menu")} aria-label="Options">
+          <Icon name="more" />
         </button>
       </header>
 
       {toast && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
 
-      <div className="stage" ref={stageRef}>
-        {older.length > 0 && (
-          <div className="history">
-            {older.slice(-6).map((t) => (
-              <HistoryLine key={t.id} turn={t} />
-            ))}
-          </div>
-        )}
-        {current ? (
-          <TurnView
-            key={current.id}
-            turn={current}
-            persona={persona}
-            onDrug={(d) => setDrug({ d, speaker: current.speaker })}
-            onFlip={() => flipSpeaker(current)}
-            onReplay={() => replay(current)}
-          />
+      <div className="transcript" ref={stageRef}>
+        {turns.length === 0 ? (
+          <IdleHero persona={persona} live={live} />
         ) : (
-          <IdleHero persona={persona} live={micState === "listening" || micState === "speech"} />
+          turns.map((t, i) => (
+            <TurnBlock
+              key={t.id}
+              turn={t}
+              persona={persona}
+              current={i === lastDone || (i === turns.length - 1 && t.status !== "done")}
+              onDrug={(d) => setDrug({ d, speaker: t.speaker })}
+              onFlip={() => flipSpeaker(t)}
+              onReplay={() => replay(t)}
+            />
+          ))
         )}
       </div>
 
-      <ContextDock items={ctx} persona={persona} onOpen={setOpenCtx} />
+      <div className="bottom">
+        <ContextDock items={ctx} persona={persona} onOpen={setOpenCtx} />
 
-      <footer className="controls">
-        {micError && <div className="mic-error">{micError}</div>}
-        {typing && (
-          <form
-            className="typer"
-            onSubmit={(e) => {
-              e.preventDefault();
-              sendTyped();
-            }}
-          >
-            <input
-              autoFocus
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              placeholder="Type what was said…"
-              aria-label="Type an utterance"
-              dir={dir(forced === "clinician" ? persona.trip.doctorLanguage : persona.language)}
-            />
-            <button className="send" type="submit" disabled={!draft.trim()} aria-label="Send">
-              ↑
+        <footer className="controls panel">
+          {micError && <div className="mic-error">{micError}</div>}
+          {typing && (
+            <form
+              className="typer"
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendTyped();
+              }}
+            >
+              <input
+                autoFocus
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Type what was said"
+                aria-label="Type an utterance"
+                dir={dir(forced === "clinician" ? persona.trip.doctorLanguage : persona.language)}
+              />
+              <button className="send" type="submit" disabled={!draft.trim()} aria-label="Send">
+                <Icon name="chevron" size={18} />
+              </button>
+            </form>
+          )}
+          <div className="control-row">
+            <button className={`tool ${typing ? "on" : ""}`} onClick={() => setTyping((v) => !v)} aria-label="Type instead">
+              <Icon name="keyboard" />
             </button>
-          </form>
-        )}
-        <Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />
-        <div className="orb-label" aria-live="polite">
-          {orbLabel}
-          {forced && demo === "off" && <span className="forced"> · {forced === "patient" ? "patient" : "doctor"} talking</span>}
-        </div>
-      </footer>
+            <div className="mic-wrap">
+              <Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />
+              <div className="orb-label" aria-live="polite">
+                {orbLabel}
+                {forced && demo === "off" && <span className="forced"> · {forced === "patient" ? first : "clinician"}</span>}
+              </div>
+            </div>
+            <button
+              className={`tool ${settings.speak ? "" : "off"}`}
+              onClick={() => setSettings((s) => ({ ...s, speak: !s.speak }))}
+              aria-label={settings.speak ? "Mute spoken translation" : "Speak translations aloud"}
+            >
+              <Icon name={settings.speak ? "speaker" : "mute"} />
+            </button>
+          </div>
+        </footer>
+      </div>
 
       {sheet === "menu" && (
         <Sheet title="Options" onClose={() => setSheet("none")}>
-          <div className="field">
-            <div className="eyebrow">Who's talking</div>
+          <div className="group">
+            <div className="group-title">Who is speaking</div>
             <div className="seg">
               {([null, "patient", "clinician"] as const).map((s) => (
                 <button key={s || "auto"} className={forced === s ? "on" : ""} onClick={() => setForced(s)}>
-                  {s === null ? "Auto-detect" : s === "patient" ? first : "Doctor"}
+                  {s === null ? "Detect" : s === "patient" ? first : "Clinician"}
                 </button>
               ))}
             </div>
           </div>
-          <div className="field">
-            <div className="eyebrow">Listening</div>
+          <div className="group">
+            <div className="group-title">Microphone</div>
             <div className="seg">
               <button className={settings.mode === "auto" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, mode: "auto" }))}>
                 Hands-free
@@ -601,33 +674,29 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
               </button>
             </div>
           </div>
-          <div className="field">
-            <div className="eyebrow">Read translations aloud</div>
-            <div className="seg">
-              <button className={settings.speak ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, speak: true }))}>
-                On
-              </button>
-              <button className={!settings.speak ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, speak: false }))}>
-                Off
-              </button>
-            </div>
-          </div>
-          <div className="menu-actions">
-            <button
-              onClick={() => {
-                setTyping((v) => !v);
-                setSheet("none");
-              }}
-            >
-              ⌨ {typing ? "Hide keyboard" : "Type instead"}
+          <div className="group">
+            <button className="row" onClick={() => void runDemo()}>
+              <Icon name="play" />
+              <span className="row-main">
+                <strong>Play demo conversation</strong>
+              </span>
+              <kbd>D</kbd>
             </button>
-            <button onClick={() => void runDemo()}>▶ Play the demo</button>
-            <button onClick={() => setSheet("record")}>▤ {first}'s record</button>
-            <button onClick={newConversation}>↺ New conversation</button>
+            <button className="row" onClick={() => setSheet("record")}>
+              <Icon name="doc" />
+              <span className="row-main">
+                <strong>{first}'s health record</strong>
+              </span>
+              <Icon name="chevron" size={16} className="muted" />
+            </button>
+            <button className="row" onClick={newConversation}>
+              <Icon name="refresh" />
+              <span className="row-main">
+                <strong>New conversation</strong>
+              </span>
+            </button>
           </div>
-          <p className="fine">
-            {langNative(persona.language)} ⇄ {langNative(persona.trip.doctorLanguage)} · keys: Space = mic, D = demo, Esc = stop
-          </p>
+          <p className="fine">Space starts and pauses the microphone. Esc stops the demo.</p>
         </Sheet>
       )}
       {drug && <DrugSheet drug={drug.d} speaker={drug.speaker} persona={persona} onClose={() => setDrug(null)} />}

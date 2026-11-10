@@ -1,20 +1,21 @@
 import { useEffect, type CSSProperties, type ReactNode } from "react";
 import type { DrugMention, DrugStatus } from "../lib/types";
 import { nearlySame } from "../lib/names";
+import Icon from "./Icon";
 
 const STATUS: Record<DrugStatus, { label: string; tone: string; icon: string }> = {
-  same_name: { label: "Same name", tone: "ok", icon: "✓" },
-  different_name: { label: "Different name", tone: "info", icon: "⇄" },
-  different_strength: { label: "Strength differs", tone: "warn", icon: "≠" },
-  not_available_locally: { label: "Not sold here", tone: "danger", icon: "!" },
-  uncertain: { label: "Check with pharmacist", tone: "warn", icon: "?" },
+  same_name: { label: "Same name here", tone: "ok", icon: "check" },
+  different_name: { label: "Different name here", tone: "info", icon: "swap" },
+  different_strength: { label: "Strength labelled differently", tone: "warn", icon: "alert" },
+  not_available_locally: { label: "Not sold here", tone: "danger", icon: "alert" },
+  uncertain: { label: "Check with a pharmacist", tone: "warn", icon: "alert" },
 };
 
 export function StatusBadge({ status, compact }: { status: DrugStatus; compact?: boolean }) {
   const s = STATUS[status] || STATUS.uncertain;
   return (
-    <span className={`badge ${s.tone}`} title={s.label}>
-      <span aria-hidden>{s.icon}</span>
+    <span className={`status ${s.tone}`} title={s.label}>
+      <Icon name={s.icon} size={compact ? 16 : 15} />
       {!compact && <span>{s.label}</span>}
     </span>
   );
@@ -33,7 +34,7 @@ export function Sheet({ title, onClose, children, tone }: { title: ReactNode; on
         <div className="sheet-head">
           <h3>{title}</h3>
           <button className="icon-btn" onClick={onClose} aria-label="Close">
-            ✕
+            <Icon name="close" size={18} />
           </button>
         </div>
         <div className="sheet-body">{children}</div>
@@ -165,10 +166,7 @@ export function Reveal({
           <button key={i} className={`drug ${tone} swaps`} onClick={() => onDrug?.(p.drug)} style={{ "--d": `${delay}ms` } as CSSProperties}>
             <span className="drug-stack">
               <span className="drug-from">{p.s}</span>
-              <span className="drug-to">
-                {to}
-                {p.drug.status === "not_available_locally" && <span className="drug-flag">!</span>}
-              </span>
+              <span className="drug-to">{to}</span>
             </span>
             <span className="drug-caption">{p.s}</span>
           </button>
@@ -178,13 +176,10 @@ export function Reveal({
   );
 }
 
-export const KIND_ICON: Record<string, string> = {
-  allergy: "⚠",
-  medication: "℞",
-  condition: "♥",
-  lab: "⚗",
-  document: "▤",
-};
+export function KindIcon({ id, size = 16 }: { id: string; size?: number }) {
+  const kind = kindOf(id);
+  return <Icon name={{ allergy: "alert", medication: "pill", condition: "heart", lab: "lab", document: "doc" }[kind] || "doc"} size={size} />;
+}
 
 export const KIND_LABEL: Record<string, string> = {
   allergy: "Allergy",
