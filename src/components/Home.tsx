@@ -8,7 +8,7 @@ import { Sheet, StatusBadge } from "./bits";
 import Icon from "./Icon";
 import Flag from "./Flag";
 import RecordSheet from "./RecordSheet";
-import { loadTranslatedRecord } from "../lib/recordTranslation";
+import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslation";
 
 type Props = {
   persona: Persona;
@@ -56,7 +56,10 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [home, local, persona.id]);
 
-  const severe = persona.allergies.filter((a) => a.severity === "severe");
+  // The app's labels are in English, so show the allergy in the clinician's language once the record is translated.
+  const translated = useTranslatedRecord(persona, persona.trip.doctorLanguage, persona.recordLanguage !== persona.trip.doctorLanguage);
+  const allergies = translated.record?.allergies || persona.allergies;
+  const severe = allergies.filter((a) => a.severity === "severe");
 
   // Get the record's translation for the clinician ready before anyone opens it.
   useEffect(() => {

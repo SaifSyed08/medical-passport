@@ -52,7 +52,12 @@ export function loadTranslatedRecord(p: Persona, lang: string): Promise<RecordBo
 }
 
 /** Keep the original ids, numbers and flags even if the model dropped or changed one. */
-function mergeIds(orig: RecordBody, tr: Partial<RecordBody>): RecordBody {
+export function mergeIds(orig: RecordBody, tr: Partial<RecordBody>): RecordBody {
+  for (const k of Object.keys(orig) as (keyof RecordBody)[]) {
+    const a = orig[k] as unknown as { id: string }[];
+    const b = tr[k] as unknown as { id?: string }[] | undefined;
+    if (!Array.isArray(b) || b.length !== a.length || a.some((x, i) => b[i]?.id !== x.id)) throw new Error("translation came back incomplete");
+  }
   const out = {} as RecordBody;
   for (const k of Object.keys(orig) as (keyof RecordBody)[]) {
     const a = orig[k] as unknown as Record<string, unknown>[];

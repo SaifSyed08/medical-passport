@@ -332,6 +332,9 @@ app.post("/api/translate-record", wrap(async (req, res) => {
     system: `You translate a patient's health record into ${langName(to)} for a clinician. Return the SAME JSON structure with the same keys, arrays and item order. Translate every human-readable string value (names of conditions, allergies, reactions, notes, document titles and bodies, lab names, schedules, purposes, relationships) into clear clinical ${langName(to)}. Keep unchanged: "id" values, dates, numbers, units, reference ranges, flags, phone numbers, person names, facility names, and medicine brand names (you may add the ${langName(to)} generic name in parentheses). Do not add, drop or summarise information.`,
     user: body,
   });
+  // A translation must keep every section, item and id; anything else is rejected and never cached.
+  const ok = Object.entries(record).every(([k, v]) => !Array.isArray(v) || (Array.isArray(out?.[k]) && out[k].length === v.length && v.every((item, i) => !item?.id || out[k][i]?.id === item.id)));
+  if (!ok) throw new HttpError(502, "translation came back incomplete");
   recordCache[ck] = out;
   try {
     fs.mkdirSync(path.dirname(RECORD_CACHE_FILE), { recursive: true });

@@ -14,7 +14,7 @@ export default function RecordSheet({ persona: p, onClose }: { persona: Persona;
   const tr = useTranslatedRecord(p, doctorLang, needsTranslation && view === "translated");
   const showTranslated = needsTranslation && view === "translated";
   const r = showTranslated && tr.record ? tr.record : recordBody(p);
-  const loading = showTranslated && !tr.record;
+  const loading = showTranslated && !tr.record && !tr.error;
 
   return (
     <Sheet title={p.name} onClose={onClose}>
@@ -31,6 +31,7 @@ export default function RecordSheet({ persona: p, onClose }: { persona: Persona;
           </button>
         </div>
       )}
+      {showTranslated && tr.error && <p className="translating-note">Couldn't translate right now. Showing the original.</p>}
       {loading && (
         <p className="translating-note">
           <span className="dots3">
@@ -38,7 +39,7 @@ export default function RecordSheet({ persona: p, onClose }: { persona: Persona;
             <i />
             <i />
           </span>
-          {tr.error ? `Couldn't translate (${tr.error}). Showing the original.` : `Translating the record into ${langName(doctorLang)}…`}
+          {`Translating the record into ${langName(doctorLang)}…`}
         </p>
       )}
       <div className={`record ${loading ? "dim" : ""}`}>
@@ -54,7 +55,7 @@ export default function RecordSheet({ persona: p, onClose }: { persona: Persona;
         </Group>
         <Group kind="condition" icon="heart" title="Conditions" count={r.conditions.length}>
           {r.conditions.map((c) => (
-            <Row key={c.id} title={c.name} badge={c.since ? { text: `since ${c.since}`, tone: "plain" } : undefined} lines={[c.note]} />
+            <Row key={c.id} title={c.name} badge={c.since ? { text: /^\d{4}$/.test(c.since) ? `since ${c.since}` : c.since, tone: "plain" } : undefined} lines={[c.note]} />
           ))}
         </Group>
         <Group kind="lab" icon="lab" title="Lab results" count={r.labs.length}>
@@ -86,7 +87,7 @@ export default function RecordSheet({ persona: p, onClose }: { persona: Persona;
         </Group>
       </div>
       <p className="fine">
-        {showTranslated && tr.record ? `Translated by AI from ${langName(p.recordLanguage)} for ${country(p.trip.country).name}. Check the original for anything critical.` : "As saved by the patient."}
+        {showTranslated && tr.record && !tr.error ? `Translated by AI from ${langName(p.recordLanguage)} for ${country(p.trip.country).name}. Check the original for anything critical.` : "As saved by the patient."}
       </p>
     </Sheet>
   );

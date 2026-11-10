@@ -1,6 +1,6 @@
 {
  "persona": "sofia",
- "recordedAt": "2026-11-11T04:28:07.038Z",
+ "recordedAt": "2026-11-11T17:24:45.811Z",
  "equivalents": [
   {
    "key": "metformin",
@@ -97,7 +97,7 @@
    "speech": "/demo/sofia-0-tr.mp3",
    "stt": {
     "text": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
-    "ms": 746
+    "ms": 1410
    },
    "interpret": {
     "language": "es",
@@ -107,36 +107,29 @@
     "cleaned": "Hola doctor, desde anoche me duele mucho el pecho y me cuesta respirar.",
     "translation": "Hello doctor, since last night my chest hurts a lot and it's hard for me to breathe.",
     "drugs": [],
-    "ms": 875
+    "ms": 2028
    },
    "context": [
     {
      "id": "cnd_asma",
      "level": "relevant",
-     "title": "Asthma, history of exacerbations",
-     "detail": "Mild persistent asthma since childhood; emergency visit for exacerbation in March 2025.",
-     "why": "Patient reports chest pain and breathing difficulty, possible asthma exacerbation."
+     "title": "Asthma history",
+     "detail": "Mild persistent asthma since childhood, crisis in March 2025 requiring emergency care",
+     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation"
     },
     {
      "id": "doc_urgencias_2025",
      "level": "relevant",
-     "title": "Emergency note: asthma crisis",
-     "detail": "March 2025: dyspnea and wheezing after respiratory infection; improved with salbutamol and prednisone.",
-     "why": "Relevant past asthma exacerbation similar to current symptoms."
+     "title": "Emergency visit for asthma crisis",
+     "detail": "March 2025: dyspnea and wheezing after respiratory infection, improved with salbutamol and prednisone",
+     "why": "Previous severe asthma episode relevant to current chest symptoms"
     },
     {
      "id": "med_ventolin",
      "level": "relevant",
-     "title": "Ventolin inhaler (salbutamol)",
-     "detail": "Use 2 puffs every 4 hours as needed for wheezing; rescue medication for asthma.",
-     "why": "Current asthma medication relevant to chest pain and breathing difficulty."
-    },
-    {
-     "id": "cnd_erc",
-     "level": "relevant",
-     "title": "Chronic kidney disease stage 3b",
-     "detail": "Detected August 2026; eGFR 44 mL/min/1.73 m²; avoid NSAIDs and contrast without nephrology consult.",
-     "why": "Important for medication and treatment considerations during acute symptoms."
+     "title": "Rescue inhaler for asthma",
+     "detail": "Salbutamol inhaler, 2 puffs as needed for wheezing, up to every 4 hours",
+     "why": "Current asthma medication relevant to chest pain and breathing difficulty"
     }
    ]
   },
@@ -147,7 +140,7 @@
    "speech": "/demo/sofia-1-tr.mp3",
    "stt": {
     "text": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
-    "ms": 381
+    "ms": 706
    },
    "interpret": {
     "language": "es",
@@ -171,8 +164,8 @@
       "local_brands": [],
       "local_strength": "",
       "status": "not_available_locally",
-      "note_listener": "Neo-Melubrina (metamizole) is not approved or available in the US.",
-      "note_doctor": "Not approved in the US; closest options acetaminophen or ibuprofen.",
+      "note_listener": "Neo-Melubrina (metamizole) is not approved or available in the US; closest options are acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
+      "note_doctor": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen or ibuprofen.",
       "curated_note": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
       "med_id": "med_neomelubrina",
       "source": "curated"
@@ -195,43 +188,36 @@
       ],
       "local_strength": "90 mcg per puff",
       "status": "different_name",
-      "note_listener": "In the US, this is called albuterol (Ventolin HFA), and the inhaler states 90 mcg per puff instead of 100 mcg.",
-      "note_doctor": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
+      "note_listener": "In the US, this medicine is called albuterol (Ventolin HFA).",
+      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff; Mexico states 100 mcg.",
       "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       "med_id": "med_ventolin",
       "source": "curated"
      }
     ],
-    "ms": 1991
+    "ms": 2804
    },
    "context": [
     {
-     "id": "doc_nefro_2026",
+     "id": "cnd_erc",
      "level": "relevant",
-     "title": "Reduced kidney function note",
-     "detail": "TFGe 44 and potassium 5.2 in August 2026; avoid NSAIDs and iodinated contrast without evaluation",
-     "why": "Neo-Melubrina (metamizol) is an NSAID; kidney disease increases risk"
+     "title": "Chronic kidney disease stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², August 2026; potassium 5.2 mmol/L",
+     "why": "Kidney function affects safety of metamizole (Neo-Melubrina) and respiratory symptoms"
     },
     {
      "id": "med_neomelubrina",
      "level": "relevant",
      "title": "Neo-Melubrina (metamizol) use",
      "detail": "500 mg every 8 hours as needed for pain or fever",
-     "why": "Patient took Neo-Melubrina for chest pain; consider kidney function and asthma"
+     "why": "Patient took Neo-Melubrina for chest pain and breathing difficulty"
     },
     {
-     "id": "cnd_asma",
+     "id": "lab_potasio",
      "level": "relevant",
-     "title": "Asthma history",
-     "detail": "Mild persistent asthma since childhood; triggered by infections and cold",
-     "why": "Asthma affects chest pain and breathing difficulty"
-    },
-    {
-     "id": "cnd_erc",
-     "level": "relevant",
-     "title": "Chronic kidney disease stage 3b",
-     "detail": "Detected August 2026, TFGe 44 mL/min/1.73 m²",
-     "why": "Relevant for medication safety and symptom evaluation"
+     "title": "Elevated potassium level",
+     "detail": "5.2 mmol/L, August 2026",
+     "why": "High potassium may affect cardiac and respiratory status, relevant to chest pain and breathing difficulty"
     }
    ]
   },
@@ -241,16 +227,16 @@
    "audioMs": 6650,
    "speech": "/demo/sofia-2-tr.mp3",
    "stt": {
-    "text": "Ok, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "ms": 317
+    "text": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
+    "ms": 399
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "es",
-    "raw": "Ok, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "cleaned": "Ok, I'd like to start you on amoxicillin and get a CT scan with contrast.",
-    "translation": "Bien, me gustaría empezar a tratarle con amoxicilina y hacerle una tomografía computarizada con contraste.",
+    "raw": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
+    "cleaned": "Okay, I'd like to start you on amoxicillin and get a CT scan with contrast.",
+    "translation": "Bien, me gustaría empezar con amoxicilina y hacer una tomografía computarizada con contraste.",
     "drugs": [
      {
       "key": "amoxicillin",
@@ -275,29 +261,29 @@
       "source": "curated"
      }
     ],
-    "ms": 1472
+    "ms": 1827
    },
    "context": [
     {
      "id": "alg_penicilina",
      "level": "alert",
-     "title": "Penicillin Allergy (Anaphylaxis)",
-     "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure.",
-     "why": "Amoxicillin is a penicillin; patient has severe allergy."
+     "title": "Penicillin Allergy",
+     "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
+     "why": "Amoxicillin is a penicillin and contraindicated due to severe allergy"
     },
     {
      "id": "cnd_erc",
      "level": "alert",
      "title": "Chronic Kidney Disease Stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m² (Aug 2026). Avoid NSAIDs and iodinated contrast without nephrology clearance.",
-     "why": "CT contrast may worsen kidney function; caution needed."
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L (Aug 2026)",
+     "why": "Contrast and metformin require caution due to kidney function"
     },
     {
      "id": "med_glucophage",
      "level": "alert",
-     "title": "Metformin Use with Reduced Kidney Function",
-     "detail": "Metformin 850 mg twice daily. eGFR 44 (Aug 2026). Risk of lactic acidosis with contrast.",
-     "why": "Contrast CT requires metformin dose review due to kidney function."
+     "title": "Metformin Use",
+     "detail": "850 mg twice daily for type 2 diabetes",
+     "why": "Metformin dosing and contrast use need careful monitoring due to kidney disease"
     }
    ]
   },
@@ -308,7 +294,7 @@
    "speech": "/demo/sofia-3-tr.mp3",
    "stt": {
     "text": "Can you take ibuprofen for the pain?",
-    "ms": 250
+    "ms": 1017
    },
    "interpret": {
     "language": "en",
@@ -335,14 +321,14 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "",
+      "note_listener": "El nombre y la dosis de ibuprofeno son iguales en México y Estados Unidos.",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 942
+    "ms": 1382
    },
    "context": [
     {
@@ -350,28 +336,21 @@
      "level": "alert",
      "title": "Penicillin Allergy",
      "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
-     "why": "Amoxicillin prescribed, patient has severe penicillin allergy"
+     "why": "Amoxicillin is contraindicated due to severe allergy"
     },
     {
      "id": "cnd_erc",
      "level": "alert",
      "title": "Chronic Kidney Disease Stage 3b",
-     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L as of 2026-08-14",
-     "why": "NSAIDs like ibuprofen contraindicated due to kidney disease"
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L (Aug 2026)",
+     "why": "Avoid NSAIDs like ibuprofen due to kidney disease risk"
     },
     {
-     "id": "med_neomelubrina",
+     "id": "med_glucophage",
      "level": "alert",
-     "title": "Metamizole Use and Kidney Disease",
-     "detail": "Using Neo-Melubrina for pain; avoid NSAIDs due to kidney function",
-     "why": "Ibuprofen suggested, risk with current pain medicine and kidney status"
-    },
-    {
-     "id": "doc_nefro_2026",
-     "level": "alert",
-     "title": "Renal Function Decreased",
-     "detail": "Avoid NSAIDs and iodinated contrast without nephrology evaluation",
-     "why": "CT scan with contrast and ibuprofen suggested, risk with kidney disease"
+     "title": "Metformin Use",
+     "detail": "850 mg twice daily, monitor dosing with kidney function",
+     "why": "Kidney function affects metformin safety with contrast and NSAIDs"
     }
    ]
   }

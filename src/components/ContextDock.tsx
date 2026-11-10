@@ -15,9 +15,9 @@ export default function ContextDock({ items: unsorted, persona, onOpen }: { item
   const [open, setOpen] = useState(false);
   if (!unsorted.length) return null;
   const items = [...unsorted].sort((a, b) => (a.level === b.level ? b.at - a.at : a.level === "alert" ? -1 : 1));
-  // Collapsed: alerts, then only what the latest utterance brought up. Older context waits behind "N earlier".
+  // Collapsed: alerts, then only what the latest utterance brought up. The rest waits behind "N more".
   const latestTurn = [...unsorted].sort((a, b) => b.at - a.at)[0]?.turnId;
-  const focus = items.filter((c) => c.level === "alert" || c.turnId === latestTurn).slice(0, 2);
+  const focus = items.filter((c) => c.level === "alert" || c.turnId === latestTurn).slice(0, 3);
   const shown = open ? items : focus.length ? focus : items.slice(0, 1);
   const hidden = items.length - shown.length;
   return (
@@ -45,7 +45,7 @@ export default function ContextDock({ items: unsorted, persona, onOpen }: { item
       </ul>
       {hidden > 0 && (
         <button className="dock-more" onClick={() => setOpen(true)}>
-          {hidden} earlier
+          {hidden} more
         </button>
       )}
     </section>

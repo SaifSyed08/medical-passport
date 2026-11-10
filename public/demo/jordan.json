@@ -1,6 +1,6 @@
 {
  "persona": "jordan",
- "recordedAt": "2026-11-11T04:28:19.341Z",
+ "recordedAt": "2026-11-11T17:24:59.743Z",
  "equivalents": [
   {
    "key": "insulin-glargine",
@@ -79,7 +79,7 @@
    "speech": "/demo/jordan-0-tr.mp3",
    "stt": {
     "text": "Um, I've been throwing up since this morning, and I couldn't keep my Lantus down. I mean, I skipped my Lantus.",
-    "ms": 1310
+    "ms": 713
    },
    "interpret": {
     "language": "en",
@@ -87,12 +87,12 @@
     "listenerLang": "ja",
     "raw": "Um, I've been throwing up since this morning, and I couldn't keep my Lantus down. I mean, I skipped my Lantus.",
     "cleaned": "I've been throwing up since this morning, and I couldn't keep my Lantus down. I skipped my Lantus.",
-    "translation": "今朝からずっと吐いていて、ランタスを打てませんでした。ランタスは抜きました。",
+    "translation": "今朝からずっと吐いていて、ランタス（インスリン グラルギン）を打てませんでした。ランタスは抜きました。",
     "drugs": [
      {
       "key": "insulin-glargine",
       "mentioned": "Lantus",
-      "translated": "ランタス",
+      "translated": "ランタス（インスリン グラルギン）",
       "inCleaned": true,
       "inTranslation": true,
       "generic": "insulin glargine",
@@ -106,42 +106,35 @@
       "local_strength": "",
       "status": "different_name",
       "note_listener": "日本ではインスリン グラルギン（ランタス）と呼ばれています。",
-      "note_doctor": "米国ではLantusと呼ばれています。",
+      "note_doctor": "米国ではLantus（インスリン グラルギン）として販売されています。",
       "curated_note": "",
       "med_id": "med_lantus",
       "source": "curated"
      }
     ],
-    "ms": 1395
+    "ms": 2114
    },
    "context": [
     {
      "id": "cnd_t1d",
      "level": "relevant",
      "title": "1型糖尿病の既往",
-     "detail": "2013年から。2023年に糖尿病性ケトアシドーシスの既往あり。",
-     "why": "嘔吐とインスリン（Lantus）中断が糖尿病管理に重要。"
+     "detail": "2013年診断。2023年に糖尿性ケトアシドーシスの既往あり。",
+     "why": "嘔吐とインスリン（Lantus）中断はDKAリスク増加のため重要。"
     },
     {
      "id": "med_lantus",
      "level": "relevant",
      "title": "Lantus（インスリン・グラルギン）使用中",
-     "detail": "18単位、毎晩10時に皮下注射。長時間作用型インスリン。",
-     "why": "嘔吐で投与できず、血糖管理に影響。"
-    },
-    {
-     "id": "rec_dka_2023",
-     "level": "relevant",
-     "title": "糖尿病性ケトアシドーシスの緊急入院歴",
-     "detail": "2023年11月、基礎インスリン中断による軽度DKA。",
-     "why": "今回の嘔吐とインスリン中断で再発リスクあり。"
+     "detail": "18単位、毎晩10時に皮下注射。1型糖尿病の長時間作用型インスリン。",
+     "why": "嘔吐で投与できず、血糖管理に影響するため重要。"
     },
     {
      "id": "lab_ketones",
      "level": "relevant",
      "title": "血中ケトン値（DKA時）",
-     "detail": "2023年11月4日、4.8 mmol/L（高値）。",
-     "why": "過去のDKA時のケトン値、現在の状態評価に参考。"
+     "detail": "2023年11月4日4.8 mmol/L（基準<0.6）、高値。",
+     "why": "過去のDKA発症時のケトン値。現在の症状と関連。"
     }
    ]
   },
@@ -152,7 +145,7 @@
    "speech": "/demo/jordan-1-tr.mp3",
    "stt": {
     "text": "I also used my ProAir twice because my chest felt tight.",
-    "ms": 419
+    "ms": 437
    },
    "interpret": {
     "language": "en",
@@ -160,7 +153,7 @@
     "listenerLang": "ja",
     "raw": "I also used my ProAir twice because my chest felt tight.",
     "cleaned": "I also used my ProAir twice because my chest felt tight.",
-    "translation": "胸が苦しかったので、プロエア（サルブタモール）も2回使いました。",
+    "translation": "胸が苦しかったので、プロエア（サルブタモール）を2回使いました。",
     "drugs": [
      {
       "key": "salbutamol",
@@ -185,14 +178,14 @@
       "source": "curated"
      }
     ],
-    "ms": 1480
+    "ms": 2108
    },
    "context": [
     {
      "id": "cnd_asthma",
      "level": "relevant",
-     "title": "喘息（中等度持続性）",
-     "detail": "運動と寒冷空気で誘発。2025年1月18日緊急受診歴あり。",
+     "title": "喘息（中等度持続型）",
+     "detail": "運動と寒冷空気で誘発。2025年1月18日緊急受診あり。",
      "why": "胸の締め付け感とProAir使用に関連"
     }
    ]
@@ -204,7 +197,7 @@
    "speech": "/demo/jordan-2-tr.mp3",
    "stt": {
     "text": "抗生物質としてアモキシシリンを出しますね。",
-    "ms": 446
+    "ms": 572
    },
    "interpret": {
     "language": "ja",
@@ -231,14 +224,14 @@
       ],
       "local_strength": "",
       "status": "different_name",
-      "note_listener": "The name is the same, but the brand may differ.",
+      "note_listener": "The medicine is called amoxicillin in the US and アモキシシリン in Japan; the brands differ.",
       "note_doctor": "米国でもアモキシシリン（Amoxil）として利用されています。",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 1503
+    "ms": 2308
    },
    "context": [
     {
@@ -246,7 +239,21 @@
      "level": "alert",
      "title": "ペニシリン系抗生物質アレルギー",
      "detail": "2019年にアナフィラキシー（喉の腫れ、低血圧）発症",
-     "why": "アモキシシリン処方に対する重篤なアレルギー反応のリスク"
+     "why": "アモキシシリン処方予定のため重篤アレルギー注意"
+    },
+    {
+     "id": "med_lantus",
+     "level": "relevant",
+     "title": "Lantus（インスリン）中断中",
+     "detail": "今朝から嘔吐で服用できず、スキップ中",
+     "why": "嘔吐とインスリン中断が糖尿病管理に影響"
+    },
+    {
+     "id": "cnd_t1d",
+     "level": "relevant",
+     "title": "1型糖尿病の既往",
+     "detail": "2013年診断、2023年に糖尿病性ケトアシドーシス歴あり",
+     "why": "インスリン中断と嘔吐でDKAリスク増加"
     }
    ]
   }
