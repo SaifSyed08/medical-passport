@@ -1,0 +1,358 @@
+{
+ "persona": "sofia",
+ "recordedAt": "2026-11-11T21:39:41.490Z",
+ "equivalents": [
+  {
+   "key": "metformin",
+   "generic": "metformin",
+   "drug_class": "",
+   "home_name": "metformina (Glucophage, Dabex)",
+   "home_strength": "",
+   "local_name": "metformin",
+   "local_brands": [
+    "Glucophage"
+   ],
+   "local_strength": "",
+   "status": "different_name",
+   "note": "Same medicine. Dose limits apply when eGFR is below 45; avoid below 30.",
+   "source": "curated",
+   "id": "med_glucophage",
+   "input": "Glucophage 850 mg"
+  },
+  {
+   "key": "losartan",
+   "generic": "losartan",
+   "drug_class": "",
+   "home_name": "losartán (Cozaar)",
+   "home_strength": "",
+   "local_name": "losartan",
+   "local_brands": [
+    "Cozaar"
+   ],
+   "local_strength": "",
+   "status": "same_name",
+   "note": "",
+   "source": "curated",
+   "id": "med_cozaar",
+   "input": "Cozaar 50 mg"
+  },
+  {
+   "key": "aspirin-low",
+   "generic": "aspirin (low dose)",
+   "drug_class": "",
+   "home_name": "ácido acetilsalicílico (Aspirina Protect)",
+   "home_strength": "100 mg",
+   "local_name": "aspirin (low dose)",
+   "local_brands": [
+    "Bayer Low Dose",
+    "Ecotrin"
+   ],
+   "local_strength": "81 mg",
+   "status": "different_strength",
+   "note": "Same medicine. Low-dose tablets are 81 mg in the US versus 100 mg in Mexico.",
+   "source": "curated",
+   "id": "med_aspirina",
+   "input": "Aspirina Protect 100 mg"
+  },
+  {
+   "key": "salbutamol",
+   "generic": "salbutamol (albuterol)",
+   "drug_class": "",
+   "home_name": "salbutamol (Ventolin)",
+   "home_strength": "100 mcg per puff",
+   "local_name": "albuterol",
+   "local_brands": [
+    "Ventolin HFA",
+    "Proventil HFA",
+    "ProAir HFA"
+   ],
+   "local_strength": "90 mcg per puff",
+   "status": "different_name",
+   "note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
+   "source": "curated",
+   "id": "med_ventolin",
+   "input": "Ventolin inhalador"
+  },
+  {
+   "key": "metamizole",
+   "generic": "metamizole (dipyrone)",
+   "drug_class": "",
+   "home_name": "metamizol sódico (Neo-Melubrina)",
+   "home_strength": "500 mg tablets",
+   "local_name": "",
+   "local_brands": [],
+   "local_strength": "",
+   "status": "not_available_locally",
+   "note": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
+   "source": "curated",
+   "id": "med_neomelubrina",
+   "input": "Neo-Melubrina 500 mg"
+  }
+ ],
+ "lines": [
+  {
+   "speaker": "patient",
+   "audio": "/demo/sofia-0.wav",
+   "audioMs": 7850,
+   "speech": "/demo/sofia-0-tr.mp3",
+   "stt": {
+    "text": "Hola doctor. Eh, desde anoche me duele mucho el pecho y... me cuesta respirar.",
+    "ms": 516
+   },
+   "interpret": {
+    "language": "es",
+    "speaker": "patient",
+    "listenerLang": "en",
+    "raw": "Hola doctor. Eh, desde anoche me duele mucho el pecho y... me cuesta respirar.",
+    "cleaned": "Hola doctor. Desde anoche me duele mucho el pecho y me cuesta respirar.",
+    "translation": "Hello doctor. Since last night my chest hurts a lot and it's hard for me to breathe.",
+    "drugs": [],
+    "ms": 1148
+   },
+   "context": [
+    {
+     "id": "cnd_asma",
+     "level": "relevant",
+     "title": "Asthma history",
+     "detail": "Mild persistent asthma since childhood, recent ER visit March 2025 for exacerbation",
+     "why": "Chest pain and breathing difficulty may relate to asthma exacerbation"
+    },
+    {
+     "id": "doc_urgencias_2025",
+     "level": "relevant",
+     "title": "Asthma ER visit 2025",
+     "detail": "ER visit for asthma exacerbation with dyspnea and wheezing, improved with albuterol and prednisone",
+     "why": "Recent severe asthma episode relevant to current chest pain and breathing difficulty"
+    },
+    {
+     "id": "med_ventolin",
+     "level": "relevant",
+     "title": "Albuterol inhaler",
+     "detail": "Rescue inhaler for asthma, 2 puffs up to every 4 hours as needed",
+     "why": "Current breathing difficulty may require rescue inhaler use"
+    }
+   ]
+  },
+  {
+   "speaker": "patient",
+   "audio": "/demo/sofia-1.wav",
+   "audioMs": 5800,
+   "speech": "/demo/sofia-1-tr.mp3",
+   "stt": {
+    "text": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
+    "ms": 350
+   },
+   "interpret": {
+    "language": "es",
+    "speaker": "patient",
+    "listenerLang": "en",
+    "raw": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
+    "cleaned": "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.",
+    "translation": "I took two metamizole (Neo-Melubrina) tablets and used my albuterol (Ventolin) inhaler, but it didn't help.",
+    "drugs": [
+     {
+      "key": "metamizole",
+      "mentioned": "Neo-Melubrinas",
+      "translated": "metamizole (Neo-Melubrina)",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "metamizole (dipyrone)",
+      "drug_class": "",
+      "home_name": "metamizol sódico (Neo-Melubrina)",
+      "home_strength": "500 mg tablets",
+      "local_name": "",
+      "local_brands": [],
+      "local_strength": "",
+      "status": "not_available_locally",
+      "note_listener": "Neo-Melubrina (metamizole) is not approved or available in the US; closest options are acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
+      "note_doctor": "Not approved in the US; closest options acetaminophen or ibuprofen.",
+      "curated_note": "Not approved in the US (withdrawn in 1977 over agranulocytosis risk). Closest options: acetaminophen (Tylenol) or ibuprofen (Advil, Motrin).",
+      "med_id": "med_neomelubrina",
+      "source": "curated"
+     },
+     {
+      "key": "salbutamol",
+      "mentioned": "Ventolin",
+      "translated": "albuterol (Ventolin)",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "salbutamol (albuterol)",
+      "drug_class": "",
+      "home_name": "salbutamol (Ventolin)",
+      "home_strength": "100 mcg per puff",
+      "local_name": "albuterol",
+      "local_brands": [
+       "Ventolin HFA",
+       "Proventil HFA",
+       "ProAir HFA"
+      ],
+      "local_strength": "90 mcg per puff",
+      "status": "different_name",
+      "note_listener": "Same medicine, but in the US it's called albuterol and the inhaler states 90 mcg per puff instead of 100 mcg.",
+      "note_doctor": "Same medicine under its US name (albuterol). US inhalers state 90 mcg per puff (mouthpiece), Mexico states 100 mcg (valve).",
+      "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
+      "med_id": "med_ventolin",
+      "source": "curated"
+     }
+    ],
+    "ms": 2540
+   },
+   "context": [
+    {
+     "id": "cnd_erc",
+     "level": "relevant",
+     "title": "CKD stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
+     "why": "Kidney disease affects medication safety and symptom evaluation"
+    },
+    {
+     "id": "med_neomelubrina",
+     "level": "relevant",
+     "title": "Metamizole use",
+     "detail": "500 mg every 8 hours as needed for pain or fever",
+     "why": "Patient took metamizole for chest pain; monitor for effectiveness and safety"
+    },
+    {
+     "id": "med_cozaar",
+     "level": "relevant",
+     "title": "Losartan use",
+     "detail": "50 mg daily for hypertension",
+     "why": "Losartan affects potassium and kidney function relevant to symptoms"
+    }
+   ]
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/sofia-2.wav",
+   "audioMs": 6650,
+   "speech": "/demo/sofia-2-tr.mp3",
+   "stt": {
+    "text": "I'd like to start you on amoxicilina and get a CT scan with contrast.",
+    "ms": 309
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "clinician",
+    "listenerLang": "es",
+    "raw": "I'd like to start you on amoxicilina and get a CT scan with contrast.",
+    "cleaned": "I'd like to start you on amoxicillin and get a CT scan with contrast.",
+    "translation": "Me gustaría empezar a tratarla con amoxicilina y hacer una tomografía computarizada con contraste.",
+    "drugs": [
+     {
+      "key": "amoxicillin",
+      "mentioned": "amoxicillin",
+      "translated": "amoxicilina",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "amoxicillin",
+      "drug_class": "penicillin",
+      "home_name": "amoxicilina (Amoxil)",
+      "home_strength": "",
+      "local_name": "amoxicillin",
+      "local_brands": [
+       "Amoxil"
+      ],
+      "local_strength": "",
+      "status": "different_name",
+      "note_listener": "El nombre es el mismo en ambos países.",
+      "note_doctor": "",
+      "curated_note": "",
+      "med_id": "",
+      "source": "curated"
+     }
+    ],
+    "ms": 1331
+   },
+   "context": [
+    {
+     "id": "alg_penicilina",
+     "level": "alert",
+     "title": "Penicillin anaphylaxis",
+     "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
+     "why": "Amoxicillin is contraindicated due to severe penicillin allergy"
+    },
+    {
+     "id": "cnd_erc",
+     "level": "alert",
+     "title": "CKD stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L, August 2026",
+     "why": "Contrast CT and metformin require caution with reduced kidney function"
+    },
+    {
+     "id": "med_glucophage",
+     "level": "alert",
+     "title": "Metformin + contrast",
+     "detail": "Metformin 850 mg twice daily, monitor kidney function before contrast",
+     "why": "Risk of lactic acidosis with contrast in CKD; dosing needs review"
+    }
+   ]
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/sofia-3.wav",
+   "audioMs": 3700,
+   "speech": "/demo/sofia-3-tr.mp3",
+   "stt": {
+    "text": "Can you take ibuprofen for the pain?",
+    "ms": 348
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "clinician",
+    "listenerLang": "es",
+    "raw": "Can you take ibuprofen for the pain?",
+    "cleaned": "Can you take ibuprofen for the pain?",
+    "translation": "¿Puede tomar ibuprofeno para el dolor?",
+    "drugs": [
+     {
+      "key": "ibuprofen",
+      "mentioned": "ibuprofen",
+      "translated": "ibuprofeno",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "ibuprofen",
+      "drug_class": "",
+      "home_name": "ibuprofeno (Advil, Motrin)",
+      "home_strength": "",
+      "local_name": "ibuprofen",
+      "local_brands": [
+       "Advil",
+       "Motrin"
+      ],
+      "local_strength": "",
+      "status": "different_name",
+      "note_listener": "",
+      "note_doctor": "",
+      "curated_note": "",
+      "med_id": "",
+      "source": "curated"
+     }
+    ],
+    "ms": 983
+   },
+   "context": [
+    {
+     "id": "alg_penicilina",
+     "level": "alert",
+     "title": "Penicillin anaphylaxis",
+     "detail": "Anaphylaxis in 2018: generalized urticaria, breathing difficulty, low blood pressure",
+     "why": "Amoxicillin is contraindicated due to severe penicillin allergy"
+    },
+    {
+     "id": "cnd_erc",
+     "level": "alert",
+     "title": "CKD stage 3b",
+     "detail": "eGFR 44 mL/min/1.73 m², potassium 5.2 mmol/L in August 2026",
+     "why": "Avoid NSAIDs like ibuprofen due to kidney disease"
+    },
+    {
+     "id": "med_glucophage",
+     "level": "alert",
+     "title": "Metformin + contrast",
+     "detail": "Metformin 850 mg twice daily, eGFR 44",
+     "why": "Risk with contrast; monitor kidney function and adjust metformin"
+    }
+   ]
+  }
+ ]
+}

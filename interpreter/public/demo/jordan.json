@@ -1,0 +1,247 @@
+{
+ "persona": "jordan",
+ "recordedAt": "2026-11-11T21:17:26.906Z",
+ "equivalents": [
+  {
+   "key": "insulin-glargine",
+   "generic": "insulin glargine",
+   "drug_class": "",
+   "home_name": "insulin glargine (Lantus, Basaglar)",
+   "home_strength": "",
+   "local_name": "インスリン グラルギン",
+   "local_brands": [
+    "ランタス"
+   ],
+   "local_strength": "",
+   "status": "different_name",
+   "note": "",
+   "source": "curated",
+   "id": "med_lantus",
+   "input": "Lantus"
+  },
+  {
+   "key": "insulin-lispro",
+   "generic": "insulin lispro",
+   "drug_class": "",
+   "home_name": "insulin lispro (Humalog)",
+   "home_strength": "",
+   "local_name": "インスリン リスプロ",
+   "local_brands": [
+    "ヒューマログ"
+   ],
+   "local_strength": "",
+   "status": "different_name",
+   "note": "",
+   "source": "curated",
+   "id": "med_humalog",
+   "input": "Humalog"
+  },
+  {
+   "key": "salbutamol",
+   "generic": "salbutamol (albuterol)",
+   "drug_class": "",
+   "home_name": "albuterol (Ventolin HFA, Proventil HFA, ProAir HFA)",
+   "home_strength": "90 mcg per puff",
+   "local_name": "サルブタモール",
+   "local_brands": [
+    "サルタノールインヘラー"
+   ],
+   "local_strength": "100 µg/噴霧",
+   "status": "different_name",
+   "note": "Same medicine; called salbutamol in Japan (albuterol in the US).",
+   "source": "curated",
+   "id": "med_proair",
+   "input": "ProAir HFA"
+  },
+  {
+   "key": "glucagon-nasal",
+   "generic": "glucagon nasal powder",
+   "drug_class": "",
+   "home_name": "glucagon nasal powder (Baqsimi)",
+   "home_strength": "",
+   "local_name": "グルカゴン点鼻粉末剤",
+   "local_brands": [
+    "バクスミー"
+   ],
+   "local_strength": "",
+   "status": "different_name",
+   "note": "",
+   "source": "curated",
+   "id": "med_baqsimi",
+   "input": "Baqsimi"
+  }
+ ],
+ "lines": [
+  {
+   "speaker": "patient",
+   "audio": "/demo/jordan-0.wav",
+   "audioMs": 11700,
+   "speech": "/demo/jordan-0-tr.mp3",
+   "stt": {
+    "text": "Um, I've been throwing up since this morning, and I couldn't keep my Lantus down. I mean, I skipped my Lantus.",
+    "ms": 830
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "patient",
+    "listenerLang": "ja",
+    "raw": "Um, I've been throwing up since this morning, and I couldn't keep my Lantus down. I mean, I skipped my Lantus.",
+    "cleaned": "I've been throwing up since this morning, and I skipped my Lantus.",
+    "translation": "今朝からずっと吐いていて、ランタス（インスリン グラルギン）は抜きました。",
+    "drugs": [
+     {
+      "key": "insulin-glargine",
+      "mentioned": "Lantus",
+      "translated": "ランタス（インスリン グラルギン）",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "insulin glargine",
+      "drug_class": "",
+      "home_name": "insulin glargine (Lantus, Basaglar)",
+      "home_strength": "",
+      "local_name": "インスリン グラルギン",
+      "local_brands": [
+       "ランタス"
+      ],
+      "local_strength": "",
+      "status": "different_name",
+      "note_listener": "日本ではインスリン グラルギン（ランタス）と呼ばれています。",
+      "note_doctor": "米国ではLantus（インスリン グラルギン）として販売されています。",
+      "curated_note": "",
+      "med_id": "med_lantus",
+      "source": "curated"
+     }
+    ],
+    "ms": 1924
+   },
+   "context": [
+    {
+     "id": "cnd_t1d",
+     "level": "relevant",
+     "title": "1型糖尿病",
+     "detail": "2013年診断。2023年に糖尿病性ケトアシドーシスの既往あり。",
+     "why": "嘔吐でインスリン注射が困難なため、糖尿病管理に影響。"
+    },
+    {
+     "id": "med_lantus",
+     "level": "relevant",
+     "title": "ランタス（インスリン・グラルギン）",
+     "detail": "18単位、毎晩10時に皮下注射。1型糖尿病の長時間作用型インスリン。",
+     "why": "嘔吐で投与できず、血糖コントロールに影響。"
+    },
+    {
+     "id": "lab_ketones",
+     "level": "relevant",
+     "title": "血中ケトン体（DKA時）",
+     "detail": "4.8 mmol/L（基準<0.6）、2023年11月4日。",
+     "why": "過去のDKAリスク評価に重要。"
+    }
+   ]
+  },
+  {
+   "speaker": "patient",
+   "audio": "/demo/jordan-1.wav",
+   "audioMs": 5250,
+   "speech": "/demo/jordan-1-tr.mp3",
+   "stt": {
+    "text": "I also used my ProAir twice because my chest felt tight.",
+    "ms": 565
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "patient",
+    "listenerLang": "ja",
+    "raw": "I also used my ProAir twice because my chest felt tight.",
+    "cleaned": "I also used my ProAir twice because my chest felt tight.",
+    "translation": "胸が苦しかったので、プロエア（サルブタモール）も2回使いました。",
+    "drugs": [
+     {
+      "key": "salbutamol",
+      "mentioned": "ProAir",
+      "translated": "プロエア（サルブタモール）",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "salbutamol (albuterol)",
+      "drug_class": "",
+      "home_name": "albuterol (Ventolin HFA, Proventil HFA, ProAir HFA)",
+      "home_strength": "90 mcg per puff",
+      "local_name": "サルブタモール",
+      "local_brands": [
+       "サルタノールインヘラー"
+      ],
+      "local_strength": "100 µg/噴霧",
+      "status": "different_name",
+      "note_listener": "日本ではサルブタモール（サルタノールインヘラー）と呼ばれています。",
+      "note_doctor": "米国ではalbuterol（ProAir HFA）と呼ばれています。",
+      "curated_note": "Same medicine; called salbutamol in Japan (albuterol in the US).",
+      "med_id": "med_proair",
+      "source": "curated"
+     }
+    ],
+    "ms": 2390
+   },
+   "context": [
+    {
+     "id": "cnd_asthma",
+     "level": "relevant",
+     "title": "中等度持続性喘息",
+     "detail": "運動と寒冷空気で誘発。2025年に緊急受診歴あり。",
+     "why": "胸の締め付け感とProAir使用に関連"
+    }
+   ]
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/jordan-2.wav",
+   "audioMs": 4600,
+   "speech": "/demo/jordan-2-tr.mp3",
+   "stt": {
+    "text": "抗生物質としてアモキシシリンを出しますね。",
+    "ms": 431
+   },
+   "interpret": {
+    "language": "ja",
+    "speaker": "clinician",
+    "listenerLang": "en",
+    "raw": "抗生物質としてアモキシシリンを出しますね。",
+    "cleaned": "抗生物質としてアモキシシリンを出しますね。",
+    "translation": "I'll prescribe amoxicillin as an antibiotic.",
+    "drugs": [
+     {
+      "key": "amoxicillin",
+      "mentioned": "アモキシシリン",
+      "translated": "amoxicillin",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "amoxicillin",
+      "drug_class": "penicillin",
+      "home_name": "amoxicillin (Amoxil)",
+      "home_strength": "",
+      "local_name": "アモキシシリン",
+      "local_brands": [
+       "サワシリン",
+       "パセトシン"
+      ],
+      "local_strength": "",
+      "status": "different_name",
+      "note_listener": "The medicine is called amoxicillin in the US and アモキシシリン in Japan, but it is the same drug.",
+      "note_doctor": "",
+      "curated_note": "",
+      "med_id": "",
+      "source": "curated"
+     }
+    ],
+    "ms": 2875
+   },
+   "context": [
+    {
+     "id": "alg_penicillin",
+     "level": "alert",
+     "title": "ペニシリンアナフィラキシー",
+     "detail": "2019年に喉の腫れと低血圧の重篤反応あり",
+     "why": "アモキシシリン投与予定のため重篤アレルギー注意"
+    }
+   ]
+  }
+ ]
+}
