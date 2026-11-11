@@ -1,0 +1,77 @@
+{
+  "expo": {
+    "name": "Tessera",
+    "slug": "tessera",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "org.texasconvergent.tessera.demo",
+      "infoPlist": {
+        "NSFaceIDUsageDescription": "Tessera uses Face ID to confirm sensitive changes to your card."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#17243a",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "package": "org.texasconvergent.tessera.demo"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      "expo-secure-store",
+      "expo-font",
+      "expo-sharing",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#17243a",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Tessera uses Face ID to confirm sensitive changes to your card."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Tessera saves your card's QR code to Photos when you ask it to.",
+          "savePhotosPermission": "Tessera saves your card's QR code to Photos when you ask it to.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Choose photos of medical documents to add to your records.",
+          "cameraPermission": "Take photos of medical documents to add to your records."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#315f98"
+        }
+      ]
+    ],
+    "scheme": "tessera",
+    "backgroundColor": "#f2f2ef",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
