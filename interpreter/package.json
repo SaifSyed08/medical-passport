@@ -1,0 +1,35 @@
+{
+  "name": "tessera-interpreter",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Patient-aware medical interpreter: live speech translation that knows the patient's record and local drug names.",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/index.mjs",
+    "build": "vite build",
+    "start": "node server/index.mjs --prod",
+    "typecheck": "tsc --noEmit",
+    "demo": "vite build && node server/index.mjs --prod",
+    "test": "node --experimental-strip-types --no-warnings --test \"tests/*.test.mjs\"",
+    "test:api": "node --experimental-strip-types --no-warnings scripts/api-check.mjs",
+    "test:e2e": "node scripts/e2e-browser.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "express": "^5.3.0",
+    "selfsigned": "^5.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.7.0",
+    "puppeteer-core": "^25.17.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2",
+    "vite": "^6.4.6"
+  }
+}

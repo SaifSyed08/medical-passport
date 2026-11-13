@@ -14,6 +14,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     // Expo traveler app has its own toolchain.
     "mobile/**",
+    // Patient-aware interpreter: its own Vite + Express project.
+    "interpreter/**",
     ".claude/**",
   ]),
   {

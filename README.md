@@ -24,6 +24,7 @@ Use Node >=22.13, the Sites installation/build helpers, and the included local p
 
 The repo now also contains:
 - `mobile/`: the Expo traveler app (iOS and Android). Setup, Expo Go notes and checks are in [mobile/README.md](mobile/README.md).
+- `interpreter/`: **Tessera Interpreter**, a patient-aware medical interpreter. The traveler hands their phone to the doctor and they both talk. It shows live captions and translates aloud. Medicine names switch to local ones (Ventolin becomes albuterol). The record items that matter come up as they talk, with alerts such as penicillin anaphylaxis when the doctor says "amoxicillin". It is a separate Vite + Express project. Run it with `cd interpreter && npm install && npm run dev` (needs `OPENAI_API_KEY`), and press **D** for the recorded demo. Details are in [interpreter/README.md](interpreter/README.md).
 - `/api/v1/*`: a JSON API on the same Worker for the app, with bearer-token auth (`app/api/v1`, logic in `lib/tessera`, types in `shared/tessera.ts`).
 - `/t/{card_id}`: the URL every Tessera QR code opens. It's a placeholder until the clinician flow is built.
 - [AUDIT.md](AUDIT.md) (repo audit and gap list), [TRANSLATION_REVIEW.md](TRANSLATION_REVIEW.md) (Japanese strings needing a qualified reviewer), [docs/WALLET_PLAN.md](docs/WALLET_PLAN.md) (Apple Wallet next steps).

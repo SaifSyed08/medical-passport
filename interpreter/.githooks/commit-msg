@@ -1,0 +1,6 @@
+#!/bin/sh
+# Reject commit messages that carry AI attribution trailers.
+if grep -qiE '^(co-authored-by:.*(claude|anthropic|openai|copilot|chatgpt))|generated with \[?claude' "$1"; then
+  echo "commit-msg: AI attribution trailer found; remove it." >&2
+  exit 1
+fi

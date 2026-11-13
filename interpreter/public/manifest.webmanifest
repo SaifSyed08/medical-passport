@@ -1,0 +1,1 @@
+{ "name": "Tessera Interpreter", "short_name": "Interpreter", "start_url": "/", "display": "standalone", "background_color": "#f4f2ec", "theme_color": "#0f4c4a", "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
