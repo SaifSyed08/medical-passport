@@ -30,6 +30,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: t.tabCard, tabBarIcon: icon("▭"), tabBarAccessibilityLabel: t.tabCard }} />
       <Tabs.Screen name="health" options={{ title: t.tabHealth, tabBarIcon: icon("✚"), tabBarAccessibilityLabel: t.tabHealth }} />
+      <Tabs.Screen name="interpreter" options={{ title: t.tabInterpreter, tabBarIcon: icon("◉"), tabBarAccessibilityLabel: t.tabInterpreter }} />
       <Tabs.Screen name="records" options={{ title: t.tabRecords, tabBarIcon: icon("❏"), tabBarAccessibilityLabel: t.tabRecords }} />
       <Tabs.Screen
         name="privacy"

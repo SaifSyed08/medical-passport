@@ -2,7 +2,7 @@ name = "tessera-extractor"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 
-# ANTHROPIC_API_KEY is a secret: `wrangler secret put ANTHROPIC_API_KEY`. Never commit it.
+# No AI API: documents are read by the PaddleOCR server in ../ocr and turned into suggestions by src/rules.ts.
 [vars]
 MAIN_API_URL = "<set to the deployed site URL>"
-MODEL = "claude-haiku-5-5"
+OCR_URL = "<set to the OCR server URL>"

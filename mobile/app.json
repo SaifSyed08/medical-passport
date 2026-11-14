@@ -10,7 +10,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "org.texasconvergent.tessera.demo",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Tessera uses Face ID to confirm sensitive changes to your card."
+        "NSFaceIDUsageDescription": "Tessera uses Face ID to confirm sensitive changes to your card.",
+        "NSMicrophoneUsageDescription": "Tessera's interpreter listens to you and your doctor so it can translate the conversation."
       }
     },
     "android": {
@@ -21,7 +22,11 @@
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "org.texasconvergent.tessera.demo"
+      "package": "org.texasconvergent.tessera.demo",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
