@@ -4,7 +4,7 @@ import * as Sharing from "expo-sharing";
 import { useEffect, useState } from "react";
 import type { RecordItem } from "@shared/tessera";
 import { api, API_URL, authHeader } from "@/lib/api";
-import { EXTRACTOR_URL, getAutofillPref } from "@/lib/autofill";
+import { ensureAutofillOptIn, EXTRACTOR_URL, getAutofillPref } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
 import { ask } from "@/lib/confirm";
 import { useSession } from "@/lib/session";
@@ -75,7 +75,7 @@ export default function RecordDetail() {
       )}
       {r.hasFile && <Button secondary busy={busy} onPress={openFile}>Open original file</Button>}
       {r.kind === "upload" && canSuggest && (
-        <Button secondary disabled={busy} onPress={() => router.push({ pathname: "/review", params: { recordId: r.id } })}>{t.suggestUpdates}</Button>
+        <Button secondary disabled={busy} onPress={async () => { if (await ensureAutofillOptIn(t)) router.push({ pathname: "/review", params: { recordId: r.id } }); else setCanSuggest(false); }}>{t.suggestUpdates}</Button>
       )}
       {!!error && <Notice tone="error">{error}</Notice>}
       <Notice>{t.restrictedNote}</Notice>

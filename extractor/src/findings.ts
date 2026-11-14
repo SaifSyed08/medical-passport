@@ -9,6 +9,10 @@ const SPEC: Record<SuggestionKind, Record<string, number>> = {
   bloodType: { value: 8 },
 };
 
+// "No known allergies" and negated conditions must never become card entries, whatever the model returns.
+const NO_ALLERGY = /^(nkda|nka|no known (drug )?allergies?|none( known)?|nil|n\/a)$/i;
+const NEGATED_CONDITION = /^no(\s|$)/i;
+
 const isObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
 
 /** Never throws: anything malformed is dropped. */
@@ -29,12 +33,15 @@ export function parseFindings(raw: unknown): Suggestion[] {
     }
     const required = Object.keys(SPEC[kind])[0];
     if (!ok || !fields[required]) continue;
+    if (kind === "allergy" && NO_ALLERGY.test(fields.substance)) continue;
+    if (kind === "condition" && NEGATED_CONDITION.test(fields.name)) continue;
     if (kind === "bloodType" && (fields.value === "Unknown" || !(BLOOD_TYPES as readonly string[]).includes(fields.value))) continue;
     if (kind === "allergy") {
       const sev = typeof src.severity === "string" ? src.severity.trim().toLowerCase() : "";
       fields.severity = ["severe", "moderate", "mild"].includes(sev) ? sev : "moderate";
     }
     const quote = typeof item.quote === "string" ? item.quote.trim().slice(0, 200) : "";
+    if (!quote) continue; // every suggestion must show the line it came from
     const c = typeof item.confidence === "number" && Number.isFinite(item.confidence) ? item.confidence : 0;
     out.push({ id: `sg_${out.length + 1}`, kind, fields, quote, confidence: Math.min(1, Math.max(0, c)) });
   }

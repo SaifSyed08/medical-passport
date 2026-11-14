@@ -159,6 +159,8 @@ export default function Review() {
                         </Button>
                       </>
                     )}
+                    {/* A duplicate stays removed: no Undo, since Confirm/Edit are hidden for it. An item edited into a duplicate can still be removed. */}
+                    {!(kind === "duplicate" && state === "removed") && (
                     <Button
                       style={{ flex: 1 }}
                       secondary
@@ -168,6 +170,7 @@ export default function Review() {
                     >
                       {state === "removed" ? t.restore : t.dontAdd}
                     </Button>
+                    )}
                   </View>
                 </Section>
               );

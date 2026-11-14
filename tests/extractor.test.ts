@@ -7,13 +7,13 @@ const f = (o: object) => ({ kind: "condition", fields: { name: "Asthma" }, quote
 
 describe("parseFindings", () => {
   it("drops an allergy without substance", () => {
-    expect(parseFindings({ findings: [{ kind: "allergy", fields: { reaction: "rash" }, quote: "", confidence: 1 }] })).toEqual([]);
+    expect(parseFindings({ findings: [{ kind: "allergy", fields: { reaction: "rash" }, quote: "q", confidence: 1 }] })).toEqual([]);
   });
   it("truncates, coerces severity, clamps confidence, assigns ids", () => {
     const out = parseFindings({
       findings: [
         f({ fields: { name: "Asthma", note: "x".repeat(600) }, confidence: 7 }),
-        { kind: "allergy", fields: { substance: "Penicillin", severity: "life-threatening" }, quote: "", confidence: 0.5 },
+        { kind: "allergy", fields: { substance: "Penicillin", severity: "life-threatening" }, quote: "q", confidence: 0.5 },
       ],
     });
     expect(out[0].fields.note).toHaveLength(400);
@@ -22,13 +22,24 @@ describe("parseFindings", () => {
     expect(out.map(s => s.id)).toEqual(["sg_1", "sg_2"]);
   });
   it("normalizes severity case and whitespace", () => {
-    const [a] = parseFindings({ findings: [{ kind: "allergy", fields: { substance: "Nuts", severity: " Severe " }, quote: "", confidence: 1 }] });
+    const [a] = parseFindings({ findings: [{ kind: "allergy", fields: { substance: "Nuts", severity: " Severe " }, quote: "q", confidence: 1 }] });
     expect(a.fields.severity).toBe("severe");
   });
   it("rejects bad blood types and non-string fields", () => {
-    const bt = (value: string) => ({ kind: "bloodType", fields: { value }, quote: "", confidence: 1 });
+    const bt = (value: string) => ({ kind: "bloodType", fields: { value }, quote: "q", confidence: 1 });
     expect(parseFindings({ findings: [bt("Unknown"), bt("Z+"), f({ fields: { name: 5 } })] })).toEqual([]);
     expect(parseFindings({ findings: [bt("O+")] })).toHaveLength(1);
+  });
+  it("drops 'no known allergies' items and keeps a real allergy", () => {
+    const al = (substance: string) => ({ kind: "allergy", fields: { substance }, quote: "q", confidence: 1 });
+    const out = parseFindings({ findings: [al("NKDA"), al(" No known drug allergies "), al("Penicillin")] });
+    expect(out.map(s => s.fields.substance)).toEqual(["Penicillin"]);
+  });
+  it("drops negated conditions", () => {
+    expect(parseFindings({ findings: [f({ fields: { name: "No history of asthma" } })] })).toEqual([]);
+  });
+  it("drops items without a quote", () => {
+    expect(parseFindings({ findings: [f({ quote: "  " }), f({ quote: undefined })] })).toEqual([]);
   });
   it("returns [] for garbage", () => {
     for (const g of [null, "x", { findings: "no" }]) expect(parseFindings(g)).toEqual([]);
@@ -57,6 +68,13 @@ describe("handle", () => {
     });
     expect(r.status).toBe(404);
     expect(((await r.json()) as { code: string }).code).toBe("not_found");
+  });
+  it("relays 401 from the file fetch with its code", async () => {
+    const r = await handle(req("t-401"), env, {
+      fetch: async () => Response.json({ error: "Session expired", code: "session_expired" }, { status: 401 }),
+    });
+    expect(r.status).toBe(401);
+    expect(((await r.json()) as { code: string }).code).toBe("session_expired");
   });
   it("415 for heic", async () => {
     const r = await handle(req("t-heic"), env, { fetch: file("image/heic"), callModel: model });
@@ -101,6 +119,18 @@ describe("callModel", () => {
   const stub = (body: object) => vi.stubGlobal("fetch", async () => Response.json(body));
   const call = () => callModel("k", "m", "application/pdf", new Uint8Array([1, 2]));
 
+  it("sends auto tool_choice, low effort and a large max_tokens", async () => {
+    let body: Record<string, unknown> = {};
+    vi.stubGlobal("fetch", async (_u: string, init: RequestInit) => {
+      body = JSON.parse(init.body as string);
+      return Response.json({ stop_reason: "tool_use", content: [{ type: "tool_use", input: { findings: [] } }] });
+    });
+    await call();
+    expect(body.tool_choice).toEqual({ type: "auto" });
+    expect(body.output_config).toEqual({ effort: "low" });
+    expect(body.max_tokens).toBe(16000);
+    expect(body).not.toHaveProperty("thinking");
+  });
   it("returns the tool_use input", async () => {
     stub({ stop_reason: "tool_use", content: [{ type: "tool_use", input: { findings: [] } }] });
     expect(await call()).toEqual({ findings: [] });

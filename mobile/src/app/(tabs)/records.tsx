@@ -6,9 +6,8 @@ import { useState } from "react";
 import { View } from "react-native";
 import type { RecordItem } from "@shared/tessera";
 import { api, ApiError } from "@/lib/api";
-import { EXTRACTOR_URL, getAutofillPref, setAutofillPref } from "@/lib/autofill";
+import { ensureAutofillOptIn } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
-import { ask } from "@/lib/confirm";
 import { useSession } from "@/lib/session";
 import { space } from "@/lib/theme";
 import { Button, Heading, LoadError, Loading, Logo, Notice, Pill, Row, Screen, Section } from "@/components/ui";
@@ -42,13 +41,7 @@ export default function Records() {
 
   /** After an upload: ask once whether to read documents, then open the review if opted in. */
   async function maybeAutofill(record: RecordItem) {
-    if (!EXTRACTOR_URL) return;
-    let pref = await getAutofillPref();
-    if (pref === null) {
-      pref = (await ask(t.autofillAskTitle, t.autofillAsk, t.autofillYes, t.autofillNo)) ? "on" : "off";
-      await setAutofillPref(pref).catch(() => {});
-    }
-    if (pref === "on") router.push({ pathname: "/review", params: { recordId: record.id } });
+    if (await ensureAutofillOptIn(t)) router.push({ pathname: "/review", params: { recordId: record.id } });
   }
 
   async function addFile(file: Pick) {

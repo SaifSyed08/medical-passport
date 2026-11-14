@@ -34,6 +34,8 @@ The destination country sets the language doctors see on the emergency profile: 
 ### Document reading (optional)
 Set `EXPO_PUBLIC_EXTRACTOR_URL` in `.env` to the extractor Worker's base URL (the address `npm run dev` in `../extractor` prints, using your Mac's LAN IP for a phone, or the deployed Worker's HTTPS URL; no trailing `/extract`). After a PDF, photo or camera scan is uploaded, the app asks once whether to read documents, then opens a review screen where each suggested allergy, medication, condition or blood type must be confirmed or removed before anything is added. Change the choice under **Privacy → Document reading**, or re-run it from a document with **Suggest profile updates**. Leave it empty to turn the feature off: no prompt, no review.
 
+The extractor needs an Anthropic key: locally put `ANTHROPIC_API_KEY=...` in `extractor/.dev.vars` (git-ignored) for `wrangler dev`; in production run `wrangler secret put ANTHROPIC_API_KEY`.
+
 After changing `.env`, restart with `npx expo start --clear`. Metro also sometimes misses file changes without watchman; `--clear` fixes that too.
 
 ## Expo Go vs a development build
