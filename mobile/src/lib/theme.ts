@@ -27,6 +27,10 @@ export const color = {
   warnBg: "#fdf3e6",
   warnText: "#8a5a1f",
   focus: "#749fc9",
+  selectedBg: "#eef4fb",
+  selectedLine: "#a8c2df",
+  removedBg: "#f0f0ee",
+  removedLine: "#dcdcd8",
 } as const;
 
 /** The four card themes from the web card studio. */

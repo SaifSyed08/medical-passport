@@ -1,7 +1,8 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef, useState } from "react";
-import { KeyboardAvoidingView, Platform, View } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
+import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { classify, initialState, mergeAccepted, readyToAdd, type ReviewState, type Suggestion } from "@shared/autofill";
 import { BLOOD_TYPES, type Profile } from "@shared/tessera";
 import { ApiError } from "@/lib/api";
@@ -10,8 +11,52 @@ import { useResource } from "@/lib/cache";
 import type { Strings } from "@/lib/i18n";
 import { ITEM_KINDS, newId, saveProfile } from "@/lib/profile";
 import { useSession } from "@/lib/session";
-import { color, space } from "@/lib/theme";
+import { color, radius, space, TOUCH } from "@/lib/theme";
 import { Button, Chips, Field, Heading, LoadError, Loading, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
+
+type IconName = "check" | "x";
+
+/** Square icon-only button with the app's button radius and the minimum touch size. Active = filled: blue for confirm, gray for remove. */
+function IconButton({ icon, label, onPress, tone, active, disabled }: {
+  icon: IconName;
+  label: string;
+  onPress: () => void;
+  tone: "confirm" | "remove";
+  active?: boolean;
+  disabled?: boolean;
+}) {
+  const accent = tone === "remove" ? color.errorText : color.blue;
+  const edge = active ? (tone === "remove" ? color.muted : color.blue) : tone === "remove" ? color.errorLine : color.blue;
+  const fill = tone === "remove" ? color.muted : color.blue;
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ disabled: !!disabled, selected: !!active }}
+      disabled={disabled}
+      hitSlop={4}
+      onPress={() => {
+        void Haptics.selectionAsync();
+        onPress();
+      }}
+      style={({ pressed }) => [
+        {
+          width: TOUCH,
+          height: TOUCH,
+          borderRadius: radius.button,
+          borderWidth: 1,
+          borderColor: edge,
+          backgroundColor: active ? fill : pressed ? "#eef3f7" : color.surface,
+          alignItems: "center",
+          justifyContent: "center",
+        },
+        disabled && { opacity: 0.4 },
+      ]}
+    >
+      <Feather name={icon} size={22} color={active ? "white" : accent} />
+    </Pressable>
+  );
+}
 
 const MAIN: Record<Suggestion["kind"], string> = { condition: "name", allergy: "substance", medication: "generic", bloodType: "value" };
 const BLOOD_OPTIONS = BLOOD_TYPES.filter(b => b !== "Unknown").map(b => ({ value: b as string, label: b }));
@@ -120,14 +165,14 @@ export default function Review() {
               const detail = Object.entries(s.fields).filter(([k, v]) => k !== MAIN[s.kind] && v.trim()).map(([, v]) => v).join(" · ");
               const label = kindLabel(t, s.kind);
               return (
-                <Section key={s.id} title={label} action={kind === "duplicate" ? <Pill tone="muted">{t.alreadyOnPassport}</Pill> : s.confidence < 0.6 ? <Pill tone="warn">{t.checkCarefully}</Pill> : undefined}>
+                <Section key={s.id} title={label} tone={state === "checked" ? "selected" : state === "removed" ? "removed" : undefined} action={kind === "duplicate" ? <Pill tone="muted">{t.alreadyOnPassport}</Pill> : s.confidence < 0.6 ? <Pill tone="warn">{t.checkCarefully}</Pill> : undefined}>
                   <View style={{ gap: space.s, opacity: state === "removed" ? 0.5 : 1 }}>
                     <T weight="500" style={{ fontSize: 17 }}>{main}</T>
                     {!!detail && <T style={{ color: color.body }}>{detail}</T>}
                     {kind === "replaces" && <T style={{ color: color.body }}>{`${t.currentValue}: ${p.bloodType}`}</T>}
                     {!!s.quote && <T style={{ color: color.muted, fontStyle: "italic", lineHeight: 20 }}>{`“${s.quote}”`}</T>}
                   </View>
-                  {editing === i && state !== "removed" && (
+                  {editing === i && (
                     <View style={{ gap: space.m, marginTop: space.m }}>
                       {s.kind === "bloodType" ? (
                         <Chips label={t.bloodType} value={s.fields.value ?? ""} options={BLOOD_OPTIONS} onChange={v => setField(i, "value", v)} />
@@ -142,34 +187,34 @@ export default function Review() {
                       )}
                     </View>
                   )}
-                  <View style={{ flexDirection: "row", gap: space.s, marginTop: space.m }}>
-                    {state !== "removed" && kind !== "duplicate" && (
-                      <>
-                        <Button
-                          style={{ flex: 1 }}
-                          secondary={state !== "checked"}
+                  {/* Confirm, remove and Edit are always shown. Checked fills the check (blue card); removed fills the X (gray card). */}
+                  <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.s, marginTop: space.m }}>
+                    <View style={{ flexDirection: "row", gap: space.s }}>
+                      {kind !== "duplicate" && (
+                        <IconButton
+                          icon="check"
+                          tone="confirm"
+                          active={state === "checked"}
                           disabled={!main.trim()}
                           label={`${t.confirmCorrect}: ${label}, ${main}`}
                           onPress={() => setState(i, state === "checked" ? "pending" : "checked")}
-                        >
-                          {state === "checked" ? `✓ ${t.confirmed}` : t.confirm}
-                        </Button>
-                        <Button style={{ flex: 1 }} secondary label={`${t.edit}: ${label}, ${main}`} onPress={() => setEditing(editing === i ? null : i)}>
-                          {editing === i ? t.done : t.edit}
-                        </Button>
-                      </>
-                    )}
-                    {/* A duplicate stays removed: no Undo, since Confirm/Edit are hidden for it. An item edited into a duplicate can still be removed. */}
-                    {!(kind === "duplicate" && state === "removed") && (
-                    <Button
-                      style={{ flex: 1 }}
-                      secondary
-                      danger={state !== "removed"}
-                      label={`${state === "removed" ? t.restore : t.dontAdd}: ${label}, ${main}`}
-                      onPress={() => setState(i, state === "removed" ? "pending" : "removed")}
-                    >
-                      {state === "removed" ? t.restore : t.dontAdd}
-                    </Button>
+                        />
+                      )}
+                      {/* A duplicate that starts removed has no controls. An item edited into a duplicate can still be removed. */}
+                      {!(kind === "duplicate" && state === "removed") && (
+                        <IconButton
+                          icon="x"
+                          tone="remove"
+                          active={state === "removed"}
+                          label={`${state === "removed" ? t.restore : t.dontAdd}: ${label}, ${main}`}
+                          onPress={() => setState(i, state === "removed" ? "pending" : "removed")}
+                        />
+                      )}
+                    </View>
+                    {kind !== "duplicate" && (
+                      <Button style={{ minWidth: 96 }} secondary label={`${t.edit}: ${label}, ${main}`} onPress={() => setEditing(editing === i ? null : i)}>
+                        {editing === i ? t.done : t.edit}
+                      </Button>
                     )}
                   </View>
                 </Section>

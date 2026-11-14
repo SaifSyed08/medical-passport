@@ -148,9 +148,16 @@ export function Button({ children, onPress, secondary, danger, disabled, busy, l
   );
 }
 
-export function Section({ title, children, tone, action }: { title?: string; children: ReactNode; tone?: "allergy"; action?: ReactNode }) {
+export function Section({ title, children, tone, action }: { title?: string; children: ReactNode; tone?: "allergy" | "selected" | "removed"; action?: ReactNode }) {
   return (
-    <View style={[styles.section, tone === "allergy" && { backgroundColor: color.allergyBg, borderColor: color.allergyLine }]}>
+    <View
+      style={[
+        styles.section,
+        tone === "allergy" && { backgroundColor: color.allergyBg, borderColor: color.allergyLine },
+        tone === "selected" && { backgroundColor: color.selectedBg, borderColor: color.selectedLine },
+        tone === "removed" && { backgroundColor: color.removedBg, borderColor: color.removedLine },
+      ]}
+    >
       {(title || action) && (
         <View style={styles.sectionHead}>
           {title ? (
