@@ -1,6 +1,7 @@
 import * as DocumentPicker from "expo-document-picker";
 import { File as FsFile } from "expo-file-system";
 import * as Haptics from "expo-haptics";
+import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -14,6 +15,12 @@ import { space } from "@/lib/theme";
 import { Button, Heading, LoadError, Loading, Logo, Notice, Pill, Row, Screen, Section } from "@/components/ui";
 
 type Pick = { uri: string; name: string; type: string };
+
+/** Re-encodes an image as JPEG (iPhone photos are HEIC, which the document reader can't open). */
+async function toJpeg(uri: string) {
+  const rendered = await ImageManipulator.manipulate(uri).renderAsync();
+  return (await rendered.saveAsync({ format: SaveFormat.JPEG, compress: 0.8 })).uri;
+}
 
 export default function Records() {
   const { t } = useSession();
@@ -61,11 +68,29 @@ export default function Records() {
   async function addImage(r: ImagePicker.ImagePickerResult) {
     if (r.canceled || !r.assets[0]) return;
     const a = r.assets[0];
+    const name = a.fileName || "Photo.jpg";
+    const isHeic = /hei[cf]/i.test(a.mimeType ?? "") || /\.hei[cf]$/i.test(name);
+    if (isHeic) {
+      try {
+        await addFile({ uri: await toJpeg(a.uri), name: name.replace(/\.hei[cf]$/i, "") + ".jpg", type: "image/jpeg" });
+        return;
+      } catch {
+        // Conversion failed: upload the original; the reader will say it can't open it.
+      }
+    }
     const type = a.mimeType === "image/png" || a.mimeType === "image/heic" ? a.mimeType : "image/jpeg";
-    await addFile({ uri: a.uri, name: a.fileName || "Photo.jpg", type });
+    await addFile({ uri: a.uri, name, type });
   }
 
-  const pickPhoto = async () => addImage(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.7 }));
+  // Compatible makes iOS hand over a JPEG instead of the original HEIC, which the extractor can't read.
+  const pickPhoto = async () =>
+    addImage(
+      await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"],
+        quality: 0.7,
+        preferredAssetRepresentationMode: ImagePicker.UIImagePickerPreferredAssetRepresentationMode.Compatible,
+      }),
+    );
 
   async function scan() {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
