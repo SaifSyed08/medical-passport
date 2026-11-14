@@ -74,7 +74,7 @@ const browser = await puppeteer.launch({
     "--use-fake-ui-for-media-stream",
     "--use-fake-device-for-media-stream",
     `--use-file-for-fake-audio-capture=${track.file.replace(/\\/g, "/")}%noloop`,
-    "--autoplay-policy=no-user-gesture-required",
+    "--autoplay-policy=no-user-gesture-required", "--disable-audio-output",
     "--window-size=430,900",
   ],
 });

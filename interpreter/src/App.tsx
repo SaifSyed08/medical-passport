@@ -7,6 +7,7 @@ import Home from "./components/Home";
 import Conversation from "./components/Conversation";
 import { unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, onHostPersona } from "./lib/host";
+import { TANDEM_ICON } from "./components/TandemLogo";
 
 export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
   const base = personas.find((p) => p.id === settings.personaId) || personas[0];
@@ -32,6 +33,17 @@ export default function App() {
   const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas]);
 
   useEffect(() => saveSettings(settings), [settings]);
+
+  // Tandem: a second visual identity over the same app. The page-level bits (tab title, icon, desktop backdrop)
+  // live outside React's tree, so they follow the setting here.
+  const brand = settings.brand;
+  useEffect(() => {
+    document.documentElement.dataset.brand = brand;
+    document.title = brand === "tandem" ? "Tandem" : "Tessera Interpreter";
+    const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
+    if (icon) icon.href = brand === "tandem" ? TANDEM_ICON : "/icon.svg";
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#eef2f5");
+  }, [brand]);
 
   // Screen changes animate inside the phone (the incoming screen and its header/mic glide in, clipped by the frame).
   const [nav, setNav] = useState<"forward" | "back" | "none">("none");
@@ -64,6 +76,10 @@ export default function App() {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.key === "3") {
+        setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "tessera" : "tandem" }));
+        return;
+      }
       if (e.key === "d" || e.key === "D") {
         // Unlock audio inside the key press itself: iOS/Chrome block playback that starts later otherwise.
         unlockAudio();
@@ -75,7 +91,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className={`app nav-${nav}${embedded() ? " embedded" : ""}`}>
+    <div className={`app nav-${nav}${embedded() ? " embedded" : ""}`} data-brand={brand}>
       {/* Desktop only: a phone status bar with the Dynamic Island, so the screen reads like the real device. */}
       {!embedded() && <div className="device-bar" aria-hidden>
         <span className="device-time">9:41</span>

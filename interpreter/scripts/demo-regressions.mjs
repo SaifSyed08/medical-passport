@@ -40,7 +40,7 @@ function micTrack() {
 }
 
 async function launch({ fakeMic = false } = {}) {
-  const args = ["--autoplay-policy=no-user-gesture-required", "--window-size=430,900"];
+  const args = ["--autoplay-policy=no-user-gesture-required", "--disable-audio-output", "--window-size=430,900"];
   if (fakeMic) args.push("--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", `--use-file-for-fake-audio-capture=${micTrack()}%noloop`);
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args });
   const page = await browser.newPage();

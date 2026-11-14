@@ -1,0 +1,151 @@
+/* Tandem: deep navy, gold and cream, with a classic serif for what matters (press 3 to switch).
+   Everything is scoped to [data-brand="tandem"], so the original Tessera look is untouched. */
+
+[data-brand="tandem"] {
+  --t-navy: #0b2452;
+  --t-navy-2: #10306a;
+  --t-navy-3: #163b7d;
+  --t-gold: #f3b23c;
+  --t-cream: #f7f1e3;
+  --t-sky: #9cc3ff;
+  --t-coral: #ff8a7a;
+  --serif: "Libre Baskerville", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+
+  --bg: var(--t-navy);
+  --panel: rgb(255 255 255 / 7%);
+  --panel-solid: var(--t-navy-2);
+  --ink: var(--t-cream);
+  --ink-2: rgb(247 241 227 / 80%);
+  --ink-3: rgb(247 241 227 / 55%);
+  --line: rgb(247 241 227 / 12%);
+  --line-2: rgb(247 241 227 / 20%);
+  --accent: var(--t-gold);
+  --accent-ink: var(--t-navy);
+  --accent-soft: rgb(243 178 60 / 15%);
+  --patient: var(--t-gold);
+  --patient-soft: rgb(243 178 60 / 14%);
+  --clinician: var(--t-sky);
+  --clinician-soft: rgb(156 195 255 / 14%);
+  --danger: var(--t-coral);
+  --danger-soft: rgb(255 122 107 / 15%);
+  --warn: #f7c46a;
+  --warn-soft: rgb(247 196 106 / 14%);
+  --ok: #7ed9b0;
+  --mark: rgb(243 178 60 / 20%);
+  --mark-ink: #ffd27a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 25%), 0 10px 30px rgb(0 0 0 / 25%);
+  color-scheme: dark;
+}
+
+/* page behind the phone on a computer */
+html[data-brand="tandem"] body { background: radial-gradient(1100px 760px at 50% 0%, #17336c, #04102a 70%); }
+@media (min-width: 560px) {
+  [data-brand="tandem"].app { box-shadow: 0 0 0 11px #05070c, 0 0 0 12.5px #2a3550, 0 40px 100px rgb(0 0 0 / 55%); }
+}
+
+/* ambient light behind the glass: a gold glow and a sky glow on navy */
+[data-brand="tandem"].app::before {
+  background:
+    radial-gradient(48% 30% at 10% 12%, rgb(243 178 60 / 16%), transparent 70%),
+    radial-gradient(44% 34% at 95% 42%, rgb(156 195 255 / 12%), transparent 70%),
+    radial-gradient(50% 30% at 30% 96%, rgb(243 178 60 / 9%), transparent 70%),
+    linear-gradient(180deg, #0d2a5e, #081d45);
+}
+[data-brand="tandem"] .tint.patient { background: rgb(243 178 60 / 12%); }
+[data-brand="tandem"] .tint.clinician { background: rgb(156 195 255 / 12%); }
+[data-brand="tandem"] .tint.alert { background: rgb(255 122 107 / 14%); }
+[data-brand="tandem"] .app::after { background: rgb(247 241 227 / 80%); }
+
+/* the logo */
+.tandem-mark { display: block; flex: none; }
+[data-brand="tandem"] .wordmark.tandem { gap: 10px; }
+[data-brand="tandem"] .tandem-word { font-family: var(--serif); font-weight: 400; font-size: 25px; letter-spacing: -.01em; color: var(--t-cream); }
+
+/* liquid glass, navy edition */
+[data-brand="tandem"] .panel {
+  background: linear-gradient(180deg, rgb(255 255 255 / 9%), rgb(255 255 255 / 4%));
+  border: 1px solid rgb(247 241 227 / 14%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 16%), inset 0 0 0 .5px rgb(255 255 255 / 4%), 0 12px 32px rgb(0 0 0 / 28%);
+}
+[data-brand="tandem"] .panel::after { background: linear-gradient(135deg, rgb(255 255 255 / 10%), transparent 34%, transparent 70%, rgb(243 178 60 / 6%)); mix-blend-mode: normal; }
+[data-brand="tandem"] .sheet { background: linear-gradient(180deg, rgb(18 50 108 / 98%), rgb(11 36 82 / 99%)); box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 -10px 30px rgb(0 0 0 / 35%); }
+[data-brand="tandem"] .sheet-backdrop { background: rgb(2 8 22 / 55%); }
+[data-brand="tandem"] .toast.panel { background: linear-gradient(180deg, #17305f, #122852); box-shadow: 0 0 0 1px rgb(255 122 107 / 45%), 0 14px 34px rgb(0 0 0 / 40%); }
+
+/* the serif carries the important words */
+[data-brand="tandem"] .translation,
+[data-brand="tandem"] .idle-line,
+[data-brand="tandem"] .pc-name strong,
+[data-brand="tandem"] .talk-title strong,
+[data-brand="tandem"] .sheet-head h3,
+[data-brand="tandem"] .toast-text strong,
+[data-brand="tandem"] .fact p,
+[data-brand="tandem"] .eq-side strong { font-family: var(--serif); letter-spacing: -.005em; }
+[data-brand="tandem"] .translation { font-weight: 400; color: var(--t-cream); }
+[data-brand="tandem"] .translation.lg { font-size: clamp(29px, 8vw, 34px); line-height: 1.28; }
+[data-brand="tandem"] .translation.md { font-size: clamp(24px, 6.8vw, 28px); line-height: 1.32; }
+[data-brand="tandem"] .translation.sm { font-size: 21px; line-height: 1.38; }
+[data-brand="tandem"] .translation.past { font-size: 18.5px; line-height: 1.42; color: rgb(247 241 227 / 86%); }
+[data-brand="tandem"] .idle-line { font-weight: 400; font-size: 28px; }
+[data-brand="tandem"] .idle-line.clinician { color: var(--t-cream); }
+[data-brand="tandem"] .pc-name strong { font-weight: 700; font-size: 20px; }
+[data-brand="tandem"] .talk-title strong { font-weight: 700; font-size: 17px; }
+[data-brand="tandem"] .sheet-head h3 { font-weight: 700; }
+[data-brand="tandem"] .original { color: rgb(247 241 227 / 68%); }
+
+/* speakers: gold for the patient, cream for the clinician */
+[data-brand="tandem"] .clinician .turn-meta .who { color: var(--t-cream); }
+[data-brand="tandem"] .turn-meta .who { font-weight: 700; letter-spacing: .01em; }
+
+/* medicine names: a gold underline-glow instead of a yellow marker */
+[data-brand="tandem"] .drug { color: #ffd27a; background: rgb(243 178 60 / 14%); box-shadow: inset 0 -2px 0 rgb(243 178 60 / 75%); border-radius: 3px; }
+[data-brand="tandem"] .drug.danger { color: #ffb2a6; background: rgb(255 122 107 / 14%); box-shadow: inset 0 -2px 0 rgb(255 122 107 / 75%); }
+[data-brand="tandem"] .drug-caption { color: rgb(247 241 227 / 60%); }
+
+/* controls */
+[data-brand="tandem"] .btn-primary { background: var(--t-gold); color: var(--t-navy); box-shadow: 0 8px 24px rgb(243 178 60 / 22%); }
+[data-brand="tandem"] .btn-quiet, [data-brand="tandem"] .icon-btn, [data-brand="tandem"] .mini { color: rgb(247 241 227 / 80%); }
+[data-brand="tandem"] .orb-core { color: var(--t-navy); background: var(--t-gold); box-shadow: 0 0 0 1px rgb(255 255 255 / 25%) inset, 0 8px 22px rgb(243 178 60 / 25%); }
+[data-brand="tandem"] .orb.off .orb-core { background: var(--t-cream); color: var(--t-navy); box-shadow: 0 8px 22px rgb(0 0 0 / 30%); }
+[data-brand="tandem"] .orb.off .orb-ring { background: rgb(247 241 227 / 14%); }
+[data-brand="tandem"] .orb-ring, [data-brand="tandem"] .orb.speech .orb-ring, [data-brand="tandem"] .orb.busy .orb-ring { background: rgb(243 178 60 / 18%); }
+[data-brand="tandem"] .orb.speaking .orb-core { background: var(--t-sky); color: var(--t-navy); }
+[data-brand="tandem"] .orb.speaking .orb-ring { background: rgb(156 195 255 / 18%); }
+[data-brand="tandem"] .orb-orbit i { background: var(--t-cream); box-shadow: 0 0 0 4px rgb(247 241 227 / 15%); }
+[data-brand="tandem"] .orb.muted .orb-core, [data-brand="tandem"] .orb.paused .orb-core { background: #5b6b8c; color: var(--t-cream); }
+[data-brand="tandem"] .eq i { background: var(--t-navy); }
+[data-brand="tandem"] .tool-icon { background: rgb(255 255 255 / 7%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%); color: var(--t-cream); }
+[data-brand="tandem"] .tool.on .tool-icon { background: rgb(243 178 60 / 18%); color: var(--t-gold); }
+[data-brand="tandem"] .latest-pill { background: var(--t-cream); color: var(--t-navy); }
+[data-brand="tandem"] .send { color: var(--t-navy); }
+[data-brand="tandem"] .seg { background: rgb(255 255 255 / 7%); }
+[data-brand="tandem"] .seg button.on { background: var(--t-cream); color: var(--t-navy); }
+[data-brand="tandem"] .inline-select select { background: rgb(243 178 60 / 16%); color: var(--t-gold); }
+[data-brand="tandem"] .inline-select select option, [data-brand="tandem"] select option { background: var(--t-navy-2); color: var(--t-cream); }
+[data-brand="tandem"] kbd { background: rgb(255 255 255 / 8%); color: var(--ink-2); border-color: var(--line-2); }
+
+/* record tiles and rows */
+[data-brand="tandem"] .tiles { border-bottom-color: rgb(247 241 227 / 10%); }
+[data-brand="tandem"] .ctx-tile { background: rgb(255 255 255 / 7%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), 0 0 0 1px rgb(247 241 227 / 10%); }
+[data-brand="tandem"] .ctx-tile.alert { background: rgb(255 122 107 / 15%); box-shadow: 0 0 0 1px rgb(255 122 107 / 40%); }
+[data-brand="tandem"] .tile-icon, [data-brand="tandem"] .ctx-icon, [data-brand="tandem"] .fact-icon, [data-brand="tandem"] .tag.plain, [data-brand="tandem"] .dock-head .count { background: rgb(255 255 255 / 8%); }
+[data-brand="tandem"] .tile-title { color: var(--t-cream); }
+[data-brand="tandem"] .tiles-link, [data-brand="tandem"] .link { color: var(--t-gold); }
+[data-brand="tandem"] .fact { background: rgb(255 255 255 / 7%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%); }
+[data-brand="tandem"] .fact.alert { background: rgb(255 122 107 / 14%); }
+[data-brand="tandem"] .rec-section.condition { --c: #c7a6ff; --bg: rgb(199 166 255 / 14%); }
+[data-brand="tandem"] .rec-section.document { --c: var(--t-sky); }
+[data-brand="tandem"] .art-bubble { background: var(--t-cream); }
+
+/* start screen illustration: sits on navy, so give its pale blob a soft frame of light */
+[data-brand="tandem"] .hero-art::before { content: ""; position: absolute; inset: 6% 4% 2%; border-radius: 48%; background: radial-gradient(closest-side, rgb(247 241 227 / 10%), transparent); z-index: -1; }
+[data-brand="tandem"] .idle-hint { color: rgb(247 241 227 / 62%); }
+[data-brand="tandem"] .hint-arrow { color: var(--t-gold); }
+
+/* the device bar text on navy */
+[data-brand="tandem"] .device-bar { color: var(--t-cream); }
+
+/* switching looks: a quick cross-fade so it reads as a reveal, not a glitch */
+[data-brand="tandem"].app > * { animation: brandIn .5s ease both; }
+@keyframes brandIn { from { opacity: 0; filter: blur(4px); } }
+[data-brand="tandem"] .art-bubble .typing i { background: var(--t-navy); }
