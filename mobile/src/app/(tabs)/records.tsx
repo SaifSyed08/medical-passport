@@ -1,4 +1,5 @@
 import * as DocumentPicker from "expo-document-picker";
+import { File as FsFile } from "expo-file-system";
 import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
@@ -25,8 +26,9 @@ export default function Records() {
     setMessage(null);
     try {
       const form = new FormData();
-      // React Native's FormData accepts a { uri, name, type } descriptor for files.
-      form.append("file", file as unknown as Blob);
+      // Expo's fetch (SDK 58) rejects the old { uri, name, type } descriptor; it accepts any part with name, type and bytes().
+      const source = new FsFile(file.uri);
+      form.append("file", { name: file.name, type: file.type, bytes: () => source.bytes() } as unknown as Blob);
       form.append("title", file.name.replace(/\.[a-z0-9]+$/i, ""));
       const record = await api<RecordItem>("/records", { form, timeoutMs: 60000 });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

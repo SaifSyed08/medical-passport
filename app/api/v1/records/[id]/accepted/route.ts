@@ -2,7 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 import { tesseraRecords } from "@/db/schema";
 import { appendAudit } from "@/lib/tessera/audit";
-import { body, v1error, withTraveler } from "@/lib/tessera/http";
+import { body, v1empty, v1error, withTraveler } from "@/lib/tessera/http";
 export { OPTIONS } from "@/lib/tessera/http";
 
 const acceptedSchema = z.object({ count: z.number().int().min(1).max(60) });
@@ -16,5 +16,5 @@ export const POST = withTraveler<{ id: string }>(async ({ request, db, traveler 
     travelerId: traveler.id, actor: "You", actorRole: "traveler", action: "suggestions_accepted", outcome: "info",
     detail: `${b.data.count} item(s) from ${row.title}`,
   });
-  return new Response(null, { status: 204 });
+  return v1empty();
 });

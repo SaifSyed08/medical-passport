@@ -1,8 +1,8 @@
 name = "tessera-extractor"
 main = "src/index.ts"
-compatibility_date = "2026-11-01"
+compatibility_date = "2026-05-01"
 
 # ANTHROPIC_API_KEY is a secret: `wrangler secret put ANTHROPIC_API_KEY`. Never commit it.
 [vars]
 MAIN_API_URL = "<set to the deployed site URL>"
-MODEL = "claude-sonnet-5-5"
+MODEL = "claude-haiku-5-5"

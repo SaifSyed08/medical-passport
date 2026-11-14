@@ -17,6 +17,8 @@ const eslintConfig = defineConfig([
     // Patient-aware interpreter: its own Vite + Express project.
     "interpreter/**",
     ".claude/**",
+    // Wrangler's generated bundles for the extractor Worker.
+    "extractor/.wrangler/**",
   ]),
   {
     files: ["components/ui/**/*.{ts,tsx}", "hooks/use-mobile.ts"],
