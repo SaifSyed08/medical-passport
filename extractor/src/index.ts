@@ -1,9 +1,11 @@
+// Document scan auto-fill: PaddleOCR reads the text (../ocr), plain rules find the findings (./rules). No AI API.
 import type { Suggestion } from "../../shared/autofill";
-import { callModel as defaultCallModel } from "./anthropic";
 import { parseFindings } from "./findings";
+import { readText as defaultReadText } from "./ocr";
+import { findFindings } from "./rules";
 
-type Env = { ANTHROPIC_API_KEY: string; MAIN_API_URL: string; MODEL?: string };
-type Deps = { fetch?: typeof fetch; callModel?: typeof defaultCallModel };
+type Env = { MAIN_API_URL: string; OCR_URL: string };
+type Deps = { fetch?: typeof fetch; readText?: (contentType: string, bytes: Uint8Array) => Promise<string> };
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -36,7 +38,7 @@ async function limited(token: string) {
 
 export async function handle(request: Request, env: Env, deps: Deps = {}): Promise<Response> {
   const doFetch = deps.fetch ?? fetch;
-  const model = deps.callModel ?? defaultCallModel;
+  const read = deps.readText ?? ((type: string, bytes: Uint8Array) => defaultReadText(env.OCR_URL, type, bytes, doFetch));
   const { pathname } = new URL(request.url);
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (pathname !== "/extract") return fail(404, "Not found.", "not_found");
@@ -49,7 +51,8 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
   const recordId = await request.json().then((b: unknown) => (b as { recordId?: unknown } | null)?.recordId, () => undefined);
   if (typeof recordId !== "string" || !recordId) return fail(400, "recordId is required.", "bad_request");
 
-  const url = `${env.MAIN_API_URL.replace(/\/$/, "")}/api/v1/records/${encodeURIComponent(recordId)}/file?purpose=autofill`;
+  const recordUrl = `${env.MAIN_API_URL.replace(/\/$/, "")}/api/v1/records/${encodeURIComponent(recordId)}`;
+  const url = `${recordUrl}/file?purpose=autofill`;
   let file: Response;
   try {
     file = await doFetch(url, { headers: { Authorization: `Bearer ${token}` } });
@@ -65,14 +68,23 @@ export async function handle(request: Request, env: Env, deps: Deps = {}): Promi
   const contentType = (file.headers.get("content-type") ?? "").split(";")[0].trim().toLowerCase();
   if (!TYPES.includes(contentType)) return fail(415, "Only PDF, JPEG and PNG documents can be scanned.", "unsupported_type");
 
+  let text: string;
   try {
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    const raw = await model(env.ANTHROPIC_API_KEY, env.MODEL || "claude-sonnet-5-5", contentType, bytes);
-    const suggestions: Suggestion[] = parseFindings(raw);
-    return json({ suggestions });
+    text = await read(contentType, new Uint8Array(await file.arrayBuffer()));
   } catch {
-    return fail(502, "The scan failed. Please try again.", "model_error");
+    return fail(502, "The scan failed. Please try again.", "ocr_error");
   }
+  const suggestions: Suggestion[] = parseFindings(findFindings(text));
+  // Keep the text on the record so the interpreter can match against what the document says. Best effort:
+  // the suggestions are still useful if saving fails.
+  if (text.trim()) {
+    await doFetch(`${recordUrl}/text`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text.slice(0, 20000) }),
+    }).catch(() => undefined);
+  }
+  return json({ suggestions });
 }
 
 const worker = { fetch: (r: Request, e: Env) => handle(r, e) };

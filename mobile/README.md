@@ -32,9 +32,31 @@ Expo SDK 58 (React Native 0.88), Expo Router, TypeScript.
 The destination country sets the language doctors see on the emergency profile: English, Japanese, Spanish, French, Italian or German. Countries outside those fall back to English. Change it under **Privacy → Your trip** or **Health → Personal details**, where you can also override the language. The app's own UI language (English/Japanese) is separate. Anything a traveler types is shown to doctors in English with an **EN** marker; only the sample traveler's data has hand-written translations (see `../TRANSLATION_REVIEW.md`).
 
 ### Document reading (optional)
-Set `EXPO_PUBLIC_EXTRACTOR_URL` in `.env` to the extractor Worker's base URL (the address `npm run dev` in `../extractor` prints, using your Mac's LAN IP for a phone, or the deployed Worker's HTTPS URL; no trailing `/extract`). After a PDF, photo or camera scan is uploaded, the app asks once whether to read documents, then opens a review screen where each suggested allergy, medication, condition or blood type must be confirmed or removed before anything is added. Change the choice under **Privacy → Document reading**, or re-run it from a document with **Suggest profile updates**. Leave it empty to turn the feature off: no prompt, no review.
+Set `EXPO_PUBLIC_EXTRACTOR_URL` in `.env` to the extractor Worker's base URL (no trailing `/extract`). After a PDF, photo or camera scan is uploaded, the app asks once whether to read documents, then opens a review screen where each suggested allergy, medication, condition or blood type must be confirmed or removed before anything is added. Change the choice under **Privacy → Document reading**, or re-run it from a document with **Suggest profile updates**. Leave it empty to turn the feature off: no prompt, no review.
 
-The extractor needs an Anthropic key: locally put `ANTHROPIC_API_KEY=...` in `extractor/.dev.vars` (git-ignored) for `wrangler dev`; in production run `wrangler secret put ANTHROPIC_API_KEY`.
+No AI API is used. The extractor sends the file to a local [PaddleOCR](https://github.com/PaddlePaddle/PaddleOCR) server (`../ocr`) to read its text, then finds allergies, medicines, conditions and blood type with plain rules (`../extractor/src/rules.ts`): section headings, a list of known medicine names, dose and schedule patterns, and negation ("NKDA", "denies", "rule out", family history). It also saves the text on the record, so the Interpreter tab can match against what the document says. Rules catch what a document states clearly. Loosely worded notes can be missed, which is why every suggestion is reviewed.
+
+```sh
+cd ../ocr && python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt   # once; PaddleOCR needs Python ≤ 3.13
+.venv/bin/python server.py                                                           # http://127.0.0.1:8790 (models download on first run)
+cd ../extractor && npm install && npx wrangler dev --config wrangler.toml --port 8788 # reads MAIN_API_URL and OCR_URL from .dev.vars
+cloudflared tunnel --url http://127.0.0.1:8788                                       # the phone reaches the extractor through this
+```
+
+`extractor/.dev.vars` (git-ignored) holds `MAIN_API_URL=http://127.0.0.1:8787` and `OCR_URL=http://127.0.0.1:8790`. Run `--config wrangler.toml` from `extractor/`, or Wrangler picks up the main app's generated build config.
+
+### Interpreter tab (optional)
+The **Interpreter** tab embeds the Tessera Interpreter (`../interpreter`) in a WebView, with the same screens, live captions, spoken translation and recorded demo. It is given the signed-in traveler's record: allergies, medicines, conditions and the text of their records and documents. While someone talks, it flags whatever is relevant, for example a penicillin allergy when the doctor mentions amoxicillin. Contacts and insurance are not sent. The demo patients (Sofía, Jordan) are still under ⚙ in the interpreter, with **Play demo conversation**.
+
+The interpreter has its own Node server, which calls OpenAI, so it needs `OPENAI_API_KEY`. The phone's mic only works over HTTPS, so reach it through a tunnel:
+
+```sh
+cd ../interpreter && npm install
+OPENAI_API_KEY=sk-... ACCESS_CODE=pick-a-code npm run demo          # production build + server on :5173
+cloudflared tunnel --url http://localhost:5173                       # prints https://<name>.trycloudflare.com
+```
+
+Then set `EXPO_PUBLIC_INTERPRETER_URL` (the tunnel URL) and `EXPO_PUBLIC_INTERPRETER_CODE` (the same `ACCESS_CODE`) in `.env`. Use `npm run demo` rather than `npm run dev` behind a tunnel, because Vite's live reload doesn't pass through it. The first time the tab opens, it explains that the record and conversation go to the interpreter server and OpenAI. Leave the URL empty to turn the tab into a notice.
 
 After changing `.env`, restart with `npx expo start --clear`. Metro also sometimes misses file changes without watchman; `--clear` fixes that too.
 
@@ -54,7 +76,7 @@ A development build needs `npx expo run:ios` (Xcode) or `npx expo run:android` (
 
 ## What's where
 
-- `src/app/`: screens (Expo Router). Tabs: Card, Health, Records, Privacy, Activity. Modals: full-screen QR (`show`), Wallet preview, emergency-profile preview, presenter tools, item and basics editors.
+- `src/app/`: screens (Expo Router). Tabs: Card, Health, Interpreter (WebView of `../interpreter`, fed by `src/lib/interpreter.ts`), Records, Privacy, Activity. Modals: full-screen QR (`show`), Wallet preview, emergency-profile preview, presenter tools, item and basics editors.
 - `src/lib/`: API client, session (token in `expo-secure-store`), in-memory cache, activity polling and notifications, theme tokens, EN/JA strings.
 - `src/components/`: UI kit ported from the web app's `app/passport.css` (same palette, serif/sans pairing, card themes).
 - `../shared/tessera.ts`: API types shared with the backend, resolved through Metro `watchFolders` (no npm workspace).
