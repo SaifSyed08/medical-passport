@@ -1,0 +1,42 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 401 >>
+stream
+BT /F1 14 Tf 60 740 Td
+(Lab report) Tj
+0 -26 Td (Patient: Jordan Example \(synthetic\)) Tj
+0 -26 Td (Collected: 2026-05-14) Tj
+0 -26 Td (Hemoglobin 13.2 g/dL \(12.0-15.5\)) Tj
+0 -26 Td (WBC 6.4 x10^9/L \(4.0-11.0\)) Tj
+0 -26 Td (Platelets 251 x10^9/L \(150-400\)) Tj
+0 -26 Td (Sodium 139 mmol/L \(135-145\)) Tj
+0 -26 Td (Potassium 4.2 mmol/L \(3.5-5.1\)) Tj
+0 -26 Td (Glucose 92 mg/dL \(70-99\)) Tj
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000241 00000 n 
+0000000693 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+763
+%%EOF
