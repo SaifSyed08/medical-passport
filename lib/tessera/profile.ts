@@ -34,13 +34,13 @@ export const destinationSchema = z.enum([OTHER_DESTINATION, ...DESTINATIONS.map(
 
 export const allergySchema = z.object({
   id, substance: s(160).min(1), reaction: s(240), severity: z.enum(["severe", "moderate", "mild"]),
-  tr: tr(TRANSLATED_FIELDS.allergies, 240),
+  tr: tr(TRANSLATED_FIELDS.allergies, 240), sourceRecordId: id.optional(),
 });
 export const medicationSchema = z.object({
   id, brand: s(120), generic: s(160).min(1), dose: s(160), schedule: s(160), purpose: s(200),
-  tr: tr(TRANSLATED_FIELDS.medications, 200),
+  tr: tr(TRANSLATED_FIELDS.medications, 200), sourceRecordId: id.optional(),
 });
-export const conditionSchema = z.object({ id, name: s(160).min(1), note: s(400), tr: tr(TRANSLATED_FIELDS.conditions, 400) });
+export const conditionSchema = z.object({ id, name: s(160).min(1), note: s(400), tr: tr(TRANSLATED_FIELDS.conditions, 400), sourceRecordId: id.optional() });
 export const contactSchema = z.object({
   id, name: s(120).min(1), relationship: s(120),
   phone: s(40).regex(/^[+0-9 ()-]{7,40}(\s*\(fictional\))?$/, "Enter a phone number using digits, spaces and +()-"),

@@ -45,3 +45,33 @@ Check each language column against the English.
 ### Traveler app (`mobile/src/lib/i18n.ts`)
 - The Japanese UI strings.
 - The clinician hint on the full-screen QR, one sentence in each of the six languages.
+
+### Document scan and suggestions (`mobile/src/lib/i18n.ts`, Japanese only)
+| English | 日本語 | Notes for the reviewer |
+|---|---|---|
+| Scan with camera | カメラでスキャン | |
+| Camera access is off. Turn it on in Settings to scan documents. | カメラへのアクセスがオフです。書類をスキャンするには、設定でオンにしてください。 | |
+| Suggest updates? | 更新を提案しますか？ | |
+| Read this document and suggest updates to your passport? You'll check each suggestion before anything is added. | この書類を読み取って、パスポートの更新を提案しますか？追加する前に、提案を1つずつ確認できます。 | Consent prompt. Check that it is clear nothing is added automatically. |
+| Read it / No thanks | 読み取る / いいえ | |
+| Suggested updates | 更新の提案 | |
+| Read from your document. Check each one before it's added. | 書類から読み取りました。追加する前に1つずつ確認してください。 | |
+| Reading your document… | 書類を読み取っています… | |
+| Nothing to add from this document | この書類から追加できる項目はありません | |
+| This file type can't be read. It's saved to your records. | このファイル形式は読み取れません。記録には保存されています。 | |
+| Too many requests. Try again later. | リクエストが多すぎます。しばらくしてからお試しください。 | |
+| Couldn't read the document. It's still saved to your records. | 書類を読み取れませんでした。記録には保存されています。 | |
+| Back | 戻る | |
+| Condition / Allergy / Medication | 疾患 / アレルギー / 薬 | "疾患" here vs "持病" in the emergency view. Pick one. |
+| Check carefully | よく確認してください | Low-confidence warning. |
+| Already on your passport | すでにパスポートに登録済み | |
+| Currently | 現在 | Shown before the current blood type. |
+| Confirm / Confirm this is correct / Confirmed | 確認 / 正しいことを確認 / 確認済み | |
+| Don't add / Undo | 追加しない / 元に戻す | |
+| Add {n} to my passport | {n}件をパスポートに追加 | Check the counter. |
+| Document reading | 書類の読み取り | |
+| After you add a document, suggest updates to your passport. You check each one first. | 書類を追加した後に、パスポートの更新を提案します。追加する前に1つずつ確認できます。 | |
+| On / Off | オン / オフ | |
+| Suggest profile updates | プロフィールの更新を提案 | |
+| Delete this document | この書類を削除 | |
+| Delete this document? Anything you already added to your passport stays. | この書類を削除しますか？パスポートに追加済みの項目は残ります。 | |

@@ -19,6 +19,8 @@ export const v1json = (data: unknown, status = 200) =>
   Response.json(data, { status, headers: { ...NO_STORE, ...CORS } });
 export const v1error = (status: number, error: string, code?: string) => v1json(code ? { error, code } : { error }, status);
 export const OPTIONS = () => new Response(null, { status: 204, headers: CORS });
+/** 204 with the same CORS headers as v1json, so browsers can read the reply. */
+export const v1empty = () => new Response(null, { status: 204, headers: { ...NO_STORE, ...CORS } });
 export const v1flags = () => flags(env as Parameters<typeof flags>[0]);
 
 let seeded: Promise<unknown> | undefined;

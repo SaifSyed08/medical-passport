@@ -2,6 +2,7 @@ import { Directory, File, Paths } from "expo-file-system";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { Me } from "@shared/tessera";
 import { api, setToken, setUnauthorizedHandler } from "./api";
+import { PREF_KEY as AUTOFILL_PREF_KEY } from "./autofill";
 import { clearCache } from "./cache";
 import { strings, type AppLanguage, type Strings } from "./i18n";
 import { storage } from "./storage";
@@ -49,7 +50,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     clearDownloadedFiles();
     setMe(null);
     setSignedIn(false);
-    await Promise.all([storage.remove(TOKEN_KEY), storage.remove(CARD_KEY)]);
+    // The auto-fill opt-in belongs to this traveler; the next one on the device is asked again.
+    await Promise.all([storage.remove(TOKEN_KEY), storage.remove(CARD_KEY), storage.remove(AUTOFILL_PREF_KEY)]);
   }, []);
 
   useEffect(() => {

@@ -57,3 +57,8 @@ next-env.d.ts
 /.playwright-cli/
 /output/
 *.tsbuildinfo
+
+# Extractor Worker: local secrets and build output
+extractor/.dev.vars
+extractor/node_modules/
+extractor/.wrangler/

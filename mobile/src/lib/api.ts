@@ -17,6 +17,10 @@ let onUnauthorized: (() => void) | null = null;
 export const setToken = (t: string | null) => (token = t);
 export const getToken = () => token;
 export const setUnauthorizedHandler = (fn: () => void) => (onUnauthorized = fn);
+/** Signs out after a 401 from any Tessera service (the main API or the extractor Worker). */
+export const signalUnauthorized = () => {
+  if (token) onUnauthorized?.();
+};
 export const authHeader = (): Record<string, string> => (token ? { Authorization: `Bearer ${token}` } : {});
 
 type Init = { method?: string; body?: unknown; form?: FormData; timeoutMs?: number };
@@ -40,7 +44,7 @@ export async function api<T>(path: string, init: Init = {}): Promise<T> {
   }
   const data = (await res.json().catch(() => ({}))) as T & Partial<ApiErrorBody>;
   if (!res.ok) {
-    if (res.status === 401 && token) onUnauthorized?.();
+    if (res.status === 401) signalUnauthorized();
     throw new ApiError(res.status, data.error ?? "Request failed", data.code);
   }
   return data;

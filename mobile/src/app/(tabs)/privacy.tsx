@@ -1,10 +1,11 @@
 import * as Haptics from "expo-haptics";
-import { router } from "expo-router";
-import { useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { destinationName, LANGUAGE_NAMES, type AccessRequest, type Card, type Privacy } from "@shared/tessera";
 import { pollActivity } from "@/lib/activity";
 import { api } from "@/lib/api";
+import { EXTRACTOR_URL, getAutofillPref, setAutofillPref } from "@/lib/autofill";
 import { primeCache, useResource } from "@/lib/cache";
 import { confirmWithBiometrics } from "@/lib/confirm";
 import type { AppLanguage } from "@/lib/i18n";
@@ -23,6 +24,18 @@ export default function PrivacyScreen() {
   const card = useResource<Card>("/card");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
+  const [autofill, setAutofill] = useState(false);
+  // Re-read on focus: the Records tab can set it from the first-upload prompt.
+  useFocusEffect(
+    useCallback(() => {
+      void getAutofillPref().then(v => setAutofill(v === "on"));
+    }, []),
+  );
+  const toggleAutofill = () =>
+    run("autofill", async () => {
+      await setAutofillPref(autofill ? "off" : "on");
+      setAutofill(!autofill);
+    });
 
   const run = async (key: string, fn: () => Promise<void>) => {
     setBusy(key);
@@ -122,6 +135,19 @@ export default function PrivacyScreen() {
           last
         />
       </Section>
+
+      {!!EXTRACTOR_URL && (
+        <Section title={t.documentReading}>
+          <Row
+            title={t.documentReading}
+            detail={t.documentReadingLead}
+            right={<Pill tone={autofill ? "ok" : "muted"}>{autofill ? t.on : t.off}</Pill>}
+            onPress={toggleAutofill}
+            label={`${t.documentReading}: ${autofill ? t.on : t.off}`}
+            last
+          />
+        </Section>
+      )}
 
       <Section title={card.data?.status === "frozen" ? t.cardFrozen : t.freezeCard}>
         <T style={{ color: color.body, marginBottom: space.s }}>{t.freezeLead}</T>

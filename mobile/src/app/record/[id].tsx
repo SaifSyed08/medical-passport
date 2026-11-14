@@ -1,10 +1,12 @@
 import { File, Paths } from "expo-file-system";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import * as Sharing from "expo-sharing";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { RecordItem } from "@shared/tessera";
-import { API_URL, authHeader } from "@/lib/api";
+import { api, API_URL, authHeader } from "@/lib/api";
+import { ensureAutofillOptIn, EXTRACTOR_URL, getAutofillPref } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
+import { ask } from "@/lib/confirm";
 import { useSession } from "@/lib/session";
 import { color } from "@/lib/theme";
 import { Button, Heading, Notice, Pill, Screen, Section, T } from "@/components/ui";
@@ -16,6 +18,24 @@ export default function RecordDetail() {
   const r = records.data?.find(x => x.id === id);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [canSuggest, setCanSuggest] = useState(false);
+  useEffect(() => {
+    if (EXTRACTOR_URL) void getAutofillPref().then(v => setCanSuggest(v !== "off"));
+  }, []);
+
+  async function remove() {
+    if (!r || !(await ask(t.deleteDocument, t.deleteDocumentConfirm, t.delete, t.cancel, true))) return;
+    setBusy(true);
+    setError("");
+    try {
+      await api(`/records/${r.id}`, { method: "DELETE" });
+      await records.refresh();
+      router.back();
+    } catch {
+      setError(t.errorGeneric);
+      setBusy(false);
+    }
+  }
 
   async function openFile() {
     if (!r) return;
@@ -54,8 +74,12 @@ export default function RecordDetail() {
         </Section>
       )}
       {r.hasFile && <Button secondary busy={busy} onPress={openFile}>Open original file</Button>}
+      {r.kind === "upload" && canSuggest && (
+        <Button secondary disabled={busy} onPress={async () => { if (await ensureAutofillOptIn(t)) router.push({ pathname: "/review", params: { recordId: r.id } }); else setCanSuggest(false); }}>{t.suggestUpdates}</Button>
+      )}
       {!!error && <Notice tone="error">{error}</Notice>}
       <Notice>{t.restrictedNote}</Notice>
+      {r.kind === "upload" && <Button secondary danger disabled={busy} onPress={remove}>{t.deleteDocument}</Button>}
     </Screen>
   );
 }
