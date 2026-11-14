@@ -3,7 +3,7 @@ import { tesseraRecords } from "@/db/schema";
 import { nowIso } from "@/lib/tessera/db";
 import { v1error, v1json, withTraveler } from "@/lib/tessera/http";
 import { randomId } from "@/lib/tessera/tokens";
-import { listRecords, MAX_UPLOAD_BYTES, simulatedSummary, toRecord, UPLOAD_TYPES } from "@/lib/tessera/traveler";
+import { listRecords, MAX_UPLOAD_BYTES, toRecord, UPLOAD_TYPES } from "@/lib/tessera/traveler";
 export { OPTIONS } from "@/lib/tessera/http";
 
 export const GET = withTraveler(async ({ db, traveler }) => v1json(await listRecords(db, traveler.id)));
@@ -28,7 +28,7 @@ export const POST = withTraveler(async ({ request, db, traveler }) => {
   await env.BUCKET.put(r2Key, await file.arrayBuffer(), { httpMetadata: { contentType: type } });
   const row = {
     id, travelerId: traveler.id, kind: "upload", title, date: nowIso().slice(0, 10), facility: null, body: null,
-    summary: simulatedSummary(title, type, file.size), simulated: 1, r2Key, contentType: type, size: file.size, created: nowIso(),
+    summary: null, simulated: 0, r2Key, contentType: type, size: file.size, created: nowIso(),
   };
   await db.insert(tesseraRecords).values(row);
   return v1json(toRecord(row), 201);

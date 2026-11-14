@@ -99,10 +99,24 @@ export const UPLOAD_TYPES: Record<string, string> = {
 };
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
 
-/** The "extracted" summary is a placeholder, always labelled as simulated. No file contents are read. */
-export function simulatedSummary(title: string, contentType: string, size: number) {
-  const kb = Math.max(1, Math.round(size / 1024));
-  return `Simulated extraction (demo): ${UPLOAD_TYPES[contentType] ?? "file"} "${title}", ${kb} KB. No text was actually read from this file. Review the original before relying on it.`;
+/** Only uploads are deletable. Removes the file, the row and any profile links to it, and logs it. */
+export async function deleteRecord(
+  db: TesseraDb,
+  bucket: { delete(key: string): Promise<void> } | undefined,
+  traveler: Traveler,
+  id: string,
+): Promise<"deleted" | "not_found" | "not_deletable"> {
+  const row = await db.select().from(tesseraRecords).where(and(eq(tesseraRecords.id, id), eq(tesseraRecords.travelerId, traveler.id))).get();
+  if (!row) return "not_found";
+  if (row.kind !== "upload") return "not_deletable";
+  if (row.r2Key) await bucket?.delete(row.r2Key);
+  await db.delete(tesseraRecords).where(eq(tesseraRecords.id, id));
+  // undefined is dropped when the profile is serialized
+  const unlink = <T extends { sourceRecordId?: string }>(items: T[]) => items.map(it => (it.sourceRecordId === id ? { ...it, sourceRecordId: undefined } : it));
+  const p = traveler.profile;
+  await updateTraveler(db, traveler.id, { profile: { ...p, allergies: unlink(p.allergies), medications: unlink(p.medications), conditions: unlink(p.conditions) } });
+  await appendAudit(db, { travelerId: traveler.id, actor: "You", actorRole: "traveler", action: "document_deleted", outcome: "info", detail: row.title });
+  return "deleted";
 }
 
 type RequestRow = typeof tesseraRequests.$inferSelect;
