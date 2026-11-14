@@ -6,7 +6,9 @@ import { useState } from "react";
 import { View } from "react-native";
 import type { RecordItem } from "@shared/tessera";
 import { api, ApiError } from "@/lib/api";
+import { EXTRACTOR_URL, getAutofillPref, setAutofillPref } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
+import { ask } from "@/lib/confirm";
 import { useSession } from "@/lib/session";
 import { space } from "@/lib/theme";
 import { Button, Heading, LoadError, Loading, Logo, Notice, Pill, Row, Screen, Section } from "@/components/ui";
@@ -19,7 +21,7 @@ export default function Records() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
 
-  async function upload(file: Pick) {
+  async function upload(file: Pick): Promise<RecordItem | undefined> {
     setBusy(true);
     setMessage(null);
     try {
@@ -27,9 +29,10 @@ export default function Records() {
       // React Native's FormData accepts a { uri, name, type } descriptor for files.
       form.append("file", file as unknown as Blob);
       form.append("title", file.name.replace(/\.[a-z0-9]+$/i, ""));
-      await api<RecordItem>("/records", { form, timeoutMs: 60000 });
+      const record = await api<RecordItem>("/records", { form, timeoutMs: 60000 });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await records.refresh();
+      return record;
     } catch (e) {
       setMessage({ tone: "error", text: e instanceof ApiError && e.status === 400 ? e.message : t.errorGeneric });
     } finally {
@@ -37,19 +40,42 @@ export default function Records() {
     }
   }
 
+  /** After an upload: ask once whether to read documents, then open the review if opted in. */
+  async function maybeAutofill(record: RecordItem) {
+    if (!EXTRACTOR_URL) return;
+    let pref = await getAutofillPref();
+    if (pref === null) {
+      pref = (await ask(t.autofillAskTitle, t.autofillAsk, t.autofillYes, t.autofillNo)) ? "on" : "off";
+      await setAutofillPref(pref).catch(() => {});
+    }
+    if (pref === "on") router.push({ pathname: "/review", params: { recordId: record.id } });
+  }
+
+  async function addFile(file: Pick) {
+    const record = await upload(file);
+    if (record) await maybeAutofill(record);
+  }
+
   async function pickPdf() {
     const r = await DocumentPicker.getDocumentAsync({ type: "application/pdf", copyToCacheDirectory: true });
     if (r.canceled || !r.assets[0]) return;
     const a = r.assets[0];
-    await upload({ uri: a.uri, name: a.name || "Document.pdf", type: a.mimeType || "application/pdf" });
+    await addFile({ uri: a.uri, name: a.name || "Document.pdf", type: a.mimeType || "application/pdf" });
   }
 
-  async function pickPhoto() {
-    const r = await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.7 });
+  async function addImage(r: ImagePicker.ImagePickerResult) {
     if (r.canceled || !r.assets[0]) return;
     const a = r.assets[0];
     const type = a.mimeType === "image/png" || a.mimeType === "image/heic" ? a.mimeType : "image/jpeg";
-    await upload({ uri: a.uri, name: a.fileName || "Photo.jpg", type });
+    await addFile({ uri: a.uri, name: a.fileName || "Photo.jpg", type });
+  }
+
+  const pickPhoto = async () => addImage(await ImagePicker.launchImageLibraryAsync({ mediaTypes: ["images"], quality: 0.7 }));
+
+  async function scan() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) return setMessage({ tone: "error", text: t.cameraDenied });
+    await addImage(await ImagePicker.launchCameraAsync({ mediaTypes: ["images"], quality: 0.7 }));
   }
 
   const list = records.data ?? [];
@@ -62,6 +88,7 @@ export default function Records() {
         <Button style={{ flex: 1 }} busy={busy} onPress={pickPdf}>{t.uploadPdf}</Button>
         <Button secondary style={{ flex: 1 }} disabled={busy} onPress={pickPhoto}>{t.uploadPhoto}</Button>
       </View>
+      <Button secondary disabled={busy} onPress={scan}>{t.scanCamera}</Button>
       {busy && <Notice>{t.uploading}</Notice>}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {!records.data && records.loading && <Loading />}
