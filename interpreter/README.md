@@ -26,7 +26,7 @@ Press **D**, or tap **Play demo conversation**. It replays a real recorded run: 
 | | |
 | --- | --- |
 | **Hears who's talking** | The language spoken decides who it is, so there are no buttons to press. You can override it in ⋯. |
-| **Live captions** | While someone talks, the audio so far goes to a fast transcription model about once a second and the caption grows. When they stop, `gpt-4o-transcribe` makes the final pass. |
+| **Live captions** | While someone talks, the audio so far goes to a fast transcription model about once a second and the caption grows. When they stop, `gpt-transcribe` makes the final pass. |
 | **Cleans up speech** | Fillers, stutters and self-corrections are removed ("two, no, three pills" becomes "three pills"). Facts, doses and hedges never change. The original is one tap away. |
 | **Local medicine names** | A curated cross-country table covers MX, US, JP, GB and IN, and the server enforces it on top of the model's output. The phone saves each match, so it works offline. |
 | **Record in real time** | The record is matched against what was just said and shown as compact tiles above the mic. Alerts come first; a new or re-triggered alert flashes and the phone vibrates. Each tile opens a short explanation and the original entry. |
@@ -52,12 +52,12 @@ In a loud room, switch to **Tap to talk** under ⋯. **⌨ Type** runs typed tex
 ## How it works
 
 ```
-phone mic ─► voice-activity detection (AudioWorklet) ─► utterance WAV ───────────────► /api/transcribe (gpt-4o-transcribe,
+phone mic ─► voice-activity detection (AudioWorklet) ─► utterance WAV ───────────────► /api/transcribe (gpt-transcribe,
          └─► snapshot every ~1 s while talking ─► /api/transcribe?fast (live caption)    primed with the patient's medicines)
                                                                                          │
                      ┌───────────────────────────────────────────────────────────────────┤
                      ▼                                                                   ▼
-   /api/interpret (gpt-4.1): language → speaker, cleanup,           /api/context (gpt-4.1-mini): which record items matter
+   /api/interpret (gpt-6-luna): language → speaker, cleanup,        /api/context (gpt-6-luna): which record items matter
    translation, drug spans; curated names enforced server-side      now; ids validated, local drug names enforced
                      │
                      ▼
@@ -76,7 +76,11 @@ phone mic ─► voice-activity detection (AudioWorklet) ─► utterance WAV �
 | `src/components/` | Home, Conversation (transcript, demo player), Stage, ContextTiles, Orb, sheets |
 | `public/demo/` | The recorded demo runs (made with `scripts/build-demo.mjs`) |
 
-Models can be overridden with `STT_MODEL`, `STT_FAST_MODEL`, `LLM_MODEL`, `CONTEXT_MODEL` and `TTS_MODEL`. From the end of speech to the translation takes about 2–3 s.
+Models can be overridden with `STT_MODEL`, `STT_FAST_MODEL`, `LLM_MODEL`, `CONTEXT_MODEL` and `TTS_MODEL`. `INTERPRET_EFFORT` sets the interpreting call's reasoning effort (default `none`, for speed). From the end of speech to the translation takes about 2–3 s.
+
+The defaults are `gpt-6-luna` (text) and `gpt-transcribe` (speech to text), OpenAI's replacements for gpt-4.1, gpt-4.1-mini and gpt-4o(-mini)-transcribe, which shut down in January–February 2027. On the scripted demo conversations (`npm run test:api`) they pass every check that gpt-4.1 did, at about $0.0003 per turn instead of $0.004. They're about 0.5–1 s slower per turn. For better translations at higher cost, set `LLM_MODEL=gpt-6.1-terra`. The server logs token counts per call (`[usage] …`), never content.
+
+**Before January 6, 2027:** `gpt-4o-mini-tts` shuts down then. OpenAI's replacement, `gpt-realtime-2.1-mini`, only works through the Realtime API, not `/v1/audio/speech`, so spoken translation needs reworking by that date.
 
 ## Tests
 

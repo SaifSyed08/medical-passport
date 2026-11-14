@@ -136,6 +136,8 @@ app.post("/api/interpret", wrap(async (req, res) => {
     system: interpretPrompt({ patientLang, doctorLang, home, local, forced }),
     user: interpretUser({ text, meds, equivalents, history }),
     model: MODELS.llm,
+    // On the live path (2–3 s budget): no reasoning unless INTERPRET_EFFORT asks for it.
+    effort: process.env.INTERPRET_EFFORT || "none",
   });
   const ms = Date.now() - t0;
 
@@ -223,6 +225,8 @@ app.post("/api/context", wrap(async (req, res) => {
     system: contextPrompt({ doctorLang, local }),
     user: contextUser({ record, text, speaker: str(req.body?.speaker, 20), history, shown, doctorLang }),
     model: MODELS.context,
+    // Picks up to 3 record ids from a list: speed matters more than deliberation.
+    effort: "none",
   });
   const ids = recordIds(record);
   // Medicine names on the cards read the local way (salbutamol -> albuterol for a US clinician).
