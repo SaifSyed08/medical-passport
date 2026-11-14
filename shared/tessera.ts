@@ -100,6 +100,7 @@ export type Allergy = {
   reaction: string;
   severity: Severity;
   tr?: Translations<"substance" | "reaction">;
+  sourceRecordId?: string;
 };
 export type Medication = {
   id: string;
@@ -109,8 +110,9 @@ export type Medication = {
   schedule: string;
   purpose: string;
   tr?: Translations<"generic" | "schedule" | "purpose">;
+  sourceRecordId?: string;
 };
-export type Condition = { id: string; name: string; note: string; tr?: Translations<"name" | "note"> };
+export type Condition = { id: string; name: string; note: string; sourceRecordId?: string; tr?: Translations<"name" | "note"> };
 export type Contact = { id: string; name: string; relationship: string; phone: string; tr?: Translations<"relationship"> };
 /** English field names that carry translations, per list. */
 export const TRANSLATED_FIELDS = {
@@ -192,7 +194,10 @@ export type AuditAction =
   | "card_unfrozen"
   | "card_replaced"
   | "privacy_changed"
-  | "identity_changed";
+  | "identity_changed"
+  | "document_read"
+  | "suggestions_accepted"
+  | "document_deleted";
 export type AccessEvent = {
   seq: number;
   at: string;
