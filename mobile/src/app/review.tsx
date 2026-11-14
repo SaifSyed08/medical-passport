@@ -11,7 +11,7 @@ import type { Strings } from "@/lib/i18n";
 import { ITEM_KINDS, newId, saveProfile } from "@/lib/profile";
 import { useSession } from "@/lib/session";
 import { color, space } from "@/lib/theme";
-import { Button, Chips, Field, Heading, Loading, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
+import { Button, Chips, Field, Heading, LoadError, Loading, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
 
 const MAIN: Record<Suggestion["kind"], string> = { condition: "name", allergy: "substance", medication: "generic", bloodType: "value" };
 const BLOOD_OPTIONS = BLOOD_TYPES.filter(b => b !== "Unknown").map(b => ({ value: b as string, label: b }));
@@ -98,6 +98,8 @@ export default function Review() {
             <Button secondary onPress={retry}>{t.retry}</Button>
             <Button secondary onPress={() => router.back()}>{t.back}</Button>
           </>
+        ) : !p && profile.error ? (
+          <LoadError onRetry={() => void profile.refresh()} />
         ) : !st || !items || !p ? (
           <>
             <Notice>{t.reviewReading}</Notice>
@@ -140,8 +142,8 @@ export default function Review() {
                       )}
                     </View>
                   )}
-                  {kind !== "duplicate" && <View style={{ flexDirection: "row", gap: space.s, marginTop: space.m }}>
-                    {state !== "removed" && (
+                  <View style={{ flexDirection: "row", gap: space.s, marginTop: space.m }}>
+                    {state !== "removed" && kind !== "duplicate" && (
                       <>
                         <Button
                           style={{ flex: 1 }}
@@ -166,7 +168,7 @@ export default function Review() {
                     >
                       {state === "removed" ? t.restore : t.dontAdd}
                     </Button>
-                  </View>}
+                  </View>
                 </Section>
               );
             })}

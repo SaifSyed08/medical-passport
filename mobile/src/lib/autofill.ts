@@ -6,7 +6,7 @@ import { storage } from "./storage";
 /** Empty means the feature is off: no opt-in prompt and no review entry points. */
 export const EXTRACTOR_URL = (process.env.EXPO_PUBLIC_EXTRACTOR_URL ?? "").replace(/\/$/, "");
 
-const PREF_KEY = "tessera.autofill";
+const PREF_KEY = "autofill.pref";
 
 export async function getAutofillPref(): Promise<"on" | "off" | null> {
   const v = await storage.get(PREF_KEY).catch(() => null);
