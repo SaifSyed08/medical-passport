@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { PERSONAS } from "../data/personas";
+import { hasDemo } from "../data/personas";
 import type { Equivalent, Persona } from "../lib/types";
 import { equivalents } from "../lib/api";
 import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
@@ -12,6 +12,8 @@ import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslat
 
 type Props = {
   persona: Persona;
+  /** Everyone selectable under Settings: the Tessera traveler (when embedded), then the demo patients. */
+  personas: Persona[];
   settings: Settings;
   setSettings: (f: (s: Settings) => Settings) => void;
   onStart: () => void;
@@ -24,7 +26,7 @@ function age(dob: string) {
   return n.getFullYear() - d.getFullYear() - (n < new Date(n.getFullYear(), d.getMonth(), d.getDate()) ? 1 : 0);
 }
 
-export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
+export default function Home({ persona, personas, setSettings, onStart, onDemo }: Props) {
   const home = persona.home;
   const local = persona.trip.country;
   const [trip, setTrip] = useState<TripCache>(() => loadTrip(home, local));
@@ -54,7 +56,7 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
     setTrip(t);
     if (!sameCountry && persona.medications.some((m) => !t.items[norm(m.name)])) void prepare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [home, local, persona.id]);
+  }, [home, local, persona.id, persona.medications.map((m) => m.name).join("|")]);
 
   // The app's labels are in English, so show the allergy in the clinician's language once the record is translated.
   const translated = useTranslatedRecord(persona, persona.trip.doctorLanguage, persona.recordLanguage !== persona.trip.doctorLanguage);
@@ -145,10 +147,12 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
           <Icon name="mic" />
           Start interpreting
         </button>
-        <button className="btn-quiet" onClick={onDemo}>
-          <Icon name="play" size={16} />
-          Play demo conversation <kbd>D</kbd>
-        </button>
+        {hasDemo(persona.id) && (
+          <button className="btn-quiet" onClick={onDemo}>
+            <Icon name="play" size={16} />
+            Play demo conversation <kbd>D</kbd>
+          </button>
+        )}
       </div>
 
 
@@ -157,7 +161,7 @@ export default function Home({ persona, setSettings, onStart, onDemo }: Props) {
         <Sheet title="Settings" onClose={() => setSheet("none")}>
           <div className="group">
             <div className="group-title">Patient</div>
-            {PERSONAS.map((p) => (
+            {personas.map((p) => (
               <button key={p.id} className="row" onClick={() => setSettings((s) => ({ ...s, personaId: p.id }))}>
                 <span className="avatar sm">{p.initials}</span>
                 <span className="row-main">

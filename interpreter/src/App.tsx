@@ -6,21 +6,30 @@ import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
 import { unlockAudio } from "./lib/audioSession";
+import { embedded, hostPersona, onHostPersona } from "./lib/host";
 
-export function effectivePersona(settings: Settings): Persona {
-  const base = PERSONAS.find((p) => p.id === settings.personaId) || PERSONAS[0];
+export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
+  const base = personas.find((p) => p.id === settings.personaId) || personas[0];
   const pair = settings.pairs[base.id];
   if (!pair) return base;
   return { ...base, language: pair.patientLang, trip: { ...base.trip, country: pair.local, doctorLanguage: pair.doctorLang } };
 }
 
 export default function App() {
-  const [settings, setSettings] = useState<Settings>(loadSettings);
+  // Inside the Tessera app the signed-in traveler's own record comes first, and each visit starts on it.
+  const [host, setHost] = useState<Persona | null>(hostPersona);
+  useEffect(() => onHostPersona(setHost), []);
+  const personas = useMemo(() => (host ? [host, ...PERSONAS] : PERSONAS), [host]);
+  const [settings, setSettings] = useState<Settings>(() => {
+    const s = loadSettings();
+    const h = hostPersona();
+    return h ? { ...s, personaId: h.id } : s;
+  });
   const [screen, setScreen] = useState<"home" | "talk">(() => (new URLSearchParams(location.search).has("talk") ? "talk" : "home"));
   // Bumped to start the recorded demo; 0 = a normal conversation.
   const [demoRequest, setDemoRequest] = useState(() => (new URLSearchParams(location.search).has("demo") ? 1 : 0));
   const [serverIssue, setServerIssue] = useState<string | null>(null);
-  const persona = useMemo(() => effectivePersona(settings), [settings]);
+  const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas]);
 
   useEffect(() => saveSettings(settings), [settings]);
 
@@ -66,9 +75,9 @@ export default function App() {
   }, []);
 
   return (
-    <div className={`app nav-${nav}`}>
+    <div className={`app nav-${nav}${embedded() ? " embedded" : ""}`}>
       {/* Desktop only: a phone status bar with the Dynamic Island, so the screen reads like the real device. */}
-      <div className="device-bar" aria-hidden>
+      {!embedded() && <div className="device-bar" aria-hidden>
         <span className="device-time">9:41</span>
         <span className="island" />
         <span className="device-icons">
@@ -87,11 +96,12 @@ export default function App() {
             <rect x="24.5" y="4" width="2" height="4" rx="1" fill="currentColor" opacity=".4" />
           </svg>
         </span>
-      </div>
+      </div>}
       {serverIssue && <div className="banner">{serverIssue}</div>}
       {screen === "home" ? (
         <Home
           persona={persona}
+          personas={personas}
           settings={settings}
           setSettings={setSettings}
           onStart={() => {

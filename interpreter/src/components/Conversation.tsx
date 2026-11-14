@@ -3,7 +3,7 @@ import type { ContextItem, DrugMention, Equivalent, Persona, Speaker, Turn } fro
 import { Mic, type MicState } from "../lib/mic";
 import type { Player } from "../lib/player";
 import { demoVoice, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
-import { PERSONAS } from "../data/personas";
+import { PERSONAS, hasDemo } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
 import { mergeContext } from "../lib/contextMerge";
 import * as api from "../lib/api";
@@ -762,13 +762,15 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
             </div>
           </div>
           <div className="group">
-            <button className="row" onClick={() => void runDemo()}>
-              <Icon name="play" />
-              <span className="row-main">
-                <strong>Play demo conversation</strong>
-              </span>
-              <kbd>D</kbd>
-            </button>
+            {hasDemo(persona.id) && (
+              <button className="row" onClick={() => void runDemo()}>
+                <Icon name="play" />
+                <span className="row-main">
+                  <strong>Play demo conversation</strong>
+                </span>
+                <kbd>D</kbd>
+              </button>
+            )}
             <button className="row" onClick={() => setSheet("record")}>
               <Icon name="doc" />
               <span className="row-main">

@@ -540,6 +540,11 @@ i.dot.clinician { background: var(--clinician); }
   .sheet { border-radius: 30px 30px 44px 44px; }
 }
 .toast.panel { position: absolute; }
+/* Inside the Tessera app's WebView the page is already on a phone (or tablet): no drawn device frame. */
+@media (min-width: 560px) {
+  .app.embedded { width: auto; max-width: none; height: 100dvh; top: auto; transform: none; border-radius: 0; box-shadow: none; }
+  .app.embedded::after { display: none; }
+}
 
 /* ---------------------------------------------------------------- screen transitions, inside the phone */
 /* Forward (Start): the conversation glides in; its header drops from where the patient card was; the mic rises from the Start button. */
