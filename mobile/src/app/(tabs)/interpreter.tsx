@@ -18,6 +18,13 @@ const ORIGIN = INTERPRETER_URL.match(/^https?:\/\/[^/]+/)?.[0] ?? "";
 // react-native-webview types its class as `WebViewProps & P` with P = undefined, which TypeScript 6 reads as never.
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 const Web = WebView<{}>;
+// Runs before the page's own scripts: forwards any script error to the app, so a crash shows up instead of a blank tab.
+const REPORT_ERRORS = `(function () {
+  function send(m) { try { window.ReactNativeWebView.postMessage(JSON.stringify({ type: "tessera:error", message: String(m).slice(0, 300) })); } catch (e) {} }
+  window.addEventListener("error", function (e) { send((e.message || "Script error") + (e.filename ? " (" + e.filename.split("/").pop() + ":" + e.lineno + ")" : "")); });
+  window.addEventListener("unhandledrejection", function (e) { send("Unhandled: " + ((e.reason && e.reason.message) || e.reason)); });
+})();`;
+const READY_TIMEOUT_MS = 10000;
 
 export default function InterpreterTab() {
   const { me, t, uiLang } = useSession();
@@ -28,6 +35,11 @@ export default function InterpreterTab() {
   const [disclosed, setDisclosed] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // "ready" = the page has drawn (it posts tessera:ready). Until then, a stall or script error is shown, not a blank tab.
+  const [ready, setReady] = useState(false);
+  const [problem, setProblem] = useState("");
+  const [lastEvent, setLastEvent] = useState("not started");
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     storage.get(DISCLOSED_KEY).then(v => setDisclosed(v === "1"), () => setDisclosed(false));
@@ -41,6 +53,24 @@ export default function InterpreterTab() {
   // Only the first record goes in before the page loads; later edits are posted to the running page.
   const [initial, setInitial] = useState("");
   if (json && !initial) setInitial(json);
+
+  const showWeb = !!INTERPRETER_URL && disclosed === true && Platform.OS !== "web" && !!initial && !failed;
+  useEffect(() => {
+    if (!showWeb || ready) return;
+    const timer = setTimeout(() => setProblem(p => p || "The page didn't draw within 10 seconds."), READY_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [showWeb, ready, attempt]);
+
+  const reload = () => {
+    setReady(false);
+    setProblem("");
+    setLoaded(false);
+    setAttempt(n => n + 1);
+  };
+  const track = (what: string) => {
+    setLastEvent(what);
+    console.log(`[interpreter tab] ${what}`);
+  };
 
   useEffect(() => {
     if (!loaded || !json || json === initial) return;
@@ -116,9 +146,10 @@ export default function InterpreterTab() {
   return (
     <View style={{ flex: 1, paddingTop: insets.top, backgroundColor: PAGE_BG }}>
       <Web
+        key={attempt}
         ref={web}
         source={{ uri: interpreterPage() }}
-        injectedJavaScriptBeforeContentLoaded={`window.__TESSERA__ = { persona: ${initial} }; true;`}
+        injectedJavaScriptBeforeContentLoaded={`${REPORT_ERRORS}\nwindow.__TESSERA__ = { persona: ${initial} }; true;`}
         originWhitelist={[ORIGIN]}
         // Links that leave the interpreter open in the system browser.
         onShouldStartLoadWithRequest={req => {
@@ -130,11 +161,52 @@ export default function InterpreterTab() {
         allowsInlineMediaPlayback
         mediaPlaybackRequiresUserAction={false}
         domStorageEnabled
-        onLoadEnd={() => setLoaded(true)}
-        onError={() => setFailed(true)}
-        onHttpError={e => e.nativeEvent.statusCode >= 500 && setFailed(true)}
+        onLoadStart={e => track(`loading ${e.nativeEvent.url}`)}
+        onLoadEnd={e => {
+          track(`loaded ${e.nativeEvent.url} (still loading: ${e.nativeEvent.loading})`);
+          setLoaded(true);
+        }}
+        onError={e => {
+          track(`error ${e.nativeEvent.code}: ${e.nativeEvent.description}`);
+          setFailed(true);
+        }}
+        onHttpError={e => {
+          track(`HTTP ${e.nativeEvent.statusCode} for ${e.nativeEvent.url}`);
+          if (e.nativeEvent.statusCode >= 500) setFailed(true);
+        }}
+        onMessage={e => {
+          let m: { type?: string; message?: string } = {};
+          try {
+            m = JSON.parse(e.nativeEvent.data);
+          } catch {
+            return;
+          }
+          if (m.type === "tessera:ready") {
+            track("page drew");
+            setReady(true);
+            setProblem("");
+          } else if (m.type === "tessera:error" && !ready) {
+            console.warn(`[interpreter tab] page error: ${m.message}`);
+            setProblem(m.message ?? "Script error");
+          }
+        }}
+        // The phone can kill the page's process to save memory; bring it back instead of leaving it blank.
+        onContentProcessDidTerminate={() => {
+          track("iOS ended the page's process");
+          reload();
+        }}
+        onRenderProcessGone={() => {
+          track("Android ended the page's process");
+          reload();
+        }}
         style={{ flex: 1, backgroundColor: PAGE_BG }}
       />
+      {problem ? (
+        <View style={{ position: "absolute", left: 0, right: 0, top: insets.top, padding: 20, gap: 12, backgroundColor: PAGE_BG }}>
+          <Notice tone="error">{`${t.interpreterBlank}\n\n${problem}\nLast step: ${lastEvent}`}</Notice>
+          <Button secondary onPress={reload}>{t.interpreterReload}</Button>
+        </View>
+      ) : null}
     </View>
   );
 }

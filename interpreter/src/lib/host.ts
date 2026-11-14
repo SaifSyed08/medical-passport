@@ -5,6 +5,17 @@ import type { Persona } from "./types";
 declare global {
   interface Window {
     __TESSERA__?: { persona?: Persona };
+    /** Set by react-native-webview inside the app. */
+    ReactNativeWebView?: { postMessage: (data: string) => void };
+  }
+}
+
+/** Tells the app something (e.g. that the page has drawn). No-op outside the app. */
+export function notifyHost(message: { type: string; [k: string]: unknown }) {
+  try {
+    window.ReactNativeWebView?.postMessage(JSON.stringify(message));
+  } catch {
+    /* not inside the app */
   }
 }
 

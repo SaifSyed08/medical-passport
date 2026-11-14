@@ -6,7 +6,7 @@ import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
 import { unlockAudio } from "./lib/audioSession";
-import { embedded, hostPersona, onHostPersona } from "./lib/host";
+import { embedded, hostPersona, notifyHost, onHostPersona } from "./lib/host";
 
 export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
   const base = personas.find((p) => p.id === settings.personaId) || personas[0];
@@ -19,6 +19,8 @@ export default function App() {
   // Inside the Tessera app the signed-in traveler's own record comes first, and each visit starts on it.
   const [host, setHost] = useState<Persona | null>(hostPersona);
   useEffect(() => onHostPersona(setHost), []);
+  // The app shows a diagnostic instead of a blank tab until it hears this.
+  useEffect(() => notifyHost({ type: "tessera:ready" }), []);
   const personas = useMemo(() => (host ? [host, ...PERSONAS] : PERSONAS), [host]);
   const [settings, setSettings] = useState<Settings>(() => {
     const s = loadSettings();
