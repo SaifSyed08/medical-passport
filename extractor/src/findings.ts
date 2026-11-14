@@ -30,7 +30,10 @@ export function parseFindings(raw: unknown): Suggestion[] {
     const required = Object.keys(SPEC[kind])[0];
     if (!ok || !fields[required]) continue;
     if (kind === "bloodType" && (fields.value === "Unknown" || !(BLOOD_TYPES as readonly string[]).includes(fields.value))) continue;
-    if (kind === "allergy") fields.severity = ["severe", "moderate", "mild"].includes(src.severity as string) ? (src.severity as string) : "moderate";
+    if (kind === "allergy") {
+      const sev = typeof src.severity === "string" ? src.severity.trim().toLowerCase() : "";
+      fields.severity = ["severe", "moderate", "mild"].includes(sev) ? sev : "moderate";
+    }
     const quote = typeof item.quote === "string" ? item.quote.trim().slice(0, 200) : "";
     const c = typeof item.confidence === "number" && Number.isFinite(item.confidence) ? item.confidence : 0;
     out.push({ id: `sg_${out.length + 1}`, kind, fields, quote, confidence: Math.min(1, Math.max(0, c)) });

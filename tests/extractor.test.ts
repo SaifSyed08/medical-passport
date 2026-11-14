@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { callModel } from "../extractor/src/anthropic";
 import { parseFindings } from "../extractor/src/findings";
 import { handle } from "../extractor/src/index";
 
@@ -19,6 +20,10 @@ describe("parseFindings", () => {
     expect(out[0].confidence).toBe(1);
     expect(out[1].fields.severity).toBe("moderate");
     expect(out.map(s => s.id)).toEqual(["sg_1", "sg_2"]);
+  });
+  it("normalizes severity case and whitespace", () => {
+    const [a] = parseFindings({ findings: [{ kind: "allergy", fields: { substance: "Nuts", severity: " Severe " }, quote: "", confidence: 1 }] });
+    expect(a.fields.severity).toBe("severe");
   });
   it("rejects bad blood types and non-string fields", () => {
     const bt = (value: string) => ({ kind: "bloodType", fields: { value }, quote: "", confidence: 1 });
@@ -88,5 +93,24 @@ describe("handle", () => {
     const text = await r.text();
     expect(text).toContain("model_error");
     expect(text).not.toContain("SECRET");
+  });
+});
+
+describe("callModel", () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const stub = (body: object) => vi.stubGlobal("fetch", async () => Response.json(body));
+  const call = () => callModel("k", "m", "application/pdf", new Uint8Array([1, 2]));
+
+  it("returns the tool_use input", async () => {
+    stub({ stop_reason: "tool_use", content: [{ type: "tool_use", input: { findings: [] } }] });
+    expect(await call()).toEqual({ findings: [] });
+  });
+  it("throws when there is no tool_use block", async () => {
+    stub({ stop_reason: "end_turn", content: [{ type: "text", text: "hi" }] });
+    await expect(call()).rejects.toThrow();
+  });
+  it("throws when output was truncated by max_tokens", async () => {
+    stub({ stop_reason: "max_tokens", content: [{ type: "tool_use", input: { findings: [] } }] });
+    await expect(call()).rejects.toThrow();
   });
 });
