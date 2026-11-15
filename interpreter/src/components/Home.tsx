@@ -157,7 +157,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
       </div>
 
 
-      {sheet === "record" && <RecordSheet persona={persona} onClose={() => setSheet("none")} />}
+      {sheet === "record" && <RecordSheet persona={persona} editable onClose={() => setSheet("none")} />}
       {sheet === "settings" && (
         <Sheet title="Settings" onClose={() => setSheet("none")}>
           <div className="group">

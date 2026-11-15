@@ -14,7 +14,13 @@ export const recordBody = (p: Persona): RecordBody => ({
   contacts: p.contacts,
 });
 
-const key = (p: Persona, lang: string) => `ti.record.${p.id}.${lang}.${JSON.stringify(recordBody(p)).length}`;
+// Keyed by the record's content, so an edit (a deleted row, a scanned document) gets a fresh translation.
+function hash(s: string) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+  return (h >>> 0).toString(36);
+}
+const key = (p: Persona, lang: string) => `ti.record.${p.id}.${lang}.${hash(JSON.stringify(recordBody(p)))}`;
 
 function readCache(p: Persona, lang: string): RecordBody | null {
   try {
