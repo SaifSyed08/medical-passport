@@ -66,6 +66,7 @@ for (const [i, line] of persona.script.entries()) {
   console.log(`  translation:     ${it.translation}`);
   for (const d of it.drugs) console.log(`  drug: "${d.mentioned}" -> "${d.translated}" | ${d.home_name} => ${d.local_name || "N/A"} [${d.status}, ${d.source}] ${d.note_doctor}`);
   for (const c of cx.items) console.log(`  context (${cx.ms} ms) ${c.level.toUpperCase()} ${c.id}: ${c.title} — ${c.detail} | ${c.why}`);
+  const shownBefore = [...shown];
   for (const c of cx.items) if (!shown.includes(c.id)) shown.push(c.id);
   console.log(`  wall: stt ${stt.wall} + max(interpret ${it.wall}, context ${cx.wall}) ms`);
   check(it.speaker === line.speaker, `speaker detected as ${line.speaker}`);
@@ -83,13 +84,17 @@ for (const [i, line] of persona.script.entries()) {
       check(/amoxicilina/i.test(it.translation), "Spanish translation says amoxicilina");
     }
   }
-  if (persona.id === "sita" && i === 1) {
+  if (persona.id === "sita" && i === 0) {
     check(it.drugs.some((d) => d.key === "ibuprofen-paracetamol"), "Flexon resolved to ibuprofen + paracetamol");
     check(/ibuprofen/i.test(it.translation), "English translation says ibuprofen");
-    check(alerts.includes("alg_nsaid") || alerts.includes("cnd_aerd") || alerts.includes("doc_pulm_2022"), "NSAID allergy alert on Flexon");
+    check(cx.items.some((c) => c.level === "alert" && /nsaid|allerg/i.test(`${c.title} ${c.detail}`)), "NSAID allergy alert on Flexon");
+  }
+  if (persona.id === "sita" && i === 1) {
+    check(/[\u0900-\u097F]/.test(it.translation), "translated into Nepali (Devanagari)");
+    check(alerts.includes("alg_contrast") || alerts.includes("doc_ct_2023"), "contrast-dye alert on CT with contrast");
   }
   if (persona.id === "sita" && i === 2) {
-    check(/[ऀ-ॿ]/.test(it.translation), "translated into Nepali (Devanagari)");
+    check(alerts.every((id) => shownBefore.includes(id)), "no new alert on small talk");
   }
   if (persona.id === "jordan" && i === 2) {
     check(alerts.includes("alg_penicillin") || alerts.includes("doc_allergy_letter"), "penicillin allergy alert");

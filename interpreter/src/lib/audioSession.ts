@@ -57,3 +57,14 @@ export function unlockAudio() {
     el.play().catch(() => {});
   }
 }
+
+/* Secret fast demo (F anywhere): the recorded demo plays about 1.6x faster with shorter pauses. */
+export const FAST_RATE = 1.6;
+let fast = false;
+export const fastDemo = () => fast;
+export function toggleFastDemo() {
+  fast = !fast;
+  sharedPlayer().setRate(fast ? FAST_RATE : 1);
+  demoVoice().el.playbackRate = fast ? FAST_RATE : 1;
+  return fast;
+}

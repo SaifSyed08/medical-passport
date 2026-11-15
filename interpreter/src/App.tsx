@@ -5,7 +5,7 @@ import { loadSettings, saveSettings, type Settings } from "./lib/store";
 import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
-import { unlockAudio } from "./lib/audioSession";
+import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
 
@@ -76,6 +76,10 @@ export default function App() {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.key === "f" || e.key === "F") {
+        toggleFastDemo();
+        return;
+      }
       if (e.key === "3") {
         // Don't leave a focus ring on whatever was clicked last.
         (document.activeElement as HTMLElement | null)?.blur?.();

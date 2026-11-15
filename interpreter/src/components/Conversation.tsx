@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContextItem, DrugMention, Equivalent, Persona, Speaker, Turn } from "../lib/types";
 import { Mic, type MicState } from "../lib/mic";
 import type { Player } from "../lib/player";
-import { demoVoice, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
+import { demoVoice, fastDemo, FAST_RATE, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
 import { PERSONAS, hasDemo } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
 import { mergeContext } from "../lib/contextMerge";
@@ -82,6 +82,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const stageRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef<number | undefined>(undefined);
   const demoToken = useRef<{ cancelled: boolean } | null>(null);
+  const pace = (ms: number) => sleep(fastDemo() ? ms / 1.8 : ms);
 
   const patch = useCallback((id: string, p: Partial<Turn> | ((t: Turn) => Partial<Turn>)) => {
     setTurns((all) => all.map((t) => (t.id === id ? { ...t, ...(typeof p === "function" ? p(t) : p) } : t)));
@@ -405,6 +406,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       el.onended = done;
       el.onerror = done;
       el.src = url;
+      // Secret fast demo (F): the recording itself plays faster too.
+      el.defaultPlaybackRate = el.playbackRate = fastDemo() ? FAST_RATE : 1;
       el.play().then(() => (raf = requestAnimationFrame(tick)), done);
       const guard = setInterval(() => {
         if (token.cancelled) {
@@ -472,7 +475,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const base = PERSONAS.find((p) => p.id === persona.id) || persona;
     saveEquivalents(base.home, base.trip.country, data.equivalents);
     const trip = loadTrip(base.home, base.trip.country);
-    await sleep(700);
+    await pace(700);
     for (const line of data.lines) {
       if (token.cancelled) break;
       const id = uid();
@@ -497,10 +500,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       if (token.cancelled) break;
       setDemo("working");
       patch(id, { raw: line.stt.text, status: "transcribing" });
-      await sleep(450);
+      await pace(450);
       if (token.cancelled) break;
       patch(id, { raw: line.stt.text, status: "interpreting" });
-      await sleep(Math.min(1400, 500 + line.stt.text.length * 9));
+      await pace(Math.min(1400, 500 + line.stt.text.length * 9));
       if (token.cancelled) break;
       const r = line.interpret;
       patch(id, {
@@ -513,14 +516,14 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         drugs: r.drugs.map((d) => ({ ...d, cached: isCached(trip, d) })),
         timings: { total: (line.stt.ms || 500) + r.ms },
       });
-      window.setTimeout(() => !token.cancelled && addContext(id, line.context, line.interpret.cleaned), 900);
-      await sleep(500);
+      window.setTimeout(() => !token.cancelled && addContext(id, line.context, line.interpret.cleaned), fastDemo() ? 500 : 900);
+      await pace(500);
       // Stopped while the words were landing: don't start this line's speech after the stop.
       if (token.cancelled) break;
       if (speakRef.current) await playerRef.current!.play(line.speech);
-      else await sleep(2600);
+      else await pace(2600);
       if (token.cancelled) break;
-      await sleep(1100);
+      await pace(1100);
     }
     if (demoToken.current === token) {
       demoToken.current = null;
@@ -658,7 +661,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
 
       {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
-      {toast && kindOf(toast.id) === "allergy" && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
+      {toast && (kindOf(toast.id) === "allergy" || /allerg|anaphyla/i.test(`${toast.title} ${toast.detail}`)) && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
 
       <div className="transcript" ref={stageRef}>
         {turns.length === 0 ? (
