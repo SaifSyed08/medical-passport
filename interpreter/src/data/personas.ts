@@ -58,7 +58,7 @@ export const sofia: Persona = {
   script: [
     { speaker: "patient", text: "Hola doctor. Eh, desde anoche me duele mucho el pecho y... me cuesta respirar.", shows: "Live captions, cleanup, asthma history from the record" },
     { speaker: "patient", text: "Tomé dos Neo-Melubrinas y usé mi Ventolin, pero no me ayudó.", shows: "Ventolin → albuterol; metamizole flagged as not sold in the US" },
-    { speaker: "clinician", text: "I'd like to start you on amoxicilina and get a CT scan with contrast.", shows: "Penicillin anaphylaxis and eGFR 44 alerts" },
+    { speaker: "clinician", text: "I'd like to start you on amoxicillin and get a CT scan with contrast.", shows: "Penicillin anaphylaxis and eGFR 44 alerts" },
     { speaker: "clinician", text: "Can you take ibuprofen for the pain?", shows: "Kidney disease alert for an NSAID" },
   ],
 };
@@ -125,7 +125,69 @@ export const jordan: Persona = {
   ],
 };
 
-export const PERSONAS: Persona[] = [sofia, jordan];
+
+// Nepali skit: Sita doesn't know her Flexon (a common Nepali pain reliever) contains ibuprofen, an NSAID,
+// and NSAIDs set off her asthma. The app flips the name and raises the allergy while she's still talking.
+export const sita: Persona = {
+  id: "sita",
+  name: "Sita Gurung",
+  initials: "SG",
+  dob: "1991-03-08",
+  sex: "Female",
+  bloodType: "B+",
+  language: "ne",
+  home: "NP",
+  trip: { country: "US", city: "New York", doctorLanguage: "en", reason: "Visiting her sister" },
+  recordLanguage: "en",
+  allergies: [
+    {
+      id: "alg_nsaid",
+      substance: "Aspirin and NSAIDs (ibuprofen, diclofenac)",
+      reaction: "Severe wheezing and asthma attack within an hour of aspirin (2022); treated in emergency",
+      severity: "severe",
+      since: "2022",
+    },
+  ],
+  medications: [
+    { id: "med_flexon", name: "Flexon", generic: "ibuprofen 400 mg + paracetamol 325 mg", dose: "1 tablet", schedule: "When needed for headache", purpose: "Headache and body pain (bought over the counter)" },
+    { id: "med_asthalin", name: "Asthalin inhaler", generic: "salbutamol 100 mcg/puff", dose: "2 puffs", schedule: "When wheezy, up to every 4 hours", purpose: "Asthma reliever" },
+    { id: "med_budecort", name: "Budecort 200 inhaler", generic: "budesonide 200 mcg/puff", dose: "1 puff", schedule: "Twice daily", purpose: "Asthma controller" },
+  ],
+  conditions: [
+    { id: "cnd_asthma", name: "Asthma", since: "childhood", note: "Usually controlled on budesonide; worse with colds and dust." },
+    { id: "cnd_aerd", name: "Aspirin-exacerbated respiratory disease (AERD)", since: "2022", note: "Asthma attacks triggered by aspirin and other NSAIDs. Paracetamol is tolerated." },
+  ],
+  labs: [
+    { id: "lab_peakflow", name: "Peak flow", value: "290", unit: "L/min", ref: "personal best 420", flag: "L", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
+    { id: "lab_eos", name: "Blood eosinophils", value: "9", unit: "%", ref: "1–6", flag: "H", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
+  ],
+  documents: [
+    {
+      id: "doc_er_2022",
+      kind: "visit",
+      title: "Emergency visit: asthma attack after aspirin",
+      date: "2022-07-14",
+      facility: "Pokhara City Hospital (fictional)",
+      body: "Acute wheeze and chest tightness 40 minutes after aspirin for a headache. Treated with nebulised salbutamol and oral steroids.",
+    },
+    {
+      id: "doc_pulm_2022",
+      kind: "document",
+      title: "Pulmonology note: AERD",
+      date: "2022-08-02",
+      facility: "Pokhara Lung Clinic (fictional)",
+      body: "Diagnosis: aspirin-exacerbated respiratory disease. Avoid aspirin and all NSAIDs, including ibuprofen combination products. Paracetamol up to 500 mg per dose is tolerated.",
+    },
+  ],
+  contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148 (fictional)" }],
+  script: [
+    { speaker: "patient", text: "नमस्ते डाक्टर, हिजो राति देखि मलाई सास फेर्न गाह्रो भइरहेको छ, अनि छाती कसिएजस्तो लाग्छ।", shows: "Nepali captions and translation; asthma and AERD from the record" },
+    { speaker: "patient", text: "टाउको दुखेकोले मैले दुई वटा फ्लेक्सन खाएँ, अनि एस्थालिन पनि प्रयोग गरेँ, तर कम भएन।", shows: "Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner; Asthalin → albuterol" },
+    { speaker: "clinician", text: "Flexon has ibuprofen in it, and that can set off your asthma. Please stop it and use plain acetaminophen for headaches.", shows: "Nepali for Sita, with the Nepali name for acetaminophen" },
+  ],
+};
+
+export const PERSONAS: Persona[] = [sofia, jordan, sita];
 
 /** Personas with a recorded run in public/demo/. */
 export const hasDemo = (id: string) => PERSONAS.some((p) => p.id === id);

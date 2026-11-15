@@ -6,7 +6,7 @@ import Icon from "./Icon";
 import Flag from "./Flag";
 
 const SPEAK_IN: Record<string, string> = {
-  es: "Hable en español", en: "Speak in English", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
+  es: "Hable en español", en: "Speak in English", ne: "नेपालीमा बोल्नुहोस्", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
   it: "Parli in italiano", pt: "Fale em português", zh: "请说中文", ko: "한국어로 말씀하세요", hi: "हिंदी में बोलिए", ur: "اردو میں بولیں",
   ar: "تحدث بالعربية", vi: "Hãy nói tiếng Việt", ru: "Говорите по-русски", tl: "Magsalita sa Tagalog", tr: "Türkçe konuşun", fa: "فارسی صحبت کنید",
 };

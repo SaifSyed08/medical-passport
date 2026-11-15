@@ -110,6 +110,15 @@ const FLAGS: Record<string, ReactNode> = {
       <path d="M15 4.5l1.3 2.6 1.8-.6-.6 3 1.8.3-2.5 2 .4 1.6H15.6v2.2h-1.2v-2.2h-1.6l.4-1.6-2.5-2 1.8-.3-.6-3 1.8.6z" fill="#d52b1e" />
     </>
   ),
+  NP: (
+    <>
+      {/* Nepal's double pennant, centred in the same 30x20 box as the other flags */}
+      <rect width={W} height={H} fill="#fff" />
+      <path d="M9 1 L21 9.6 L12.6 9.6 L21 19 L9 19 Z" fill="#dc143c" stroke="#003893" strokeWidth="1.3" strokeLinejoin="round" />
+      <circle cx="12.4" cy="7.6" r="1.4" fill="#fff" />
+      <circle cx="12.6" cy="15.2" r="1.7" fill="#fff" />
+    </>
+  ),
   PH: (
     <>
       <rect width={W} height={10} fill="#0038a8" />
