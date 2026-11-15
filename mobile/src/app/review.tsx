@@ -6,10 +6,11 @@ import { KeyboardAvoidingView, Platform, Pressable, View } from "react-native";
 import { classify, initialState, mergeAccepted, readyToAdd, type ReviewState, type Suggestion } from "@shared/autofill";
 import { BLOOD_TYPES, type Profile } from "@shared/tessera";
 import { ApiError } from "@/lib/api";
-import { reportAccepted, requestSuggestions } from "@/lib/autofill";
+import { reportAccepted } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
 import type { Strings } from "@/lib/i18n";
 import { ITEM_KINDS, newId, saveProfile } from "@/lib/profile";
+import { useScans, type Scan } from "@/lib/scans";
 import { useSession } from "@/lib/session";
 import { color, radius, space, TOUCH } from "@/lib/theme";
 import { Button, Chips, Field, Heading, LoadError, Loading, Notice, Pill, Screen, Section, Segmented, T } from "@/components/ui";
@@ -69,37 +70,63 @@ function loadMessage(t: Strings, e: ApiError) {
   return t.reviewFailed;
 }
 
+/** "Reading page 1 of 3" with a slim progress bar, instead of a spinner. Falls back to the spinner for the moment between steps. */
+function ScanProgress({ scan, t }: { scan: Scan | undefined; t: Strings }) {
+  if (scan?.status !== "reading") {
+    return (
+      <>
+        <Notice>{t.reviewReading}</Notice>
+        <Loading />
+      </>
+    );
+  }
+  const label = scan.pages > 0 ? t.scanReadingPage.replace("{n}", String(scan.page)).replace("{total}", String(scan.pages)) : t.reviewReading;
+  // Half a page counts for the page being read, so the bar moves even for a single page.
+  const percent = scan.pages > 0 ? Math.round(Math.min(1, Math.max(0.05, (scan.page - 0.5) / scan.pages)) * 100) : 5;
+  return (
+    <View style={{ gap: space.m }}>
+      <Notice>{label}</Notice>
+      <View
+        accessibilityRole="progressbar"
+        accessibilityLabel={label}
+        accessibilityValue={{ min: 0, max: 100, now: percent }}
+        style={{ height: 6, borderRadius: 3, backgroundColor: color.line, overflow: "hidden" }}
+      >
+        <View style={{ width: `${percent}%`, height: "100%", backgroundColor: color.blue }} />
+      </View>
+      <T style={{ color: color.muted, lineHeight: 20 }}>{t.scanBackground}</T>
+    </View>
+  );
+}
+
 /** Review suggestions read from one uploaded document before any are added to the profile. */
 export default function Review() {
   const { recordId } = useLocalSearchParams<{ recordId: string }>();
   const { t } = useSession();
   const profile = useResource<Profile>("/profile");
-  const [items, setItems] = useState<Suggestion[] | null>(null);
+  const { scans, start, clear } = useScans();
+  const scan = scans[recordId];
+  // Edits are made on a copy, so leaving and coming back starts again from the scan's own suggestions.
+  const [edited, setEdited] = useState<Suggestion[] | null>(null);
+  const items = edited ?? (scan?.status === "ready" ? scan.suggestions : null);
   const [states, setStates] = useState<ReviewState[] | null>(null);
-  const [loadError, setLoadError] = useState<ApiError | null>(null);
   const [editing, setEditing] = useState<number | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState("");
   const savingRef = useRef(false);
+  // Set once the suggestions are added, so clearing the finished scan doesn't start a new one while this screen closes.
+  const finished = useRef(false);
 
-  const [attempt, setAttempt] = useState(0);
-
+  // The scan usually started when the file was uploaded. Opened from a record, or after "Try again", there is none yet: start it.
   useEffect(() => {
-    let live = true;
-    requestSuggestions(recordId).then(
-      s => live && setItems(s),
-      e => live && setLoadError(e instanceof ApiError ? e : new ApiError(0, String(e))),
-    );
-    return () => {
-      live = false;
-    };
-  }, [recordId, attempt]);
+    if (!scan && !finished.current) start(recordId);
+  }, [scan, recordId, start]);
 
+  const loadError = scan?.status === "error" ? scan.error : null;
   const retry = () => {
-    setLoadError(null);
-    setItems(null);
+    setEdited(null);
     setStates(null);
-    setAttempt(n => n + 1);
+    clear(recordId);
   };
 
   // Initial states need both the suggestions and the profile (duplicates start removed).
@@ -107,7 +134,7 @@ export default function Review() {
   const st = states ?? (items && p ? items.map(s => initialState(p, s)) : null);
   const setState = (i: number, v: ReviewState) => st && setStates(st.map((x, j) => (j === i ? v : x)));
   const setField = (i: number, key: string, v: string) => {
-    setItems(list => list && list.map((s, j) => (j === i ? { ...s, fields: { ...s.fields, [key]: v } } : s)));
+    setEdited(list => (list ?? items)?.map((s, j) => (j === i ? { ...s, fields: { ...s.fields, [key]: v } } : s)) ?? null);
     setState(i, "pending");
   };
   const count = (p && items?.filter((s, i) => st?.[i] === "checked" && classify(p, s) !== "duplicate").length) || 0;
@@ -124,6 +151,8 @@ export default function Review() {
       // Only a count for the audit log; a failure here must not undo the saved profile.
       if (accepted.length) await reportAccepted(recordId, Math.min(accepted.length, 60)).catch(() => {});
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      finished.current = true;
+      clear(recordId);
       router.back();
     } catch (e) {
       setSaveError(e instanceof ApiError && e.status === 400 ? e.message : t.errorGeneric);
@@ -147,8 +176,8 @@ export default function Review() {
           <LoadError onRetry={() => void profile.refresh()} />
         ) : !st || !items || !p ? (
           <>
-            <Notice>{t.reviewReading}</Notice>
-            <Loading />
+            <ScanProgress scan={scan} t={t} />
+            <Button secondary onPress={() => router.back()}>{t.back}</Button>
           </>
         ) : items.length === 0 ? (
           <>

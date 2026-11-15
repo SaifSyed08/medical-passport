@@ -75,3 +75,13 @@ Check each language column against the English.
 | Suggest profile updates | プロフィールの更新を提案 | |
 | Delete this document | この書類を削除 | |
 | Delete this document? Anything you already added to your passport stays. | この書類を削除しますか？パスポートに追加済みの項目は残ります。 | |
+
+### Background scan status on a record (`mobile/src/lib/i18n.ts`, Japanese only)
+| English | 日本語 | Notes for the reviewer |
+|---|---|---|
+| Reading page {n} of {total} | {total}ページ中{n}ページを読み取り中 | Shown on the record row and the review screen. Check the word order. |
+| Reading… | 読み取り中… | |
+| Ready to review | 確認できます | Short label on a record when its scan is done. |
+| Nothing to add | 追加できる項目なし | |
+| Couldn't read | 読み取れませんでした | |
+| You can leave this screen. Records will show Ready to review when it's done. | この画面を閉じても大丈夫です。完了すると、記録に「確認できます」と表示されます。 | |
