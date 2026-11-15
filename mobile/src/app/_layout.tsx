@@ -7,6 +7,7 @@ import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { ActivityWatcher } from "@/lib/activity";
+import { ScanProvider } from "@/lib/scans";
 import { SessionProvider, useSession } from "@/lib/session";
 import { color } from "@/lib/theme";
 
@@ -48,7 +49,9 @@ export default function Layout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
-        <Root />
+        <ScanProvider>
+          <Root />
+        </ScanProvider>
       </SessionProvider>
     </SafeAreaProvider>
   );

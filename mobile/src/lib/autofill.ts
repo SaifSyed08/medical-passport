@@ -27,16 +27,19 @@ export async function ensureAutofillOptIn(t: Strings): Promise<boolean> {
   return pref === "on";
 }
 
-export async function requestSuggestions(recordId: string): Promise<Suggestion[]> {
+type ScanReply = { status?: "reading" | "done"; page?: number; pages?: number; jobId?: string; suggestions?: Suggestion[]; error?: string; code?: string };
+
+/** One quick call to the extractor. A scan itself runs in the background, so no call waits for the OCR. */
+async function extractor(path: string, body?: unknown): Promise<ScanReply> {
   if (!EXTRACTOR_URL) throw new ApiError(0, "Extractor URL not configured", "config");
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 60000);
+  const timer = setTimeout(() => controller.abort(), 30000);
   let res: Response;
   try {
-    res = await fetch(`${EXTRACTOR_URL}/extract`, {
-      method: "POST",
-      headers: { ...authHeader(), "Content-Type": "application/json" },
-      body: JSON.stringify({ recordId }),
+    res = await fetch(`${EXTRACTOR_URL}${path}`, {
+      method: body ? "POST" : "GET",
+      headers: { ...authHeader(), ...(body ? { "Content-Type": "application/json" } : {}) },
+      body: body ? JSON.stringify(body) : undefined,
       signal: controller.signal,
     });
   } catch {
@@ -45,12 +48,26 @@ export async function requestSuggestions(recordId: string): Promise<Suggestion[]
   } finally {
     clearTimeout(timer);
   }
-  const data = (await res.json().catch(() => ({}))) as { suggestions?: Suggestion[]; error?: string; code?: string };
+  const data = (await res.json().catch(() => ({}))) as ScanReply;
   if (!res.ok) {
     if (res.status === 401) signalUnauthorized();
     throw new ApiError(res.status, data.error ?? "Request failed", data.code);
   }
-  return data.suggestions ?? [];
+  return data;
+}
+
+/** Starts reading a document: a job to poll, or the suggestions at once when the record's saved text is reused. */
+export async function startScan(recordId: string): Promise<{ jobId: string } | { suggestions: Suggestion[] }> {
+  const r = await extractor("/extract/start", { recordId });
+  if (r.status === "done") return { suggestions: r.suggestions ?? [] };
+  if (!r.jobId) throw new ApiError(0, "Unexpected reply", "bad_reply");
+  return { jobId: r.jobId };
+}
+
+/** How far a scan has got: the page being read, or the finished suggestions. */
+export async function pollScan(recordId: string, jobId: string): Promise<{ status: "reading"; page: number; pages: number } | { status: "done"; suggestions: Suggestion[] }> {
+  const r = await extractor(`/extract/jobs/${jobId}?recordId=${encodeURIComponent(recordId)}`);
+  return r.status === "done" ? { status: "done", suggestions: r.suggestions ?? [] } : { status: "reading", page: r.page ?? 0, pages: r.pages ?? 0 };
 }
 
 export const reportAccepted = (recordId: string, count: number): Promise<void> =>

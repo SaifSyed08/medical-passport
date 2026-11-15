@@ -10,11 +10,23 @@ import type { RecordItem } from "@shared/tessera";
 import { api, ApiError } from "@/lib/api";
 import { ensureAutofillOptIn } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
+import type { Strings } from "@/lib/i18n";
+import { useScans, type Scan } from "@/lib/scans";
 import { useSession } from "@/lib/session";
 import { space } from "@/lib/theme";
 import { Button, Heading, LoadError, Loading, Logo, Notice, Pill, Row, Screen, Section } from "@/components/ui";
 
 type Pick = { uri: string; name: string; type: string };
+
+/** What a record's background scan is doing, as the short label shown on its row. */
+function scanStatus(t: Strings, scan: Scan): { text: string; tone: "ok" | "muted" | "error" } {
+  if (scan.status === "reading") {
+    const text = scan.pages > 0 ? t.scanReadingPage.replace("{n}", String(scan.page)).replace("{total}", String(scan.pages)) : t.scanReading;
+    return { text, tone: "muted" };
+  }
+  if (scan.status === "error") return { text: t.scanFailed, tone: "error" };
+  return scan.suggestions.length > 0 ? { text: t.scanReady, tone: "ok" } : { text: t.scanNothing, tone: "muted" };
+}
 
 /** Re-encodes an image as JPEG (iPhone photos are HEIC, which the document reader can't open). */
 async function toJpeg(uri: string) {
@@ -24,6 +36,7 @@ async function toJpeg(uri: string) {
 
 export default function Records() {
   const { t } = useSession();
+  const { scans, start } = useScans();
   const records = useResource<RecordItem[]>("/records");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -48,9 +61,9 @@ export default function Records() {
     }
   }
 
-  /** After an upload: ask once whether to read documents, then open the review if opted in. */
+  /** After an upload: ask once whether to read documents, then scan it in the background if opted in. */
   async function maybeAutofill(record: RecordItem) {
-    if (await ensureAutofillOptIn(t)) router.push({ pathname: "/review", params: { recordId: record.id } });
+    if (await ensureAutofillOptIn(t)) start(record.id);
   }
 
   async function addFile(file: Pick) {
@@ -115,16 +128,24 @@ export default function Records() {
       {!records.data && records.error && <LoadError onRetry={records.refresh} />}
       {list.length > 0 && (
         <Section>
-          {list.map((r, i) => (
-            <Row
-              key={r.id}
-              title={r.title}
-              detail={[r.date, r.facility].filter(Boolean).join(" · ")}
-              last={i === list.length - 1}
-              onPress={() => router.push({ pathname: "/record/[id]", params: { id: r.id } })}
-              right={r.simulated ? <Pill tone="warn">{t.simulated}</Pill> : r.kind === "encounter" ? <Pill tone="muted">Visit</Pill> : undefined}
-            />
-          ))}
+          {list.map((r, i) => {
+            const scan = scans[r.id];
+            const status = scan && scanStatus(t, scan);
+            // Ready (with suggestions) and failed scans open the review screen; the rest open the record.
+            const toReview = scan?.status === "error" || (scan?.status === "ready" && scan.suggestions.length > 0);
+            const detail = [r.date, r.facility].filter(Boolean).join(" · ");
+            return (
+              <Row
+                key={r.id}
+                title={r.title}
+                detail={detail}
+                label={status ? `${r.title}${detail ? `, ${detail}` : ""}. ${status.text}` : undefined}
+                last={i === list.length - 1}
+                onPress={() => router.push(toReview ? { pathname: "/review", params: { recordId: r.id } } : { pathname: "/record/[id]", params: { id: r.id } })}
+                right={status ? <Pill tone={status.tone}>{status.text}</Pill> : r.simulated ? <Pill tone="warn">{t.simulated}</Pill> : r.kind === "encounter" ? <Pill tone="muted">Visit</Pill> : undefined}
+              />
+            );
+          })}
         </Section>
       )}
     </Screen>
