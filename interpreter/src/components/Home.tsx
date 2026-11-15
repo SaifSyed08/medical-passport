@@ -188,6 +188,17 @@ export default function Home({ persona, personas, settings, setSettings, onStart
             </div>
           </div>
           <div className="group">
+            <div className="group-title">Conversation layout</div>
+            <div className="seg">
+              <button className={settings.layout !== "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "classic" }))}>
+                Transcript
+              </button>
+              <button className={settings.layout === "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "focus" }))}>
+                Focus <kbd>L</kbd>
+              </button>
+            </div>
+          </div>
+          <div className="group">
             <div className="group-title row-between">
               <span>Medicines in {country(local).name}</span>
               {!sameCountry && (

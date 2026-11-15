@@ -79,9 +79,14 @@ export default function App() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
-      if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
       if (e.key === "f" || e.key === "F") {
         toggleFastDemo();
+        return;
+      }
+      if (e.key === "l" || e.key === "L") {
+        // Experimental conversation layout (Focus): one line at a time, record notes pinned under it.
+        setSettings((s) => ({ ...s, layout: s.layout === "focus" ? "classic" : "focus" }));
         return;
       }
       if (e.key === "3") {

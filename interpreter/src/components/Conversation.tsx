@@ -16,6 +16,7 @@ import { kindOf } from "./bits";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
+import { FocusDock, FocusView } from "./Focus";
 import ContextSheet from "./ContextSheet";
 import { Sheet } from "./bits";
 import Icon from "./Icon";
@@ -360,7 +361,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       el.removeEventListener("wheel", userScroll);
       el.removeEventListener("touchmove", userScroll);
     };
-  }, []);
+    // Re-attach when the layout switches back to the transcript (Focus has no scrolling list).
+  }, [settings.layout]);
   useEffect(() => {
     if (pinned.current) toBottom(true);
   }, [turns, toBottom]);
@@ -370,7 +372,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const ro = new ResizeObserver(() => pinned.current && toBottom(false));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [toBottom]);
+  }, [toBottom, settings.layout]);
   const jumpToLatest = () => {
     pinned.current = true;
     setShowLatest(false);
@@ -633,66 +635,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const lastDone = turns.map((t) => t.status).lastIndexOf("done");
   const mood = toast ? "alert" : lastSpeaker || "idle";
   const first = persona.name.split(" ")[0];
-
-  return (
-    <main className="talk" data-mood={mood}>
-      <div className="backdrop" aria-hidden>
-        <span className="tint patient" />
-        <span className="tint clinician" />
-        <span className="tint alert" />
-      </div>
-
-      <header className="talk-bar panel">
-        <button className="icon-btn" onClick={onBack} aria-label="Back">
-          <Icon name="back" />
-        </button>
-        <button className="talk-title" onClick={() => setSheet("record")}>
-          <strong>{persona.name}</strong>
-          <span>
-            <Flag code={persona.home} size={20} className="pt" /> {langName(persona.language)}
-            <span className="sep">↔</span>
-            <Flag code={persona.trip.country} size={20} className="dr" /> {langName(persona.trip.doctorLanguage)}
-          </span>
-        </button>
-        <button className="icon-btn" onClick={() => setSheet("menu")} aria-label="Options">
-          <Icon name="more" />
-        </button>
-      </header>
-
-
-      {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
-      {toast && (kindOf(toast.id) === "allergy" || /allerg|anaphyla/i.test(`${toast.title} ${toast.detail}`)) && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
-
-      <div className="transcript" ref={stageRef}>
-        {turns.length === 0 ? (
-          <IdleHero persona={persona} live={live} />
-        ) : (
-          turns.map((t, i) => (
-            <TurnBlock
-              key={t.id}
-              turn={t}
-              persona={persona}
-              current={i === lastDone || (i === turns.length - 1 && t.status !== "done")}
-              onDrug={(d) => setDrug({ d, speaker: t.speaker })}
-              onFlip={() => flipSpeaker(t)}
-              onReplay={() => replay(t)}
-            />
-          ))
-        )}
-      </div>
-
-      <div className="bottom">
-        {showLatest && turns.length > 0 && (
-          <button className="latest-pill" onClick={jumpToLatest}>
-            Latest
-            <Icon name="chevron" size={16} className="down" />
-          </button>
-        )}
-        <footer className="controls panel">
-          {/* The record lives inside the bottom bar: one panel, so the translation keeps the screen. */}
-          <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />
-          {micError && <div className="mic-error">{micError}</div>}
-          {typing && (
+  const focus = settings.layout === "focus";
+  const latestTurn = turns[turns.length - 1];
+  const activeSpeaker: Speaker | null = (latestTurn && latestTurn.status !== "done" ? latestTurn.speaker || latestTurn.forced : null) || forced || lastSpeaker || null;
+  const typer = (
             <form
               className="typer"
               onSubmit={(e) => {
@@ -712,7 +658,100 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
                 <Icon name="chevron" size={18} />
               </button>
             </form>
-          )}
+  );
+
+  return (
+    <main className={`talk ${focus ? "focus" : ""}`} data-mood={mood}>
+      <div className="backdrop" aria-hidden>
+        <span className="tint patient" />
+        <span className="tint clinician" />
+        <span className="tint alert" />
+      </div>
+
+      {focus ? (
+        <FocusView
+          turns={turns}
+          ctx={ctx}
+          persona={persona}
+          live={live}
+          speak={settings.speak}
+          onBack={onBack}
+          onMenu={() => setSheet("menu")}
+          onRecord={() => setSheet("record")}
+          onToggleSpeak={() => setSettings((s) => ({ ...s, speak: !s.speak }))}
+          onDrug={(d, speaker) => setDrug({ d, speaker })}
+          onFlip={flipSpeaker}
+          onReplay={replay}
+          onOpenCtx={setOpenCtx}
+        />
+      ) : (
+        <>
+      <header className="talk-bar panel">
+        <button className="icon-btn" onClick={onBack} aria-label="Back">
+          <Icon name="back" />
+        </button>
+        <button className="talk-title" onClick={() => setSheet("record")}>
+          <strong>{persona.name}</strong>
+          <span>
+            <Flag code={persona.home} size={20} className="pt" /> {langName(persona.language)}
+            <span className="sep">↔</span>
+            <Flag code={persona.trip.country} size={20} className="dr" /> {langName(persona.trip.doctorLanguage)}
+          </span>
+        </button>
+        <button className="icon-btn" onClick={() => setSheet("menu")} aria-label="Options">
+          <Icon name="more" />
+        </button>
+      </header>
+
+
+
+        </>
+      )}
+
+      {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
+      {toast && (kindOf(toast.id) === "allergy" || /allerg|anaphyla/i.test(`${toast.title} ${toast.detail}`)) && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
+
+      {!focus && (
+      <div className="transcript" ref={stageRef}>
+        {turns.length === 0 ? (
+          <IdleHero persona={persona} live={live} />
+        ) : (
+          turns.map((t, i) => (
+            <TurnBlock
+              key={t.id}
+              turn={t}
+              persona={persona}
+              current={i === lastDone || (i === turns.length - 1 && t.status !== "done")}
+              onDrug={(d) => setDrug({ d, speaker: t.speaker })}
+              onFlip={() => flipSpeaker(t)}
+              onReplay={() => replay(t)}
+            />
+          ))
+        )}
+      </div>
+
+      )}
+
+      {focus ? (
+        <div className="bottom">
+          {micError && <div className="mic-error">{micError}</div>}
+          <FocusDock persona={persona} active={activeSpeaker} forced={forced} setForced={setForced} orb={<Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />} label={orbLabel}>
+            {typing && typer}
+          </FocusDock>
+        </div>
+      ) : (
+      <div className="bottom">
+        {showLatest && turns.length > 0 && (
+          <button className="latest-pill" onClick={jumpToLatest}>
+            Latest
+            <Icon name="chevron" size={16} className="down" />
+          </button>
+        )}
+        <footer className="controls panel">
+          {/* The record lives inside the bottom bar: one panel, so the translation keeps the screen. */}
+          <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />
+          {micError && <div className="mic-error">{micError}</div>}
+          {typing && typer}
           <div className="control-row">
             <button className={`tool ${typing ? "on" : ""}`} onClick={() => setTyping((v) => !v)} aria-label="Type instead">
               <span className="tool-icon">
@@ -740,6 +779,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           </div>
         </footer>
       </div>
+      )}
 
       {sheet === "menu" && (
         <Sheet title="Options" onClose={() => setSheet("none")}>
@@ -772,6 +812,20 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
                   <strong>Play demo conversation</strong>
                 </span>
                 <kbd>D</kbd>
+              </button>
+            )}
+            {focus && (
+              <button
+                className="row"
+                onClick={() => {
+                  setTyping(true);
+                  setSheet("none");
+                }}
+              >
+                <Icon name="keyboard" />
+                <span className="row-main">
+                  <strong>Type instead</strong>
+                </span>
               </button>
             )}
             <button className="row" onClick={() => setSheet("record")}>

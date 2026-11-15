@@ -35,10 +35,12 @@ export type Settings = {
   pairs: Record<string, { patientLang: string; doctorLang: string; local: string }>;
   /** Visual identity: the original Tessera look, or Tandem (press 3 to switch). */
   brand: "tessera" | "tandem";
+  /** Conversation layout: the scrolling transcript, or Focus (one line at a time; press L to switch). */
+  layout: "classic" | "focus";
 };
 
 const SETTINGS_KEY = "ti.settings.v1";
-const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {}, brand: "tessera" };
+const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {}, brand: "tessera", layout: "classic" };
 
 export const loadSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(SETTINGS_KEY, {}) });
 export const saveSettings = (s: Settings) => write(SETTINGS_KEY, s);
