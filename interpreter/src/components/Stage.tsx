@@ -166,7 +166,7 @@ export function TurnBlock({
       {done && (
         <>
           <p className="original" dir={dir(spokenLang)} lang={spokenLang}>
-            {current ? <Reveal key={t.cleaned} text={t.cleaned} lang={spokenLang} drugs={t.drugs} field="mentioned" swap={swapToward} onDrug={onDrug} step={30} budget={500} /> : t.cleaned}
+            {current ? <Reveal key={t.cleaned} text={t.cleaned} lang={spokenLang} drugs={t.drugs} field="mentioned" swap={who === "clinician" ? undefined : swapToward} onDrug={onDrug} step={30} budget={500} /> : t.cleaned}
           </p>
           <p className={`translation ${current ? sizeFor(t.translation) : "past"}`} dir={dir(listenerLang)} lang={listenerLang}>
             {current ? (

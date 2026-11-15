@@ -79,8 +79,8 @@ html[data-brand="tandem"] body { background: radial-gradient(1100px 760px at 50%
 [data-brand="tandem"] .talk-title strong,
 [data-brand="tandem"] .sheet-head h3,
 [data-brand="tandem"] .toast-text strong,
-[data-brand="tandem"] .fact p,
-[data-brand="tandem"] .eq-side strong { font-family: var(--serif); letter-spacing: -.005em; }
+[data-brand="tandem"] .fact p { font-family: var(--serif); letter-spacing: -.005em; }
+/* drug names in the side-by-side sheet stay in the narrower sans so long generics don't split mid-word */
 [data-brand="tandem"] .translation { font-weight: 400; color: var(--t-cream); }
 [data-brand="tandem"] .translation.lg { font-size: clamp(29px, 8vw, 34px); line-height: 1.28; }
 [data-brand="tandem"] .translation.md { font-size: clamp(24px, 6.8vw, 28px); line-height: 1.32; }

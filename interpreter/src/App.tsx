@@ -77,6 +77,8 @@ export default function App() {
       const el = e.target as HTMLElement;
       if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
       if (e.key === "3") {
+        // Don't leave a focus ring on whatever was clicked last.
+        (document.activeElement as HTMLElement | null)?.blur?.();
         setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "tessera" : "tandem" }));
         return;
       }
