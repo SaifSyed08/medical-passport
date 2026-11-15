@@ -649,6 +649,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
               <input
                 autoFocus
                 value={draft}
+                onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setTyping(false))}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Type what was said"
                 aria-label="Type an utterance"
@@ -818,13 +819,13 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
               <button
                 className="row"
                 onClick={() => {
-                  setTyping(true);
+                  setTyping((v) => !v);
                   setSheet("none");
                 }}
               >
                 <Icon name="keyboard" />
                 <span className="row-main">
-                  <strong>Type instead</strong>
+                  <strong>{typing ? "Stop typing" : "Type instead"}</strong>
                 </span>
               </button>
             )}
