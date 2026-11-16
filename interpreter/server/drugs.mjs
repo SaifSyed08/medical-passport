@@ -31,6 +31,7 @@ export const CURATED = [
         note: "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       },
       JP: { name: "サルブタモール", brands: ["サルタノールインヘラー"], strength: "100 µg/噴霧", note: "Same medicine; called salbutamol in Japan (albuterol in the US)." },
+      NP: { name: "salbutamol", brands: ["Asthalin"], strength: "100 mcg per puff" },
       GB: { name: "salbutamol", brands: ["Ventolin Evohaler"], strength: "100 mcg per puff" },
     },
   },
@@ -106,6 +107,7 @@ export const CURATED = [
       JP: { name: "アセトアミノフェン", brands: ["カロナール", "タイレノールA"] },
       GB: { name: "paracetamol", brands: ["Panadol", "Calpol"] },
       IN: { name: "paracetamol", brands: ["Crocin", "Dolo 650"] },
+      NP: { name: "paracetamol", brands: ["Cetamol"] },
     },
   },
   {
@@ -116,6 +118,31 @@ export const CURATED = [
       MX: { name: "ibuprofeno", brands: ["Advil", "Motrin"] },
       JP: { name: "イブプロフェン", brands: ["ブルフェン", "イブ"] },
       GB: { name: "ibuprofen", brands: ["Nurofen"] },
+    },
+  },
+  {
+    key: "ibuprofen-paracetamol",
+    generic: "ibuprofen + paracetamol",
+    cls: "NSAID",
+    by: {
+      NP: { name: "ibuprofen + paracetamol", brands: ["Flexon"], strength: "400 mg + 325 mg" },
+      IN: { name: "ibuprofen + paracetamol", brands: ["Combiflam"], strength: "400 mg + 325 mg" },
+      US: {
+        name: "ibuprofen + acetaminophen",
+        brands: ["Advil Dual Action"],
+        strength: "125 mg + 250 mg per tablet",
+        strengthDiffers: true,
+        note: "Contains ibuprofen, an NSAID. US combination tablets are lower strength (Advil Dual Action 125 mg + 250 mg).",
+      },
+    },
+  },
+  {
+    key: "budesonide-inhaler",
+    generic: "budesonide inhaler",
+    by: {
+      NP: { name: "budesonide", brands: ["Budecort"], strength: "200 mcg per puff" },
+      IN: { name: "budesonide", brands: ["Budecort"], strength: "200 mcg per puff" },
+      US: { name: "budesonide", brands: ["Pulmicort"] },
     },
   },
   {
@@ -188,15 +215,22 @@ const INDEX = CURATED.map((e) => ({ e, names: namesOf(e) }));
 export function findCurated(text) {
   const n = norm(text);
   if (!n) return null;
-  let best = null;
+  // 1) exact name; 2) a known name inside the text ("Ventolin inhalador"): longest wins;
+  // 3) the text inside a longer name ("proair" in "proairhfa"): shortest wins, so plain "ibuprofen"
+  //    stays ibuprofen instead of becoming the ibuprofen + paracetamol combination.
+  let contained = null;
+  let partial = null;
   for (const { e, names } of INDEX) {
     for (const name of names) {
-      if (n === name || n.includes(name) || (name.length >= 5 && name.includes(n) && n.length >= 5)) {
-        if (!best || name.length > best.len) best = { e, len: name.length };
+      if (n === name) return e;
+      if (n.includes(name)) {
+        if (!contained || name.length > contained.len) contained = { e, len: name.length };
+      } else if (name.length >= 5 && n.length >= 5 && name.includes(n)) {
+        if (!partial || name.length < partial.len) partial = { e, len: name.length };
       }
     }
   }
-  return best?.e || null;
+  return contained?.e || partial?.e || null;
 }
 
 /** Curated entries whose names literally appear in a piece of text (used to ground the interpreter). */

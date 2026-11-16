@@ -10,7 +10,9 @@ export type RawFinding = { kind: Kind | "bloodType"; fields: Record<string, stri
 
 const HEADINGS: [RegExp, Kind | "skip"][] = [
   [/^(known |drug |medication )?(allerg(y|ies)|adverse (drug )?reactions?|intolerances?)( list)?$/i, "allergy"],
-  [/^(current |home |discharge |active |outpatient |regular )?(medications?|meds|medicines?|prescriptions?|rx)( list)?$/i, "medication"],
+  // Stopped medicines are not current: skip the list under "Medications to stop taking".
+  [/^(medications?|meds|prescriptions?)\s+(to\s+)?(stop|discontinue|be stopped|stopped|discontinued)( taking)?$|^(stopped|discontinued)( medications?| meds)?$/i, "skip"],
+  [/^(current |home |discharge |active |outpatient |regular |new |changed |continued? )?(medications?|meds|medicines?|prescriptions?|rx)( list)?$/i, "medication"],
   [/^((discharge |final |principal |primary |secondary |admitting |working )?(diagnos[ie]s|dx)|(active )?problems?( list)?|(past )?medical history|pmh|assessment( (and|&) plan)?|impression|(chronic |medical )?conditions)$/i, "condition"],
   [/^(family|social|surgical|travel) history|^(fh|sh|psh)$|^(plan|labs?|lab results|results|vitals?|vital signs|hpi|history of present illness|chief complaint|cc|review of systems|ros|physical exam(ination)?|pe|follow[- ]?up|instructions|patient|name|visit|admitted|discharged|collected|date|dob|signed|provider|physician)\b/i, "skip"],
 ];
@@ -24,7 +26,10 @@ const NO_ALLERGY = /^(nkda|nka|no known (drug )?allergies?|none( known)?|nil|n\/
 const BULLET = /^\s*(?:[-*•·▪◦]|\(?\d{1,2}[.)])\s+/;
 const ICD = /\s*\(?\b[A-TV-Z]\d{2}(?:\.\d{1,4})?\b\)?/g;
 const DOSE = /\b\d+(?:[.,]\d+)?\s?(?:mg|mcg|µg|ug|g|ml|mL|units?|iu|IU|puffs?|tabs?|tablets?|caps?|capsules?|drops?|sprays?)(?:\s?\/\s?(?:dose|kg|ml|mL|actuation|puff|day|hr|h))?\b(?:[^,;]*?\b(?:subcutaneous(?:ly)?|oral(?:ly)?|po|sc|sq|iv|im|inhaled|topical(?:ly)?|nasal(?:ly)?))?/i;
-const SCHEDULE = /\b(?:(?:once|twice|three times|four times|1x|2x|3x|4x)\s*(?:a|per)?\s*(?:day|daily|week|weekly)|(?:every|q)\s?\d+(?:\s?-\s?\d+)?\s?(?:hours?|hrs?|h)\b|daily|nightly|weekly|at bedtime|before bed|with meals|before meals|in the morning|in the evening|(?:as needed|prn)(?: for [^,;.]+)?|qd|qhs|bid|tid|qid|qam|qpm)\b(?:\s*at \d{1,2}(?::\d{2})?\s?(?:am|pm))?/i;
+const DURATION = /\bfor \d+\s*(?:days?|weeks?|months?)\b/i;
+// Words that are labels on a prescription or chart, not medicines ("Refills: 0", "MRN: 123").
+const NOT_A_DRUG = /^(new medications?|refills?|mrn|fin|qty|quantity|sig|rx|pharmacy|directions?|instructions?|start|stop|dispense|prescriber|provider|patient|name|dob|date)$/i;
+const SCHEDULE = /\b(?:(?:once|twice|(?:\d+|one|two|three|four|five|six)\s*times?|\dx)\s*(?:a|per)?\s*(?:day|daily|week|weekly)|every (?:other )?(?:day|morning|night|evening|week)|each (?:day|morning|night|evening)|(?:every|q)\s?\d+(?:\s?-\s?\d+)?\s?(?:hours?|hrs?|h)\b|daily|nightly|weekly|at bedtime|before bed|with meals|before meals|in the morning|in the evening|(?:as needed|prn)(?: for [^,;.]+)?|qd|qhs|bid|tid|qid|qam|qpm)\b(?:\s*at \d{1,2}(?::\d{2})?\s?(?:am|pm))?/i;
 const PURPOSE = /\bfor ([a-z][a-z \-']{2,60}?)(?=[,;.)]|$)/i;
 const SEVERE = /anaphyla|throat (swelling|closing)|airway|angioedema|hypotension|low blood pressure|stevens|sjs|ten\b|hospitali|intubat|epinephrine|epipen|collapse/i;
 const MILD = /\bmild\b|itch|pruritus|nausea|upset stomach|headache/i;
@@ -69,11 +74,15 @@ function medication(item: string, line: string, inSection: boolean): RawFinding 
   if (!drug) {
     // Unknown medicine under a Medications heading: its name is whatever comes before the dose.
     const name = clean(item.split(/\s\d/)[0].split(/\s[-–(]/)[0]);
-    if (!/^[a-z][a-z0-9 \-]{2,40}$/i.test(name) || heading(name)) return null;
+    if (!/^[a-z][a-z0-9 \-]{2,40}$/i.test(name) || heading(name) || NOT_A_DRUG.test(name)) return null;
+    // An unknown name with neither a dose nor a schedule is a label, not a medicine.
+    if (!dose && !SCHEDULE.test(item)) return null;
     generic = name.toLowerCase();
   }
   if (brand) brand = brand.replace(/\b[a-z]/g, c => c.toUpperCase());
-  const schedule = [...item.matchAll(new RegExp(SCHEDULE.source, "gi"))].map(m => m[0].replace(/ for .+$/i, "").trim()).join(", ");
+  const frequency = [...item.matchAll(new RegExp(SCHEDULE.source, "gi"))].map(m => m[0].replace(/ for .+$/i, "").trim()).join(", ");
+  // The course length ("for 14 Days") goes with the schedule.
+  const schedule = [frequency, DURATION.exec(item)?.[0] ?? ""].filter(Boolean).join(" ");
   const purpose = PURPOSE.exec(item)?.[1].trim() ?? "";
   return { kind: "medication", fields: { generic, brand, dose, schedule, purpose }, quote: quoteOf(line), confidence: drug ? (inSection ? 0.9 : 0.75) : 0.6 };
 }
@@ -102,6 +111,26 @@ function conditions(rest: string, line: string): RawFinding[] {
 
 const BLOOD = /\b(?:blood\s*(?:type|group)|abo(?:\s*\/\s*rh)?)\s*(?:is|:|-)?\s*(AB|A|B|O)\s*(\+|-|−|pos(?:itive)?|neg(?:ative)?)/i;
 
+// "Findings consistent with homozygous hemoglobin S (sickle cell disease)": a lab or pathology interpretation, not an
+// outright diagnosis, so it is suggested with low confidence ("Check carefully") and says so in the note.
+const CONSISTENT = /\bconsistent with\s+(.+)$/i;
+const NOT_CONSISTENT = /\b(?:not|no|never|neither|nor)\b[^.;]{0,40}\bconsistent with|\binconsistent with/i;
+const ICD_ONLY = /^[A-TV-Z]\d{2}(?:\.\d{1,4})?$/i;
+const sentenceCase = (s: string) => (s === s.toUpperCase() ? s.charAt(0) + s.slice(1).toLowerCase() : s);
+
+function consistentWith(rest: string, line: string): RawFinding | null {
+  // Only the first of "X versus Y": a differential isn't settled, and the traveler can add the other by hand.
+  const first = rest.split(/\s+(?:versus|vs\.?|or)\s+/i)[0].replace(/[.;:,\s]+$/, "");
+  const paren = /^(.+?)\s*\(([^()]{4,60})\)$/.exec(first);
+  // "Homozygous hemoglobin S (sickle cell disease)": the parenthesis names the condition, the rest describes the result.
+  const named = paren && !ICD_ONLY.test(paren[2].trim()) ? paren : null;
+  const name = clean(sentenceCase(named ? named[2] : first));
+  if (!name || name.split(" ").length > 8 || !/[a-z]{3}/i.test(name)) return null;
+  const detail = named ? clean(sentenceCase(named[1])) : "";
+  const note = ["Findings consistent with this, not a confirmed diagnosis", detail].filter(Boolean).join(". ");
+  return { kind: "condition", fields: { name, note }, quote: quoteOf(line), confidence: 0.55 };
+}
+
 export function findFindings(text: string): { findings: RawFinding[] } {
   const found: RawFinding[] = [];
   let section: Section = null;
@@ -128,6 +157,14 @@ export function findFindings(text: string): { findings: RawFinding[] } {
         const a = allergy(item, line, 0.9);
         if (a) found.push(a);
       }
+      section = null;
+      continue;
+    }
+
+    const consistent = CONSISTENT.exec(body);
+    if (consistent && !excluded(body) && !NOT_CONSISTENT.test(body)) {
+      const c = consistentWith(consistent[1], line);
+      if (c) found.push(c);
       section = null;
       continue;
     }

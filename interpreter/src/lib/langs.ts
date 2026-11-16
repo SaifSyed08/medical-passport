@@ -1,6 +1,7 @@
 export const LANGS: Record<string, { name: string; native: string }> = {
   en: { name: "English", native: "English" },
   es: { name: "Spanish", native: "Español" },
+  ne: { name: "Nepali", native: "नेपाली" },
   ja: { name: "Japanese", native: "日本語" },
   fr: { name: "French", native: "Français" },
   de: { name: "German", native: "Deutsch" },
@@ -20,6 +21,7 @@ export const LANGS: Record<string, { name: string; native: string }> = {
 
 export const COUNTRIES: Record<string, { name: string; flag: string }> = {
   US: { name: "United States", flag: "🇺🇸" },
+  NP: { name: "Nepal", flag: "🇳🇵" },
   MX: { name: "Mexico", flag: "🇲🇽" },
   JP: { name: "Japan", flag: "🇯🇵" },
   GB: { name: "United Kingdom", flag: "🇬🇧" },

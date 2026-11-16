@@ -92,3 +92,22 @@ test("no duplicated names when the card already uses the local one", () => {
   assert.equal(localizeNames("Albuterol (salbutamol in Mexico)", "MX", "US"), "Albuterol (salbutamol in Mexico)");
   assert.equal(localizeNames("Paracetamol (acetaminophen) as needed", "MX", "US"), "Paracetamol (acetaminophen) as needed");
 });
+
+test("Nepal: Flexon is ibuprofen + paracetamol (an NSAID), and it reads that way for a US doctor", () => {
+  const e = findCurated("Flexon");
+  assert.equal(e.key, "ibuprofen-paracetamol");
+  assert.equal(e.cls, "NSAID");
+  const eq = curatedEquivalent(e, "NP", "US");
+  assert.equal(eq.local_name, "ibuprofen + acetaminophen");
+  assert.equal(eq.status, "different_strength");
+  assert.match(eq.note, /NSAID/);
+  const r = localizeDrug("I took two Flexon for my headache.", e, { home: "NP", local: "US", listener: "clinician" });
+  assert.equal(r.translation, "I took two ibuprofen + acetaminophen (Flexon) for my headache.");
+});
+
+test("Nepal: Asthalin is salbutamol (albuterol in the US); a plain ibuprofen mention still resolves to ibuprofen", () => {
+  assert.equal(findCurated("Asthalin inhaler").key, "salbutamol");
+  assert.equal(curatedEquivalent(findCurated("Asthalin"), "NP", "US").local_name, "albuterol");
+  assert.equal(findCurated("ibuprofen").key, "ibuprofen");
+  assert.equal(findCurated("Budecort 200 inhaler").key, "budesonide-inhaler");
+});

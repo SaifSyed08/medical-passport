@@ -20,6 +20,9 @@ Press **D**, or tap **Play demo conversation**. It replays a real recorded run: 
 
 - **Sofía Hernández** is from Guadalajara and visiting Austin (Spanish ⇄ English). Her record is written in Spanish, and the doctor reads it in English.
 - **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Tessera medical passport](https://github.com/SaifSyed08/medical-passport) demo.
+- **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). She took two **Flexon** for a headache, not knowing it contains ibuprofen, an NSAID, which sets off her asthma. The word flips to *ibuprofen + acetaminophen* and the NSAID-allergy banner drops in while she is still talking.
+
+Press **3** to switch to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter. The same app and features are under both looks.
 
 ## What it does
 
