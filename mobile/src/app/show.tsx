@@ -10,6 +10,7 @@ import { useResource } from "@/lib/cache";
 import { clinicianHint } from "@/lib/i18n";
 import { CARD_KEY, useSession } from "@/lib/session";
 import { color, font, space, TOUCH } from "@/lib/theme";
+import { TesseraMark } from "@/components/mark";
 import { DemoBanner, T } from "@/components/ui";
 import { storage } from "@/lib/storage";
 
@@ -46,7 +47,10 @@ export default function Show() {
     <View style={[styles.wrap, { paddingTop: insets.top + space.l, paddingBottom: insets.bottom + space.l }]}>
       <DemoBanner />
       <View style={{ alignItems: "center", gap: space.xl }}>
-        <T style={{ fontSize: 16, letterSpacing: -0.3, color: color.ink }}>+  Tessera</T>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+          <TesseraMark size={22} />
+          <T weight="500" style={{ fontSize: 16, letterSpacing: -0.3, color: color.ink }}>Tessera</T>
+        </View>
         <View accessible accessibilityRole="image" accessibilityLabel={`QR code for ${me?.traveler.name ?? "your"} Tessera card`} style={styles.qr}>
           {url ? <QRCode value={url} size={size} ecl="M" /> : <View style={{ width: size, height: size }} />}
         </View>

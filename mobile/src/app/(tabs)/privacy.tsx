@@ -3,7 +3,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { View } from "react-native";
 import { destinationName, LANGUAGE_NAMES, type AccessRequest, type Card, type Privacy } from "@shared/tessera";
-import { pollActivity } from "@/lib/activity";
+import { pollActivity, useActivity } from "@/lib/activity";
 import { api } from "@/lib/api";
 import { EXTRACTOR_URL, getAutofillPref, setAutofillPref } from "@/lib/autofill";
 import { primeCache, useResource } from "@/lib/cache";
@@ -22,6 +22,7 @@ export default function PrivacyScreen() {
   const privacy = useResource<Privacy>("/privacy");
   const requests = useResource<AccessRequest[]>("/requests");
   const card = useResource<Card>("/card");
+  const { unread } = useActivity();
   const [error, setError] = useState("");
   const [busy, setBusy] = useState("");
   const [autofill, setAutofill] = useState(false);
@@ -106,6 +107,17 @@ export default function PrivacyScreen() {
             <Pill tone={r.status === "approved" ? "ok" : "muted"}>{r.status === "approved" ? t.approved : t.denied}</Pill>
           </View>
         ))}
+      </Section>
+
+      <Section>
+        <Row
+          title={t.accessLog}
+          detail={t.accessLogLead}
+          right={unread ? <Pill tone="warn">{`${unread} ${t.accessLogNew}`}</Pill> : undefined}
+          onPress={() => router.push("/activity")}
+          label={`${t.accessLog}${unread ? `, ${unread} ${t.accessLogNew}` : ""}. ${t.accessLogLead}`}
+          last
+        />
       </Section>
 
       <Section title={t.emergencyShows}>

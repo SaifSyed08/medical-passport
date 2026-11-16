@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { hasJapanese } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
+import { TesseraMark } from "./mark";
 import { color, font, radius, space, TOUCH } from "@/lib/theme";
 
 /** Text that switches to Noto Sans JP when it contains Japanese. Dynamic type stays on. */
@@ -70,6 +71,7 @@ export function Screen({
   return (
     <ScrollView
       style={styles.screen}
+      keyboardShouldPersistTaps="handled"
       contentContainerStyle={[pad, { gap: space.l }]}
       refreshControl={onRefresh ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} /> : undefined}
     >
@@ -98,7 +100,7 @@ export function Logo({ presenter = true }: { presenter?: boolean }) {
       accessibilityLabel="Tessera"
       style={styles.logo}
     >
-      <View style={styles.brandIcon}><T style={{ color: "white", fontSize: 18, fontWeight: "700", lineHeight: 20 }}>+</T></View>
+      <TesseraMark size={28} />
       <T weight="500" style={{ fontSize: 17, letterSpacing: -0.5, color: color.ink }}>Tessera</T>
     </Pressable>
   );
@@ -321,7 +323,6 @@ const styles = StyleSheet.create({
   demo: { alignSelf: "flex-start", backgroundColor: color.notice, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   demoText: { fontSize: 11.5, color: color.noticeText },
   logo: { flexDirection: "row", alignItems: "center", gap: 9, minHeight: TOUCH, alignSelf: "flex-start" },
-  brandIcon: { width: 30, height: 30, borderRadius: 15, backgroundColor: color.ink, alignItems: "center", justifyContent: "center" },
   button: { minHeight: 52, borderRadius: radius.button, paddingHorizontal: 22, paddingVertical: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderWidth: 1 },
   primary: { backgroundColor: color.blue, borderColor: "transparent" },
   secondary: { backgroundColor: "transparent", borderColor: "#cdd5dd" },

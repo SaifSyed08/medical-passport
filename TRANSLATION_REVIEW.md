@@ -75,3 +75,9 @@ Check each language column against the English.
 | Suggest profile updates | プロフィールの更新を提案 | |
 | Delete this document | この書類を削除 | |
 | Delete this document? Anything you already added to your passport stays. | この書類を削除しますか？パスポートに追加済みの項目は残ります。 | |
+
+## Doctor page opened by the card's QR code (`components/tessera-scan.tsx`)
+The date-of-birth check and page labels are hand-written in Japanese, Spanish, French, Italian and German (`COPY` in that file) and have not been reviewed: "Confirm the patient", the date-of-birth prompt, "View information", the wrong-date and too-many-tries messages, "Emergency information" and "Entered by the patient. Confirm with the patient where possible."
+
+## Medicines tab (`mobile/src/lib/i18n.ts`, keys starting `med`)
+The Japanese strings for the medicine lookup are unreviewed, including the caution that a matching name does not mean two medicines can be swapped.

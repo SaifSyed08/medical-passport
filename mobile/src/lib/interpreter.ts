@@ -5,7 +5,7 @@ import { destinationName, languageForCountry, OTHER_DESTINATION, type Me, type P
 import type { AppLanguage } from "./i18n";
 
 export const INTERPRETER_URL = (process.env.EXPO_PUBLIC_INTERPRETER_URL ?? "").replace(/\/$/, "");
-const INTERPRETER_CODE = process.env.EXPO_PUBLIC_INTERPRETER_CODE ?? "";
+export const INTERPRETER_CODE = process.env.EXPO_PUBLIC_INTERPRETER_CODE ?? "";
 /** The page to load. The access code unlocks the interpreter server once; it then keeps a cookie. */
 export const interpreterPage = () => (INTERPRETER_URL ? `${INTERPRETER_URL}/${INTERPRETER_CODE ? `?code=${encodeURIComponent(INTERPRETER_CODE)}` : ""}` : "");
 
@@ -37,7 +37,8 @@ const COUNTRY_CODES: Record<string, string> = {
   india: "IN", pakistan: "PK", spain: "ES", france: "FR", germany: "DE", italy: "IT", brazil: "BR", china: "CN",
   "south korea": "KR", korea: "KR", canada: "CA", philippines: "PH", vietnam: "VN", turkey: "TR", australia: "AU",
 };
-const homeCode = (country: string) => COUNTRY_CODES[country.trim().toLowerCase()] ?? "US";
+/** ISO code of the country the traveler lives in, as typed into their profile. Unknown names count as the US. */
+export const homeCode = (country: string) => COUNTRY_CODES[country.trim().toLowerCase()] ?? "US";
 
 const initials = (name: string) =>
   name

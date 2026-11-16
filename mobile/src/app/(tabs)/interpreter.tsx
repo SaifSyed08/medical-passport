@@ -80,7 +80,7 @@ export default function InterpreterTab() {
   if (!INTERPRETER_URL) {
     return (
       <Screen>
-        <Heading>{t.tabInterpreter}</Heading>
+        <Heading>{t.interpreterTitle}</Heading>
         <Notice tone="warn">{t.interpreterMissing}</Notice>
       </Screen>
     );
@@ -88,7 +88,7 @@ export default function InterpreterTab() {
   if (disclosed === false) {
     return (
       <Screen>
-        <Heading>{t.tabInterpreter}</Heading>
+        <Heading>{t.interpreterTitle}</Heading>
         <Notice>{t.interpreterDisclosure}</Notice>
         <Button
           onPress={() => {
@@ -105,7 +105,7 @@ export default function InterpreterTab() {
     // The web preview can't host a WebView; open the interpreter in its own tab instead.
     return (
       <Screen>
-        <Heading>{t.tabInterpreter}</Heading>
+        <Heading>{t.interpreterTitle}</Heading>
         <Notice>{t.interpreterWebOnly}</Notice>
         <Button onPress={() => void Linking.openURL(interpreterPage())}>{t.interpreterOpen}</Button>
       </Screen>
@@ -128,7 +128,7 @@ export default function InterpreterTab() {
   if (failed) {
     return (
       <Screen>
-        <Heading>{t.tabInterpreter}</Heading>
+        <Heading>{t.interpreterTitle}</Heading>
         <Notice tone="error">{t.interpreterUnreachable}</Notice>
         <Button
           secondary

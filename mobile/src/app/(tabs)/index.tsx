@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Asset, requestPermissionsAsync } from "expo-media-library";
 import { router } from "expo-router";
 import { useEffect, useRef, useState, type ComponentRef } from "react";
-import { Share, View } from "react-native";
+import { View } from "react-native";
 import { captureRef } from "react-native-view-shot";
 import type { Card } from "@shared/tessera";
 import { api } from "@/lib/api";
@@ -83,36 +83,10 @@ export default function CardScreen() {
           {c.status === "frozen" && <Notice tone="warn">{t.frozenNote}</Notice>}
           {message && <Notice tone={message.tone}>{message.text}</Notice>}
           <Button haptic disabled={c.status !== "active"} onPress={() => router.push("/show")} hint={t.showHint}>{t.showToDoctor}</Button>
-          <View style={{ flexDirection: "row", gap: space.m }}>
-            <Button secondary style={{ flex: 1 }} busy={busy === "save"} onPress={saveToPhotos}>{t.saveToPhotos}</Button>
-            <Button secondary style={{ flex: 1 }} onPress={() => void Share.share({ message: c.cardUrl, url: c.cardUrl })}>{t.share}</Button>
-          </View>
-          <WalletButton enabled={!!me?.walletEnabled} />
+          <Button secondary busy={busy === "save"} onPress={saveToPhotos}>{t.saveToPhotos}</Button>
           <Button secondary danger busy={busy === "replace"} onPress={replace} disabled={!card.data}>{t.replaceCard}</Button>
         </>
       )}
     </Screen>
-  );
-}
-
-function WalletButton({ enabled }: { enabled: boolean }) {
-  const { t } = useSession();
-  // Flag-gated: WALLET_ENABLED is off, so this only opens the preview.
-  return (
-    <Button
-      secondary
-      onPress={() => router.push("/wallet-preview")}
-      label={`${t.addToWallet}, ${enabled ? "" : t.comingSoon}`}
-      hint={t.walletPreview}
-    >
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-        <T weight="500" style={{ fontSize: 16, color: enabled ? "#30445e" : color.subtle }}> {t.addToWallet}</T>
-        {!enabled && (
-          <View style={{ backgroundColor: color.notice, borderRadius: 99, paddingHorizontal: 8, paddingVertical: 3 }}>
-            <T style={{ fontSize: 11.5, color: color.noticeText }}>{t.comingSoon}</T>
-          </View>
-        )}
-      </View>
-    </Button>
   );
 }
