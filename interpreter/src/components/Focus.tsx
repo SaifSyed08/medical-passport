@@ -10,6 +10,7 @@ import { KindIcon, Reveal, StatusBadge, swapLabel } from "./bits";
 import { IdleHero, LiveCaption, sizeFor } from "./Stage";
 import Icon from "./Icon";
 import Flag from "./Flag";
+import LogoLoader from "./LogoLoader";
 
 type ViewProps = {
   turns: Turn[];
@@ -211,10 +212,8 @@ function Line({
           <p className="f-original" dir={dir(spokenLang)}>
             {t.raw}
           </p>
-          <div className="f-pending" aria-label={`Translating to ${langName(listenerLang)}`}>
-            <i />
-            <i />
-            <i />
+          <div className="f-pending">
+            <LogoLoader size={36} label={`Translating to ${langName(listenerLang)}`} />
           </div>
         </>
       )}

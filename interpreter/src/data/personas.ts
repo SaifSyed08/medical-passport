@@ -89,7 +89,7 @@ export const jordan: Persona = {
     { id: "cnd_asthma", name: "Asthma, moderate persistent", note: "Triggered by exercise and cold air. Last urgent visit 2025." },
   ],
   labs: [
-    { id: "lab_ketones", name: "Blood ketones (during DKA)", value: "4.8", unit: "mmol/L", ref: "<0.6", flag: "H", date: "2023-11-04", source: "Hill Country General Hospital (fictional)" },
+    { id: "lab_ketones", name: "Blood ketones (during DKA)", value: "4.8", unit: "mmol/L", ref: "<0.6", flag: "H", date: "2023-11-04", source: "Hill Country General Hospital" },
   ],
   documents: [
     {
@@ -97,7 +97,7 @@ export const jordan: Persona = {
       kind: "visit",
       title: "Emergency admission: diabetic ketoacidosis",
       date: "2023-11-04",
-      facility: "Hill Country General Hospital (fictional)",
+      facility: "Hill Country General Hospital",
       body: "Admitted 2 days for mild DKA after a missed basal insulin dose during illness. Treated with IV fluids and insulin infusion. Discharged on prior regimen with sick-day education.",
     },
     {
@@ -105,7 +105,7 @@ export const jordan: Persona = {
       kind: "visit",
       title: "Urgent care: asthma exacerbation",
       date: "2025-01-18",
-      facility: "Riverbend Urgent Care (fictional)",
+      facility: "Riverbend Urgent Care",
       body: "Wheezing after outdoor exercise in cold weather. Improved with nebulized albuterol. Advised to carry rescue inhaler at all times.",
     },
     {
@@ -113,7 +113,7 @@ export const jordan: Persona = {
       kind: "document",
       title: "Allergy clinic letter: penicillin",
       date: "2019-09-12",
-      facility: "Lakeside Allergy Clinic (fictional)",
+      facility: "Lakeside Allergy Clinic",
       body: "History of anaphylaxis to amoxicillin. Avoid all penicillin-class antibiotics. Alert all treating clinicians before any antibiotic is given.",
     },
   ],
@@ -167,8 +167,8 @@ export const sita: Persona = {
     { id: "cnd_backpain", name: "Low back pain", since: "2025", note: "Recurring after lifting at work; no injury on X-ray (2025)." },
   ],
   labs: [
-    { id: "lab_creat", name: "Creatinine", value: "0.8", unit: "mg/dL", ref: "0.5–1.1", flag: "", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
-    { id: "lab_eos", name: "Blood eosinophils", value: "9", unit: "%", ref: "1–6", flag: "H", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
+    { id: "lab_creat", name: "Creatinine", value: "0.8", unit: "mg/dL", ref: "0.5–1.1", flag: "", date: "2026-09-02", source: "Pokhara Lung Clinic" },
+    { id: "lab_eos", name: "Blood eosinophils", value: "9", unit: "%", ref: "1–6", flag: "H", date: "2026-09-02", source: "Pokhara Lung Clinic" },
   ],
   documents: [
     {
@@ -176,7 +176,7 @@ export const sita: Persona = {
       kind: "document",
       title: "Pulmonology note: AERD",
       date: "2022-08-02",
-      facility: "Pokhara Lung Clinic (fictional)",
+      facility: "Pokhara Lung Clinic",
       body: "Diagnosis: aspirin-exacerbated respiratory disease. Avoid aspirin and all NSAIDs, including ibuprofen combination products and ketorolac. Paracetamol up to 500 mg per dose is tolerated.",
     },
     {
@@ -184,11 +184,11 @@ export const sita: Persona = {
       kind: "visit",
       title: "Radiology: reaction to CT contrast",
       date: "2023-05-19",
-      facility: "Pokhara City Hospital (fictional)",
+      facility: "Pokhara City Hospital",
       body: "Hives and throat tightness 5 minutes into a contrast CT of the abdomen; treated with antihistamine and steroid. Future contrast only with premedication, or use a non-contrast scan or MRI.",
     },
   ],
-  contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148 (fictional)" }],
+  contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148" }],
   script: [
     { speaker: "patient", text: "डाक्टर, अँ... मेरो ढाड एकदमै दुखिरहेको छ। मैले दुई वटा फ्लेक्सन खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner" },
     { speaker: "clinician", text: "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.", shows: "Nepali translation spoken; ketorolac (NSAID) and contrast-dye alerts" },

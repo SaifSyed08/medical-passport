@@ -13,6 +13,7 @@ export class Player {
   private current: Item | null = null;
   private unlocked = false;
   private rate = 1;
+  private watchdog: ReturnType<typeof setInterval> | undefined;
   private onBusy: (busy: boolean, text?: string) => void;
 
   constructor(onBusy: (busy: boolean, text?: string) => void) {
@@ -80,11 +81,31 @@ export class Player {
     this.audio.src = item.url;
     this.audio.defaultPlaybackRate = this.audio.playbackRate = this.rate;
     this.audio.play().catch(() => this.finish());
+    this.watch(item);
+  }
+
+  /** Failsafe: a line that never starts, or stops moving for 6 s, is skipped rather than blocking the queue. */
+  private watch(item: Item) {
+    let last = -1;
+    let moved = Date.now();
+    clearInterval(this.watchdog);
+    this.watchdog = setInterval(() => {
+      if (this.current !== item) return clearInterval(this.watchdog);
+      if (this.audio.currentTime !== last) {
+        last = this.audio.currentTime;
+        moved = Date.now();
+      } else if (Date.now() - moved > (last > 0 ? 6000 : 15000)) {
+        // (Live speech can take a while to arrive from the server, so a line that hasn't started gets longer.)
+        this.audio.pause();
+        this.finish();
+      }
+    }, 250);
   }
 
   private finish() {
     const item = this.current;
     if (!item) return;
+    clearInterval(this.watchdog);
     this.current = null;
     item.done();
     this.playNext();

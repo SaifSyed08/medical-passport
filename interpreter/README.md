@@ -16,7 +16,7 @@ npm install
 npm run dev          # then open http://localhost:5173
 ```
 
-Press **D**, or tap **Play demo conversation**. It replays a real recorded run: the speakers' voices, live captions, the drug-name flips, the record tiles and alerts, and the spoken translations. It needs no mic, no network and no API calls. **Esc** stops it. Switch patients under ⚙ on the home screen.
+Press **D**, or tap **Play demo conversation**. It replays a real recorded run: the speakers' voices, live captions, the drug-name flips, the record tiles and alerts, and the spoken translations. It needs no mic, no network and no API calls. **Esc** stops it. If a recorded clip can't load or stalls, that line carries on silently with its captions instead of freezing the demo. Switch patients under ⚙ on the home screen.
 
 - **Sofía Hernández** is from Guadalajara and visiting Austin (Spanish ⇄ English). Her record is written in Spanish, and the doctor reads it in English.
 - **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Tessera medical passport](https://github.com/SaifSyed08/medical-passport) demo.
@@ -39,7 +39,7 @@ Hidden keys:
 | **Cleans up speech** | Fillers, stutters and self-corrections are removed ("two, no, three pills" becomes "three pills"). Facts, doses and hedges never change. The original is one tap away. |
 | **Local medicine names** | A curated cross-country table covers MX, US, JP, GB and IN, and the server enforces it on top of the model's output. The phone saves each match, so it works offline. |
 | **Record in real time** | The record is matched against what was just said and shown as compact tiles above the mic. Alerts come first; a new or re-triggered alert flashes and the phone vibrates. Each tile opens a short explanation and the original entry. |
-| **Editable profile** | On the home screen the patient can swipe any record row left to delete it (with undo), and add a document by photo. Tesseract reads the photo on the phone and the medical passport's own rule-based reader (`../extractor`) finds allergies, medicines and conditions, each quoting its line. No AI model and no upload; the patient ticks what to keep. Medicines show the local name with the local flag. |
+| **Editable profile** | On the home screen the patient can swipe any record row left to delete it (with undo). Every section has **Add**: type the entry in, or upload a photo of a document. Tesseract reads the photo on the phone and the medical passport's own rule-based reader (`../extractor`) finds allergies, medicines and conditions, each quoting its line. No AI model and no upload; the patient ticks what to keep. Documents show a thumbnail (the photo, or a drawn page) and open as a page. Medicines show the local name with the local flag. |
 | **Record in the doctor's language** | The full record opens translated, color-coded by section, with a toggle back to the original. A translation is rejected if it comes back incomplete. |
 | **Spoken translation** | `gpt-4o-mini-tts` reads each translation in order. The mic pauses while the phone speaks, so it never translates itself. |
 
@@ -67,7 +67,7 @@ phone mic ─► voice-activity detection (AudioWorklet) ─► utterance WAV �
                                                                                          │
                      ┌───────────────────────────────────────────────────────────────────┤
                      ▼                                                                   ▼
-   /api/interpret (gpt-4.1): language → speaker, cleanup,           /api/context (gpt-4.1-mini): which record items matter
+   /api/interpret (gpt-4.1): language → speaker, cleanup,           /api/context (gpt-4.1): which record items matter    
    translation, drug spans; curated names enforced server-side      now; ids validated, local drug names enforced
                      │
                      ▼
@@ -98,10 +98,34 @@ node scripts/demo-regressions.mjs          # browser regressions with a mocked A
 node scripts/profile-check.mjs             # editable profile: swipe to delete, undo, scan a printed note, persistence
 node scripts/focus-check.mjs sita --tandem # the Focus layout through a recorded demo
 npm run test:api -- sofia                  # live API: TTS-voiced lines → transcribe → interpret + context (paid)
+npm run test:accuracy                      # accuracy on 16 new lines across the 3 patients (paid, a few cents)
+node scripts/demo-check.mjs sita --stall   # demo failsafe: the script fetch fails once and two clips hang forever
 npm run test:e2e -- sofia                  # headless Chrome with a fake mic feeding the real pipeline (paid)
 ```
 
 After changing prompts or the drug table, re-record the demo with `node --experimental-strip-types scripts/build-demo.mjs`.
+
+## Accuracy
+
+`npm run test:accuracy` (`scripts/accuracy.mjs`) voices 16 sentences with TTS. None of them are from the demo scripts; they are new lines for the three patients, in Spanish, English, Japanese and Nepali. Each one runs through the same pipeline the phone uses, and the script checks it against what a correct answer must contain.
+
+Results from 2026-11-16, two runs, with `gpt-4.1` choosing the record items:
+
+| Measure | Result |
+| --- | --- |
+| Transcription character error rate | 1.6–2.2% overall (Spanish 0%, Japanese 0%, English 1.8%, Nepali 3–6%) |
+| Speaker told apart by language alone | 16/16 |
+| Medicines recognized (brand or generic) | 11/11 |
+| Required record alerts raised (penicillin, NSAIDs with kidney disease or AERD, contrast dye) | 5/5 |
+| Lines that should raise no alert (thanks, a chest X-ray) that raised none | 4/4 |
+| Key terms kept in the translation (local medicine names, the symptom) | 22/22 |
+| End of speech to translation | median 1.8–2.0 s, 90th percentile 2.7–2.9 s |
+
+With `gpt-4.1-mini` choosing the record items (the previous default), every score was the same except false alarms. Two or three of the four quiet lines raised alerts: Sita's "thank you" and her chest X-ray both raised her NSAID allergy. That is why the context model is now `gpt-4.1`; it runs beside the interpreter call, so it adds no wait.
+
+Two caveats:
+- The set is small and the voices are synthetic, so treat these as a regression check, not a clinical validation.
+- The last prompt change (judge only the latest line; thanks and greetings raise nothing) was checked with `npm run test:api` for Sita and Sofía. A full accuracy rerun after it is still to do.
 
 ## Limits
 

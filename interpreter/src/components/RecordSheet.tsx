@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import type { Persona } from "../lib/types";
+import type { Persona, RecordDoc } from "../lib/types";
 import { country, langName } from "../lib/langs";
 import { recordBody, useTranslatedRecord } from "../lib/recordTranslation";
 import { loadTrip, norm } from "../lib/store";
@@ -8,11 +8,14 @@ import { Sheet } from "./bits";
 import Icon from "./Icon";
 import Flag from "./Flag";
 import ScanFlow from "./ScanFlow";
+import ManualAdd, { type Section } from "./ManualAdd";
+import DocPreview, { DocThumb } from "./DocPreview";
+import LogoLoader from "./LogoLoader";
 
 type Props = {
   persona: Persona;
   onClose: () => void;
-  /** The patient's own view (home): swipe a row left to delete it, and add documents by photo. */
+  /** The patient's own view (home): swipe a row left to delete it, and add to any section. */
   editable?: boolean;
 };
 
@@ -25,12 +28,18 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
   const showTranslated = needsTranslation && view === "translated";
   // A row the patient just deleted vanishes at once, even before the translated copy catches up.
   const [gone, setGone] = useState<string[]>([]);
-  const base = showTranslated && tr.record ? tr.record : recordBody(p);
+  // The record as saved, with each row swapped for its translation once there is one (a just-added row shows
+  // in the original until the new translation lands).
+  const orig = recordBody(p);
+  const base = showTranslated && tr.record ? (Object.fromEntries(Object.entries(orig).map(([k, xs]) => [k, (xs as { id: string }[]).map((x) => ((tr.record as Record<string, { id: string }[]>)[k] || []).find((t) => t.id === x.id) || x)])) as typeof orig) : orig;
   const r = Object.fromEntries(Object.entries(base).map(([k, xs]) => [k, (xs as { id: string }[]).filter((x) => !gone.includes(x.id))])) as typeof base;
   const loading = showTranslated && !tr.record && !tr.error;
   const [open, setOpen] = useState<string | null>(null);
   const [undo, setUndo] = useState<{ id: string; title: string } | null>(null);
   const [scan, setScan] = useState<File | null>(null);
+  const [manual, setManual] = useState<Section | null>(null);
+  const [preview, setPreview] = useState<RecordDoc | null>(null);
+  const [adding, setAdding] = useState<Section | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Local names for the patient's medicines, from what the phone already matched for this trip.
@@ -39,7 +48,7 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
   const localFor = (id: string) => {
     const m = p.medications.find((x) => x.id === id);
     if (!m || !trip) return null;
-    const e = trip.items[norm(m.name)] || trip.items[norm(m.generic)];
+    const e = trip.items[norm(m.name)] || (m.generic ? trip.items[norm(m.generic)] : undefined);
     if (!e) return null;
     if (e.status === "not_available_locally") return { text: `Not sold here · ask for ${e.generic}`, warn: true };
     const name = e.local_name || e.generic;
@@ -67,17 +76,70 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
   };
 
   if (scan) return <ScanFlow persona={p} file={scan} onDone={() => setScan(null)} onClose={onClose} />;
+  if (manual) return <ManualAdd persona={p} section={manual} onDone={() => setManual(null)} onClose={onClose} />;
+  if (preview) return <DocPreview doc={preview} onClose={() => setPreview(null)} />;
 
-  const swipe = (id: string, title: string, children: ReactNode, className = "list-row") =>
+  const swipe = (id: string, title: string, children: ReactNode, className = "list-row", onTap?: () => void) =>
     editable ? (
-      <SwipeRow key={id} id={id} open={open === id} setOpen={setOpen} onDelete={() => del(id, title)} className={className}>
+      <SwipeRow key={id} id={id} open={open === id} setOpen={setOpen} onDelete={() => del(id, title)} onTap={onTap} className={className}>
         {children}
       </SwipeRow>
+    ) : onTap ? (
+      <button key={id} className={className} onClick={onTap}>
+        {children}
+      </button>
     ) : (
       <div key={id} className={className}>
         {children}
       </div>
     );
+
+  // Every section takes additions: typed in, or read off a photo of a document.
+  const group = (kind: Section, icon: string, title: string, count: number, children: ReactNode) => (
+    <Group
+      kind={kind}
+      icon={icon}
+      title={title}
+      count={count}
+      always={editable}
+      action={
+        editable && (
+          <button className={`add-btn ${adding === kind ? "on" : ""}`} onClick={() => setAdding(adding === kind ? null : kind)} aria-expanded={adding === kind}>
+            <Icon name={adding === kind ? "close" : "plus"} size={16} />
+            Add
+          </button>
+        )
+      }
+      menu={
+        adding === kind && (
+          <div className="add-menu" role="menu">
+            <button
+              role="menuitem"
+              onClick={() => {
+                setAdding(null);
+                setManual(kind);
+              }}
+            >
+              <Icon name="pencil" size={20} />
+              Type it in
+            </button>
+            <button
+              role="menuitem"
+              onClick={() => {
+                setAdding(null);
+                fileRef.current?.click();
+              }}
+            >
+              <Icon name="upload" size={20} />
+              Upload
+            </button>
+          </div>
+        )
+      }
+    >
+      {children}
+    </Group>
+  );
 
   return (
     <Sheet title={p.name} onClose={onClose}>
@@ -90,28 +152,31 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
             <Flag code={p.trip.country} size={18} /> {langName(doctorLang)}
           </button>
           <button className={view === "original" ? "on" : ""} onClick={() => setView("original")}>
-            <Flag code={p.home} size={18} /> {langName(p.recordLanguage)} (original)
+            <Flag code={p.home} size={18} /> {langName(p.recordLanguage)}
           </button>
         </div>
       )}
       {showTranslated && tr.error && <p className="translating-note">Couldn't translate right now. Showing the original.</p>}
       {loading && (
         <p className="translating-note">
-          <span className="dots3">
-            <i />
-            <i />
-            <i />
-          </span>
-          {`Translating the record into ${langName(doctorLang)}…`}
+          <LogoLoader size={22} />
+          {`Translating into ${langName(doctorLang)}…`}
         </p>
       )}
-      {editable && <p className="edit-hint">Swipe left on anything to remove it.</p>}
       <div className={`record ${loading ? "dim" : ""}`} onPointerDown={(e) => open && !(e.target as Element).closest(".swipe-row.open") && setOpen(null)}>
-        <Group kind="allergy" icon="alert" title="Allergies" count={r.allergies.length}>
-          {r.allergies.map((a) => swipe(a.id, a.substance, <RowBody title={a.substance} badge={a.severity === "severe" ? { text: "Severe", tone: "danger" } : undefined} lines={[a.reaction]} />))}
-        </Group>
-        <Group kind="medication" icon="pill" title="Medicines" count={r.medications.length}>
-          {r.medications.map((m) => {
+        {group(
+          "allergy",
+          "alert",
+          "Allergies",
+          r.allergies.length,
+          r.allergies.map((a) => swipe(a.id, a.substance, <RowBody title={a.substance} badge={a.severity === "severe" ? { text: "Severe", tone: "danger" } : undefined} lines={[a.reaction]} />)),
+        )}
+        {group(
+          "medication",
+          "pill",
+          "Medicines",
+          r.medications.length,
+          r.medications.map((m) => {
             const loc = localFor(m.id);
             return swipe(
               m.id,
@@ -126,27 +191,31 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
                     </span>
                   )
                 }
-                lines={[[m.generic, m.dose].filter(Boolean).join(" · "), m.schedule, m.purpose]}
+                lines={[[m.generic, m.dose].filter(Boolean).join(" · "), [m.schedule, m.purpose].filter(Boolean).join(" · ")]}
               />,
             );
-          })}
-        </Group>
-        <Group kind="condition" icon="heart" title="Conditions" count={r.conditions.length}>
-          {r.conditions.map((c) =>
-            swipe(c.id, c.name, <RowBody title={c.name} badge={c.since ? { text: /^\d{4}$/.test(c.since) ? `since ${c.since}` : c.since, tone: "plain" } : undefined} lines={[c.note]} />),
-          )}
-        </Group>
-        <Group kind="lab" icon="lab" title="Lab results" count={r.labs.length}>
-          {r.labs.map((l) =>
+          }),
+        )}
+        {group(
+          "condition",
+          "heart",
+          "Conditions",
+          r.conditions.length,
+          r.conditions.map((c) => swipe(c.id, c.name, <RowBody title={c.name} badge={c.since ? { text: /^\d{4}$/.test(c.since) ? `since ${c.since}` : c.since, tone: "plain" } : undefined} lines={[c.note]} />)),
+        )}
+        {group(
+          "lab",
+          "lab",
+          "Lab results",
+          r.labs.length,
+          r.labs.map((l) =>
             swipe(
               l.id,
               l.name,
               <>
                 <span className="lab-name">
                   <strong>{l.name}</strong>
-                  <span>
-                    {l.date} · reference {l.ref}
-                  </span>
+                  <span>{[l.date, l.ref && `normal ${l.ref}`].filter(Boolean).join(" · ")}</span>
                 </span>
                 <span className={`lab-value ${l.flag === "H" ? "high" : l.flag === "L" ? "low" : ""}`}>
                   {l.value}
@@ -156,46 +225,70 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
               </>,
               "list-row lab-row",
             ),
-          )}
-        </Group>
-        <Group
-          kind="document"
-          icon="doc"
-          title="Visits and documents"
-          count={r.documents.length}
-          always={editable}
-          action={
-            editable && (
-              <button className="add-doc" onClick={() => fileRef.current?.click()}>
-                <Icon name="plus" size={16} />
-                Add
-              </button>
-            )
-          }
-        >
-          {r.documents.map((d) => swipe(d.id, d.title, <RowBody title={d.title} badge={d.date ? { text: d.date, tone: "plain" } : undefined} lines={[d.facility, d.body]} />))}
-          {editable && (
-            <button className="list-row add-doc-row" onClick={() => fileRef.current?.click()}>
-              <span className="add-doc-icon">
-                <Icon name="camera" size={20} />
-              </span>
-              <span>
-                <strong>Add a document</strong>
-                <span>Take a photo; we read it on this phone</span>
-              </span>
-            </button>
-          )}
-        </Group>
-        <Group kind="contact" icon="user" title="Emergency contacts" count={r.contacts.length}>
-          {r.contacts.map((c) => swipe(c.id, c.name, <RowBody title={c.name} lines={[c.relationship, c.phone]} />))}
-        </Group>
+          ),
+        )}
+        {group(
+          "document",
+          "doc",
+          "Visits and documents",
+          r.documents.length,
+          r.documents.map((d) =>
+            swipe(
+              d.id,
+              d.title,
+              <>
+                <DocThumb doc={d} />
+                <span className="doc-main">
+                  <strong className="doc-title">{d.title}</strong>
+                  {(d.facility || d.date) && (
+                    <span className="doc-meta">
+                      {d.facility && (
+                        <span className="doc-place">
+                          <Icon name="pin" size={15} />
+                          <span>{d.facility}</span>
+                        </span>
+                      )}
+                      {d.date && <time>{d.date}</time>}
+                    </span>
+                  )}
+                  {d.body && <span className="doc-body">{d.body}</span>}
+                </span>
+              </>,
+              "list-row doc-row",
+              () => setPreview(d),
+            ),
+          ),
+        )}
+        {group(
+          "contact",
+          "user",
+          "Emergency contacts",
+          r.contacts.length,
+          r.contacts.map((c) =>
+            swipe(
+              c.id,
+              c.name,
+              <RowBody
+                title={c.name}
+                lines={[c.relationship]}
+                extra={
+                  c.phone && (
+                    <span className="contact-phone">
+                      <Icon name="phone" size={15} />
+                      {c.phone}
+                    </span>
+                  )
+                }
+              />,
+            ),
+          ),
+        )}
       </div>
       {editable && (
         <input
           ref={fileRef}
           type="file"
           accept="image/*"
-          capture="environment"
           hidden
           data-testid="scan-input"
           onChange={(e) => {
@@ -205,9 +298,7 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
           }}
         />
       )}
-      <p className="fine">
-        {showTranslated && tr.record && !tr.error ? `Translated by AI from ${langName(p.recordLanguage)} for ${country(p.trip.country).name}. Check the original for anything critical.` : "As saved by the patient."}
-      </p>
+      {showTranslated && tr.record && !tr.error && <p className="fine">{`Translated by AI from ${langName(p.recordLanguage)} for ${country(p.trip.country).name}. Check the original for anything critical.`}</p>}
       {undo && (
         <div className="undo-bar" role="status">
           <span>Removed {undo.title.replace(/\s*\(.*\)/, "")}</span>
@@ -221,19 +312,18 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
   );
 }
 
-function Group({ kind, icon, title, count, children, action, always }: { kind: string; icon: string; title: string; count: number; children: ReactNode; action?: ReactNode; always?: boolean }) {
+function Group({ kind, icon, title, count, children, action, menu, always }: { kind: string; icon: string; title: string; count: number; children: ReactNode; action?: ReactNode; menu?: ReactNode; always?: boolean }) {
   if (!count && !always) return null;
   return (
     <section className={`rec-section ${kind}`}>
       <header>
-        <span className="rec-icon">
-          <Icon name={icon} size={18} />
-        </span>
+        <Icon name={icon} size={24} className="rec-icon" />
         <span className="rec-title">{title}</span>
         {count > 0 && <span className="rec-count">{count}</span>}
         {action}
       </header>
-      <div className="list">{children}</div>
+      {menu}
+      {count > 0 && <div className="list">{children}</div>}
     </section>
   );
 }
@@ -256,7 +346,7 @@ function RowBody({ title, lines, badge, extra }: { title: string; lines: string[
 const REVEAL = 92;
 
 /** A row that slides left to show Delete, like iOS lists. One open at a time; tap elsewhere to close. */
-function SwipeRow({ id, open, setOpen, onDelete, className, children }: { id: string; open: boolean; setOpen: (id: string | null) => void; onDelete: () => void; className: string; children: ReactNode }) {
+function SwipeRow({ id, open, setOpen, onDelete, onTap, className, children }: { id: string; open: boolean; setOpen: (id: string | null) => void; onDelete: () => void; onTap?: () => void; className: string; children: ReactNode }) {
   const [dx, setDxState] = useState<number | null>(null);
   // The release handler can run before React re-renders the last move, so it reads the live value from a ref.
   const dxRef = useRef<number | null>(null);
@@ -292,7 +382,7 @@ function SwipeRow({ id, open, setOpen, onDelete, className, children }: { id: st
         Delete
       </button>
       <div
-        className={className}
+        className={`${className} ${onTap ? "tappable" : ""}`}
         style={{ transform: `translateX(${leaving ? -width.current : offset}px)`, transition: dx === null ? undefined : "none" }}
         onPointerDown={(e) => {
           width.current = e.currentTarget.offsetWidth;
@@ -319,6 +409,7 @@ function SwipeRow({ id, open, setOpen, onDelete, className, children }: { id: st
         onClick={() => {
           if (dragged.current) dragged.current = false;
           else if (open) setOpen(null);
+          else onTap?.();
         }}
       >
         {children}

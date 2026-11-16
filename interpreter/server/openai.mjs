@@ -6,7 +6,9 @@ export const MODELS = {
   /** Live captions while someone is still talking: speed over accuracy; the final pass uses `stt`. */
   sttFast: process.env.STT_FAST_MODEL || "gpt-4o-mini-transcribe",
   llm: process.env.LLM_MODEL || "gpt-4.1",
-  context: process.env.CONTEXT_MODEL || "gpt-4.1-mini",
+  // gpt-4.1, not -mini: on the accuracy set (scripts/accuracy.mjs) mini raised false allergy alerts on small
+  // talk and an X-ray; 4.1 raised none and, running beside the interpreter call, adds no wall time.
+  context: process.env.CONTEXT_MODEL || "gpt-4.1",
   tts: process.env.TTS_MODEL || "gpt-4o-mini-tts",
 };
 
