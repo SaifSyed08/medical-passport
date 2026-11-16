@@ -33,10 +33,12 @@ export type Settings = {
   mode: MicMode;
   speak: boolean;
   pairs: Record<string, { patientLang: string; doctorLang: string; local: string }>;
+  /** Visual identity: the original Tessera look, or Tandem (press 3 to switch). */
+  brand: "tessera" | "tandem";
 };
 
 const SETTINGS_KEY = "ti.settings.v1";
-const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {} };
+const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {}, brand: "tessera" };
 
 export const loadSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(SETTINGS_KEY, {}) });
 export const saveSettings = (s: Settings) => write(SETTINGS_KEY, s);

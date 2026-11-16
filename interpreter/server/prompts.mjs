@@ -1,13 +1,13 @@
 // Prompts and JSON schemas for the interpreter and the record-context finder.
 
 export const LANGS = {
-  en: "English", es: "Spanish", ja: "Japanese", fr: "French", de: "German", it: "Italian", pt: "Portuguese",
+  en: "English", es: "Spanish", ne: "Nepali", ja: "Japanese", fr: "French", de: "German", it: "Italian", pt: "Portuguese",
   zh: "Chinese (Mandarin)", ko: "Korean", hi: "Hindi", ur: "Urdu", ar: "Arabic", vi: "Vietnamese", ru: "Russian",
   tl: "Tagalog", bn: "Bengali", tr: "Turkish", pl: "Polish", uk: "Ukrainian", fa: "Persian",
 };
 
 export const COUNTRIES = {
-  US: "the United States", MX: "Mexico", JP: "Japan", GB: "the United Kingdom", IN: "India", PK: "Pakistan",
+  US: "the United States", NP: "Nepal", MX: "Mexico", JP: "Japan", GB: "the United Kingdom", IN: "India", PK: "Pakistan",
   ES: "Spain", FR: "France", DE: "Germany", IT: "Italy", BR: "Brazil", CN: "China", KR: "South Korea",
   CA: "Canada", PH: "the Philippines", VN: "Vietnam", EG: "Egypt", SA: "Saudi Arabia", TR: "Turkey", AU: "Australia",
 };
@@ -129,6 +129,7 @@ export function contextPrompt({ doctorLang, local }) {
 
 What counts:
 - Symptoms or complaints -> related conditions, past episodes and visits, recent results (labs, ECG), and current medicines that bear on them.
+- A brand name can hide what is inside it: check the patient's medication list for its generic ingredients (e.g. a combination painkiller that contains ibuprofen is an NSAID).
 - A medicine, drug class or treatment named by either side -> allergies to it or a cross-reactive class (penicillins and cephalosporins, sulfonamides), contraindications, interactions with current medicines, and the labs that change dosing (e.g. kidney function for metformin, contrast or NSAIDs; potassium for ARBs).
 - A test or procedure -> results or conditions that change whether or how to do it (e.g. eGFR before IV contrast, metformin before contrast).
 - Small talk, greetings, thanks, logistics: return no items.

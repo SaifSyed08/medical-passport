@@ -21,7 +21,7 @@ async function voice(text, lang, i) {
   const r = await fetch("https://api.openai.com/v1/audio/speech", {
     method: "POST",
     headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ model: "gpt-4o-mini-tts", voice: lang === persona.language ? "ash" : "sage", input: text, response_format: "wav", instructions: `Speak naturally in ${lang}, like a ${lang === persona.language ? "worried patient" : "doctor"}, including the hesitations.` }),
+    body: JSON.stringify({ model: "gpt-4o-mini-tts", voice: lang === persona.language ? "ash" : "sage", input: text, response_format: "wav", instructions: `Speak naturally in ${({ ne: "Nepali", es: "Spanish", ja: "Japanese", en: "English" })[lang] || lang}, like a ${lang === persona.language ? "worried patient" : "doctor"}, including the hesitations.` }),
   });
   if (!r.ok) throw new Error(`tts ${r.status} ${await r.text()}`);
   const buf = Buffer.from(await r.arrayBuffer());
@@ -82,6 +82,14 @@ for (const [i, line] of persona.script.entries()) {
       check(ids.includes("lab_tfge") || ids.includes("cnd_erc") || ids.includes("doc_nefro_2026"), "kidney function surfaced before contrast");
       check(/amoxicilina/i.test(it.translation), "Spanish translation says amoxicilina");
     }
+  }
+  if (persona.id === "sita" && i === 1) {
+    check(it.drugs.some((d) => d.key === "ibuprofen-paracetamol"), "Flexon resolved to ibuprofen + paracetamol");
+    check(/ibuprofen/i.test(it.translation), "English translation says ibuprofen");
+    check(alerts.includes("alg_nsaid") || alerts.includes("cnd_aerd") || alerts.includes("doc_pulm_2022"), "NSAID allergy alert on Flexon");
+  }
+  if (persona.id === "sita" && i === 2) {
+    check(/[ऀ-ॿ]/.test(it.translation), "translated into Nepali (Devanagari)");
   }
   if (persona.id === "jordan" && i === 2) {
     check(alerts.includes("alg_penicillin") || alerts.includes("doc_allergy_letter"), "penicillin allergy alert");

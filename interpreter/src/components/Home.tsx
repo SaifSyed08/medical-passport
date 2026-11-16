@@ -6,6 +6,7 @@ import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
 import { loadTrip, norm, saveEquivalents, type Settings, type TripCache } from "../lib/store";
 import { Sheet, StatusBadge } from "./bits";
 import Icon from "./Icon";
+import { TandemWordmark } from "./TandemLogo";
 import Flag from "./Flag";
 import RecordSheet from "./RecordSheet";
 import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslation";
@@ -26,7 +27,7 @@ function age(dob: string) {
   return n.getFullYear() - d.getFullYear() - (n < new Date(n.getFullYear(), d.getMonth(), d.getDate()) ? 1 : 0);
 }
 
-export default function Home({ persona, personas, setSettings, onStart, onDemo }: Props) {
+export default function Home({ persona, personas, settings, setSettings, onStart, onDemo }: Props) {
   const home = persona.home;
   const local = persona.trip.country;
   const [trip, setTrip] = useState<TripCache>(() => loadTrip(home, local));
@@ -77,7 +78,7 @@ export default function Home({ persona, personas, setSettings, onStart, onDemo }
   return (
     <main className="home">
       <header className="home-top">
-        <Wordmark />
+        {settings.brand === "tandem" ? <TandemWordmark /> : <Wordmark />}
         <button className="icon-btn" onClick={() => setSheet("settings")} aria-label="Settings">
           <Icon name="settings" />
         </button>
@@ -175,6 +176,17 @@ export default function Home({ persona, personas, setSettings, onStart, onDemo }
             ))}
           </div>
           <LanguageFields persona={persona} setSettings={setSettings} />
+          <div className="group">
+            <div className="group-title">Look</div>
+            <div className="seg">
+              <button className={settings.brand !== "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tessera" }))}>
+                Tessera
+              </button>
+              <button className={settings.brand === "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tandem" }))}>
+                Tandem <kbd>3</kbd>
+              </button>
+            </div>
+          </div>
           <div className="group">
             <div className="group-title row-between">
               <span>Medicines in {country(local).name}</span>

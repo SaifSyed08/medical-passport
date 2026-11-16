@@ -40,7 +40,7 @@ function micTrack() {
 }
 
 async function launch({ fakeMic = false } = {}) {
-  const args = ["--autoplay-policy=no-user-gesture-required", "--window-size=430,900"];
+  const args = ["--autoplay-policy=no-user-gesture-required", "--disable-audio-output", "--window-size=430,900"];
   if (fakeMic) args.push("--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", `--use-file-for-fake-audio-capture=${micTrack()}%noloop`);
   const browser = await puppeteer.launch({ executablePath: CHROME, headless: true, args });
   const page = await browser.newPage();
@@ -231,7 +231,7 @@ for (const round of ["first visit", "after Back and Start"]) {
 {
   const { browser, page } = await launch();
   await page.keyboard.press("d");
-  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 2, 60000);
+  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 3, 90000);
   const box = await page.$eval(".transcript", (el) => {
     const r = el.getBoundingClientRect();
     return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
@@ -240,11 +240,12 @@ for (const round of ["first visit", "after Back and Start"]) {
   for (let i = 0; i < 6; i++) await page.mouse.wheel({ deltaY: -400 });
   await sleep(400);
   const before = await page.$eval(".transcript", (el) => el.scrollTop);
-  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 3, 60000);
+  const farUp = await page.$eval(".transcript", (el) => el.scrollHeight - el.scrollTop - el.clientHeight);
+  await waitFor(page, () => document.querySelectorAll(".turn.done").length >= 4, 90000);
   await sleep(1500);
   const after = await page.$eval(".transcript", (el) => el.scrollTop);
   const pill = await page.$(".latest-pill");
-  check("scrolled up: the next turn doesn't yank the reader down", Math.abs(after - before) < 40 && Boolean(pill), `scrollTop ${before} -> ${after}, Latest button ${pill ? "shown" : "missing"}`);
+  check("scrolled up: the next turn doesn't yank the reader down", farUp > 150 && Math.abs(after - before) < 40 && Boolean(pill), `scrolled ${farUp}px above the bottom; scrollTop ${before} -> ${after}, Latest button ${pill ? "shown" : "missing"}`);
   if (pill) {
     await pill.click();
     await sleep(900);
