@@ -60,7 +60,7 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
  * Live caption: new words drift in softly as the recogniser catches up (no dictation caret),
  * and a small voice wave trails the text while the person is still talking.
  */
-function LiveCaption({ text, lang }: { text: string; lang: string }) {
+export function LiveCaption({ text, lang }: { text: string; lang: string }) {
   const words = text ? (/\s/.test(text) ? text.split(/(\s+)/) : [...text]) : [];
   const prev = useRef(0);
   const firstNew = Math.min(prev.current, words.length);
@@ -90,7 +90,7 @@ function LiveCaption({ text, lang }: { text: string; lang: string }) {
   );
 }
 
-function sizeFor(text: string) {
+export function sizeFor(text: string) {
   // A CJK character takes about two Latin letters of width.
   const n = [...text].reduce((w, ch) => w + (/[　-鿿가-힯＀-￯]/.test(ch) ? 1.9 : 1), 0);
   if (n < 60) return "lg";

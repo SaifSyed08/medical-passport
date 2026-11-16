@@ -3,7 +3,8 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  server: { watch: { ignored: ["**/data/**", "**/.cache/**", "**/.cert/**"] } },
+  // ".." lets the app reuse the medical passport's rule-based document reader (extractor/src/rules.ts).
+  server: { watch: { ignored: ["**/data/**", "**/.cache/**", "**/.cert/**"] }, fs: { allow: [".."] } },
   build: { target: "es2022" },
   // Plain CSS, no PostCSS. Without this, Vite walks up into medical-passport and loads the Site's Tailwind config.
   css: { postcss: { plugins: [] } },

@@ -1,0 +1,99 @@
+/* Focus layout (press L): one line at a time, no cards, record notes pinned under the sentence that raised them. */
+
+.f-top { display: flex; align-items: center; gap: 4px; margin: max(10px, env(safe-area-inset-top)) 10px 0; min-height: 48px; }
+.f-ribbon { flex: 1; min-width: 0; display: flex; align-items: center; justify-content: safe center; gap: 7px; overflow-x: auto; scrollbar-width: none; padding: 6px 10px; mask-image: linear-gradient(90deg, transparent, #000 14px, #000 calc(100% - 14px), transparent); }
+.f-ribbon::-webkit-scrollbar { display: none; }
+.f-dot { --c: var(--ink-3); flex: none; width: 10px; height: 10px; padding: 0; border: 0; border-radius: 99px; background: color-mix(in srgb, var(--c) 45%, transparent); display: grid; place-items: center; transition: width .45s cubic-bezier(.3, 1.4, .5, 1), height .45s cubic-bezier(.3, 1.4, .5, 1), background .3s; animation: dotIn .5s cubic-bezier(.3, 1.6, .5, 1) both; }
+.f-dot.patient { --c: var(--patient); }
+.f-dot.clinician { --c: var(--clinician); }
+.f-dot.alert { box-shadow: 0 0 0 2.5px var(--danger); }
+.f-dot.on { width: 40px; height: 26px; background: color-mix(in srgb, var(--c) 18%, transparent); box-shadow: inset 0 0 0 1.5px var(--c); }
+.f-dot.on.alert { box-shadow: inset 0 0 0 1.5px var(--c), 0 0 0 2.5px var(--danger); }
+.f-dot.live, .f-dot.transcribing, .f-dot.interpreting { animation: dotIn .5s cubic-bezier(.3, 1.6, .5, 1) both, dotPulse 1.2s ease-in-out infinite; }
+@keyframes dotIn { from { transform: scale(0); } }
+@keyframes dotPulse { 50% { opacity: .45; } }
+.f-pair { display: inline-flex; align-items: center; gap: 7px; border: 0; background: var(--panel); border-radius: 99px; padding: 7px 14px; font-size: 15px; color: var(--ink-2); box-shadow: inset 0 0 0 1px var(--line); }
+.f-pair .icon { color: var(--ink-3); }
+
+.f-stage-wrap { position: relative; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; padding: 6px 26px 22px; touch-action: pan-y; mask-image: linear-gradient(180deg, #000 calc(100% - 26px), transparent); }
+.f-stage-wrap::-webkit-scrollbar { display: none; }
+.f-stage-wrap > * { margin-block: auto; }
+.f-stage-wrap > .idle { margin: auto 0; }
+
+.f-line { display: grid; gap: 14px; animation: lineIn .6s cubic-bezier(.2, .9, .3, 1) both; }
+@keyframes lineIn { from { opacity: 0; transform: translateY(26px); filter: blur(8px); } }
+.f-prev { margin: 0 0 8px; padding-left: 14px; border-left: 3px solid var(--line-2); display: grid; gap: 8px; animation: fadeIn .4s ease both; }
+.f-prev p { margin: 0; font-size: 18px; line-height: 1.4; color: var(--ink-3); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.f-prev-notes { display: flex; flex-wrap: wrap; gap: 6px; }
+.f-mini { --c: var(--accent); display: inline-flex; align-items: center; gap: 5px; border: 0; border-radius: 99px; padding: 4px 10px 4px 8px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--c); background: color-mix(in srgb, var(--c) 11%, transparent); }
+.f-mini.alert { --c: var(--danger); }
+/* Focus: the allergy banner takes its own place under the ribbon instead of covering the line. */
+.talk.focus > .f-top { order: 0; }
+.talk.focus > .toast { order: 1; position: relative; top: auto; left: auto; right: auto; margin: 4px 12px 0; flex: none; }
+.talk.focus > .f-stage-wrap { order: 2; }
+.talk.focus > .bottom { order: 3; }
+.f-who { display: flex; align-items: center; gap: 12px; }
+.f-flag { animation: flagPop .55s cubic-bezier(.3, 1.6, .5, 1) both; border-radius: 6px; }
+.f-listening { width: 30px; height: 30px; border-radius: 99px; background: var(--accent-soft); animation: dotPulse 1.2s ease-in-out infinite; }
+.f-name { display: grid; gap: 1px; min-width: 0; }
+.f-name strong { font-size: 18px; font-weight: 650; }
+.f-name span { font-size: 14.5px; color: var(--ink-3); }
+.patient .f-name strong { color: var(--patient); }
+.clinician .f-name strong { color: var(--clinician); }
+.f-acts { margin-left: auto; display: flex; gap: 2px; }
+
+.f-translation { margin: 0; font-weight: 620; letter-spacing: -.02em; color: var(--ink); }
+.f-translation.lg { font-size: clamp(34px, 10.2vw, 46px); line-height: 1.14; }
+.f-translation.md { font-size: clamp(27px, 7.8vw, 34px); line-height: 1.2; }
+.f-translation.sm { font-size: clamp(22px, 6.2vw, 26px); line-height: 1.3; }
+.f-original { margin: 0; font-size: 17px; line-height: 1.45; color: var(--ink-3); }
+.f-line .live-text { font-size: clamp(28px, 8.4vw, 36px); line-height: 1.2; font-weight: 560; color: var(--ink-2); margin: 0; }
+.f-pending { display: flex; gap: 10px; padding: 14px 2px; }
+.f-pending i { width: 14px; height: 14px; border-radius: 99px; background: var(--accent); animation: typing 1.1s ease-in-out infinite; }
+.f-pending i:nth-child(2) { animation-delay: .15s; }
+.f-pending i:nth-child(3) { animation-delay: .3s; }
+
+.f-notes { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+.f-notes li { animation: noteIn .5s cubic-bezier(.2, .9, .3, 1) both; animation-delay: calc(var(--i) * 130ms + 700ms); }
+@keyframes noteIn { from { opacity: 0; transform: translateX(-14px); } }
+.f-note { --c: var(--accent); position: relative; width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; text-align: left; border: 0; border-radius: 14px; padding: 10px 12px 10px 16px; background: color-mix(in srgb, var(--c) 9%, transparent); color: inherit; font: inherit; overflow: hidden; }
+.f-note::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--c); transform-origin: top; animation: ruleDraw .5s cubic-bezier(.2, .9, .3, 1) both; }
+.f-notes li .f-note::before { animation-delay: calc(var(--i) * 130ms + 750ms); }
+@keyframes ruleDraw { from { transform: scaleY(0); } }
+.f-note.alert { --c: var(--danger); }
+.f-note.drug { --c: var(--warn); }
+.f-note-icon { width: 36px; height: 36px; border-radius: 11px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 14%, transparent); }
+.f-note-text { display: grid; gap: 1px; min-width: 0; }
+.f-note-text strong { font-size: 16.5px; font-weight: 650; }
+.f-note.alert .f-note-text strong { color: var(--danger); }
+.f-note-text span { font-size: 14.5px; line-height: 1.35; color: var(--ink-2); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.f-note.alert .f-note-text span { -webkit-line-clamp: 2; }
+.f-note.relevant { padding-block: 8px; }
+.f-note.relevant .f-note-icon { width: 30px; height: 30px; border-radius: 9px; }
+
+.f-live { position: sticky; bottom: 4px; align-self: center; margin: 12px 0 0 !important; display: inline-flex; align-items: center; gap: 8px; border: 0; border-radius: 99px; padding: 9px 16px; background: var(--ink); color: var(--bg); font-size: 15px; font-weight: 600; box-shadow: var(--shadow); animation: up .35s cubic-bezier(.2, .9, .3, 1) both; z-index: 2; }
+.f-live i { width: 8px; height: 8px; border-radius: 99px; background: var(--danger); animation: dotPulse 1.2s ease-in-out infinite; }
+
+.f-dock { display: grid; gap: 6px; padding: 4px 2px 0; }
+.f-dock-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.f-chip { --c: var(--patient); display: flex; align-items: center; gap: 9px; min-width: 0; border: 0; border-radius: 20px; padding: 9px 10px; background: var(--panel); color: inherit; font: inherit; text-align: left; box-shadow: inset 0 0 0 1px var(--line); opacity: .62; transition: opacity .3s, transform .45s cubic-bezier(.3, 1.5, .5, 1), box-shadow .3s, background .3s; }
+.f-chip.clinician { --c: var(--clinician); flex-direction: row-reverse; text-align: right; }
+.f-chip > span { display: grid; min-width: 0; }
+.f-chip strong { font-size: 16px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.f-chip small { font-size: 12.5px; color: var(--ink-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.f-chip .flag { flex: none; transition: transform .45s cubic-bezier(.3, 1.6, .5, 1); }
+.f-chip.on { opacity: 1; transform: scale(1.04); background: color-mix(in srgb, var(--c) 14%, var(--panel)); box-shadow: inset 0 0 0 1.5px var(--c); }
+.f-chip.on .flag { transform: scale(1.12) rotate(-4deg); }
+.f-chip.pinned small { color: var(--warn); font-weight: 600; }
+.f-dock .typer { margin-bottom: 4px; }
+
+/* Tandem: the serif carries the line, glass chips */
+[data-brand="tandem"] .f-translation { font-family: var(--serif); font-weight: 400; letter-spacing: -.01em; color: var(--t-cream); }
+[data-brand="tandem"] .f-translation.lg { font-size: clamp(31px, 9.2vw, 42px); line-height: 1.22; }
+[data-brand="tandem"] .f-name strong { font-family: var(--serif); }
+[data-brand="tandem"] .patient .f-name strong { color: var(--t-gold); }
+[data-brand="tandem"] .clinician .f-name strong { color: var(--t-cream); }
+[data-brand="tandem"] .f-chip { background: rgb(255 255 255 / 6%); box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%), inset 0 0 0 1px rgb(247 241 227 / 10%); }
+[data-brand="tandem"] .f-chip.on { background: color-mix(in srgb, var(--c) 16%, transparent); box-shadow: inset 0 0 0 1.5px var(--c); }
+[data-brand="tandem"] .f-pair { background: rgb(255 255 255 / 6%); }
+[data-brand="tandem"] .f-live { background: var(--t-cream); color: var(--t-navy); }

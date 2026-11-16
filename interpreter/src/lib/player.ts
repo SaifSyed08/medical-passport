@@ -12,6 +12,7 @@ export class Player {
   private queue: Item[] = [];
   private current: Item | null = null;
   private unlocked = false;
+  private rate = 1;
   private onBusy: (busy: boolean, text?: string) => void;
 
   constructor(onBusy: (busy: boolean, text?: string) => void) {
@@ -57,6 +58,12 @@ export class Player {
     }
   }
 
+  /** Playback speed for every line (the secret fast demo). */
+  setRate(rate: number) {
+    this.rate = rate;
+    this.audio.playbackRate = rate;
+  }
+
   get busy() {
     return Boolean(this.current);
   }
@@ -71,6 +78,7 @@ export class Player {
     this.current = item;
     this.onBusy(true, item.text);
     this.audio.src = item.url;
+    this.audio.defaultPlaybackRate = this.audio.playbackRate = this.rate;
     this.audio.play().catch(() => this.finish());
   }
 

@@ -22,6 +22,10 @@ const PATHS: Record<string, string> = {
   chevron: "M9 6l6 6-6 6",
   refresh: "M20 11a8 8 0 1 0-2.3 5.7 M20 5v6h-6",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4.5 20a7.5 7.5 0 0 1 15 0",
+  plus: "M12 5v14 M5 12h14",
+  trash: "M4 7h16 M9.5 7V4.5h5V7 M6.5 7l1 13h9l1-13 M10 11v5.5 M14 11v5.5",
+  camera: "M4 8h3.5L9 5.5h6L16.5 8H20v11H4z M12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z",
+  undo: "M9 14 4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11",
 };
 
 export default function Icon({ name, size = 20, className = "" }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {

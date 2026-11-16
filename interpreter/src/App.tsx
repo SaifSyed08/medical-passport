@@ -5,15 +5,17 @@ import { loadSettings, saveSettings, type Settings } from "./lib/store";
 import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
-import { unlockAudio } from "./lib/audioSession";
+import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
+import { applyEdits, useEdits } from "./lib/edits";
 
 export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
   const base = personas.find((p) => p.id === settings.personaId) || personas[0];
   const pair = settings.pairs[base.id];
-  if (!pair) return base;
-  return { ...base, language: pair.patientLang, trip: { ...base.trip, country: pair.local, doctorLanguage: pair.doctorLang } };
+  const edited = applyEdits(base);
+  if (!pair) return edited;
+  return { ...edited, language: pair.patientLang, trip: { ...base.trip, country: pair.local, doctorLanguage: pair.doctorLang } };
 }
 
 export default function App() {
@@ -30,7 +32,9 @@ export default function App() {
   // Bumped to start the recorded demo; 0 = a normal conversation.
   const [demoRequest, setDemoRequest] = useState(() => (new URLSearchParams(location.search).has("demo") ? 1 : 0));
   const [serverIssue, setServerIssue] = useState<string | null>(null);
-  const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas]);
+  // The patient's own edits (swipe to delete, scanned documents) re-derive the record everywhere.
+  const edits = useEdits(settings.personaId);
+  const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas, edits]);
 
   useEffect(() => saveSettings(settings), [settings]);
 
@@ -75,7 +79,16 @@ export default function App() {
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement;
-      if (e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.repeat || e.metaKey || e.ctrlKey || e.altKey || (el && /^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName))) return;
+      if (e.key === "f" || e.key === "F") {
+        toggleFastDemo();
+        return;
+      }
+      if (e.key === "l" || e.key === "L") {
+        // Experimental conversation layout (Focus): one line at a time, record notes pinned under it.
+        setSettings((s) => ({ ...s, layout: s.layout === "focus" ? "classic" : "focus" }));
+        return;
+      }
       if (e.key === "3") {
         // Don't leave a focus ring on whatever was clicked last.
         (document.activeElement as HTMLElement | null)?.blur?.();

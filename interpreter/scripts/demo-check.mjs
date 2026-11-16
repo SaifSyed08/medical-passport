@@ -26,6 +26,7 @@ await new Promise((r) => setTimeout(r, 1200));
 await page.screenshot({ path: path.join(OUT, `${persona}-0-home.png`) });
 
 const t0 = Date.now();
+if (process.argv.includes("--fast")) await page.keyboard.press("f"); // secret fast demo
 await page.keyboard.press("d");
 let shot = 1;
 const seen = new Set();

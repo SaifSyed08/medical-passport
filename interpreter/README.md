@@ -20,9 +20,15 @@ Press **D**, or tap **Play demo conversation**. It replays a real recorded run: 
 
 - **Sofía Hernández** is from Guadalajara and visiting Austin (Spanish ⇄ English). Her record is written in Spanish, and the doctor reads it in English.
 - **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Tessera medical passport](https://github.com/SaifSyed08/medical-passport) demo.
-- **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). She took two **Flexon** for a headache, not knowing it contains ibuprofen, an NSAID, which sets off her asthma. The word flips to *ibuprofen + acetaminophen* and the NSAID-allergy banner drops in while she is still talking.
+- **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). She has back pain and took two **Flexon**, not knowing it contains ibuprofen, an NSAID, which sets off her asthma. The word flips to *ibuprofen + acetaminophen* and the NSAID-allergy banner drops in. The doctor then proposes ketorolac (another NSAID) and a CT with contrast, and her record shows a contrast-dye reaction too. The lines to say are in the [demo script doc](https://claude.ai/artifact/TKTvdwnDLx7LXDkdvCNk5k).
 
-Press **3** to switch to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter. The same app and features are under both looks.
+Hidden keys:
+
+| Key | |
+| --- | --- |
+| **3** | Switches to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter |
+| **L** | Switches the conversation to **Focus**, an experimental layout (also under ⚙ → Conversation layout). One line at a time in very large type, the record's notes pinned under the sentence that raised them, earlier lines as a ribbon of dots at the top (tap one, or swipe sideways, to go back), and the two people as chips either side of the mic (tap one to say who talks next) |
+| **F** | Fast demo: the recording plays about 1.6× faster with shorter pauses. Press again for normal speed |
 
 ## What it does
 
@@ -33,6 +39,7 @@ Press **3** to switch to **Tandem**, a second look: navy, gold and cream, with a
 | **Cleans up speech** | Fillers, stutters and self-corrections are removed ("two, no, three pills" becomes "three pills"). Facts, doses and hedges never change. The original is one tap away. |
 | **Local medicine names** | A curated cross-country table covers MX, US, JP, GB and IN, and the server enforces it on top of the model's output. The phone saves each match, so it works offline. |
 | **Record in real time** | The record is matched against what was just said and shown as compact tiles above the mic. Alerts come first; a new or re-triggered alert flashes and the phone vibrates. Each tile opens a short explanation and the original entry. |
+| **Editable profile** | On the home screen the patient can swipe any record row left to delete it (with undo), and add a document by photo. Tesseract reads the photo on the phone and the medical passport's own rule-based reader (`../extractor`) finds allergies, medicines and conditions, each quoting its line. No AI model and no upload; the patient ticks what to keep. Medicines show the local name with the local flag. |
 | **Record in the doctor's language** | The full record opens translated, color-coded by section, with a toggle back to the original. A translation is rejected if it comes back incomplete. |
 | **Spoken translation** | `gpt-4o-mini-tts` reads each translation in order. The mic pauses while the phone speaks, so it never translates itself. |
 
@@ -88,6 +95,8 @@ npm test                                   # unit tests: drug names, merges, mic
 npm run typecheck
 node scripts/demo-check.mjs sofia          # plays demo mode headless and checks turns, captions, alerts and layout
 node scripts/demo-regressions.mjs          # browser regressions with a mocked API (stop/restart, half-duplex, scrolling…)
+node scripts/profile-check.mjs             # editable profile: swipe to delete, undo, scan a printed note, persistence
+node scripts/focus-check.mjs sita --tandem # the Focus layout through a recorded demo
 npm run test:api -- sofia                  # live API: TTS-voiced lines → transcribe → interpret + context (paid)
 npm run test:e2e -- sofia                  # headless Chrome with a fake mic feeding the real pipeline (paid)
 ```
@@ -97,6 +106,8 @@ After changing prompts or the drug table, re-record the demo with `node --experi
 ## Limits
 
 - Drug equivalents outside the curated table are AI suggestions and are labeled that way.
+- Document scanning downloads Tesseract's engine and English language data from a CDN the first time; scan once online before an offline demo.
+- `scripts/demo-regressions.mjs`'s scroll check is timing-sensitive and occasionally fails on a slow machine; rerun it.
 - The demo record is sent to the model to find context and to translate. A real version needs consent, data minimization and a BAA-covered provider.
 - Record tiles are AI summaries of the patient's own record. Each tile links back to its source entry.
 - Not yet tested on a physical iPhone or Android. On iOS the mic is released during playback, and audio is unlocked on the first tap.

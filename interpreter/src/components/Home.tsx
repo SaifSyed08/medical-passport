@@ -157,7 +157,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
       </div>
 
 
-      {sheet === "record" && <RecordSheet persona={persona} onClose={() => setSheet("none")} />}
+      {sheet === "record" && <RecordSheet persona={persona} editable onClose={() => setSheet("none")} />}
       {sheet === "settings" && (
         <Sheet title="Settings" onClose={() => setSheet("none")}>
           <div className="group">
@@ -184,6 +184,17 @@ export default function Home({ persona, personas, settings, setSettings, onStart
               </button>
               <button className={settings.brand === "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tandem" }))}>
                 Tandem <kbd>3</kbd>
+              </button>
+            </div>
+          </div>
+          <div className="group">
+            <div className="group-title">Conversation layout</div>
+            <div className="seg">
+              <button className={settings.layout !== "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "classic" }))}>
+                Transcript
+              </button>
+              <button className={settings.layout === "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "focus" }))}>
+                Focus <kbd>L</kbd>
               </button>
             </div>
           </div>

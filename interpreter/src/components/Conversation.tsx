@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContextItem, DrugMention, Equivalent, Persona, Speaker, Turn } from "../lib/types";
 import { Mic, type MicState } from "../lib/mic";
 import type { Player } from "../lib/player";
-import { demoVoice, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
+import { demoVoice, fastDemo, FAST_RATE, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
 import { PERSONAS, hasDemo } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
 import { mergeContext } from "../lib/contextMerge";
@@ -16,6 +16,7 @@ import { kindOf } from "./bits";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
+import { FocusDock, FocusView } from "./Focus";
 import ContextSheet from "./ContextSheet";
 import { Sheet } from "./bits";
 import Icon from "./Icon";
@@ -82,6 +83,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const stageRef = useRef<HTMLDivElement>(null);
   const toastTimer = useRef<number | undefined>(undefined);
   const demoToken = useRef<{ cancelled: boolean } | null>(null);
+  const pace = (ms: number) => sleep(fastDemo() ? ms / 1.8 : ms);
 
   const patch = useCallback((id: string, p: Partial<Turn> | ((t: Turn) => Partial<Turn>)) => {
     setTurns((all) => all.map((t) => (t.id === id ? { ...t, ...(typeof p === "function" ? p(t) : p) } : t)));
@@ -359,7 +361,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       el.removeEventListener("wheel", userScroll);
       el.removeEventListener("touchmove", userScroll);
     };
-  }, []);
+    // Re-attach when the layout switches back to the transcript (Focus has no scrolling list).
+  }, [settings.layout]);
   useEffect(() => {
     if (pinned.current) toBottom(true);
   }, [turns, toBottom]);
@@ -369,7 +372,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const ro = new ResizeObserver(() => pinned.current && toBottom(false));
     ro.observe(el);
     return () => ro.disconnect();
-  }, [toBottom]);
+  }, [toBottom, settings.layout]);
   const jumpToLatest = () => {
     pinned.current = true;
     setShowLatest(false);
@@ -405,6 +408,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       el.onended = done;
       el.onerror = done;
       el.src = url;
+      // Secret fast demo (F): the recording itself plays faster too.
+      el.defaultPlaybackRate = el.playbackRate = fastDemo() ? FAST_RATE : 1;
       el.play().then(() => (raf = requestAnimationFrame(tick)), done);
       const guard = setInterval(() => {
         if (token.cancelled) {
@@ -472,7 +477,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const base = PERSONAS.find((p) => p.id === persona.id) || persona;
     saveEquivalents(base.home, base.trip.country, data.equivalents);
     const trip = loadTrip(base.home, base.trip.country);
-    await sleep(700);
+    await pace(700);
     for (const line of data.lines) {
       if (token.cancelled) break;
       const id = uid();
@@ -497,10 +502,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       if (token.cancelled) break;
       setDemo("working");
       patch(id, { raw: line.stt.text, status: "transcribing" });
-      await sleep(450);
+      await pace(450);
       if (token.cancelled) break;
       patch(id, { raw: line.stt.text, status: "interpreting" });
-      await sleep(Math.min(1400, 500 + line.stt.text.length * 9));
+      await pace(Math.min(1400, 500 + line.stt.text.length * 9));
       if (token.cancelled) break;
       const r = line.interpret;
       patch(id, {
@@ -513,14 +518,14 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         drugs: r.drugs.map((d) => ({ ...d, cached: isCached(trip, d) })),
         timings: { total: (line.stt.ms || 500) + r.ms },
       });
-      window.setTimeout(() => !token.cancelled && addContext(id, line.context, line.interpret.cleaned), 900);
-      await sleep(500);
+      window.setTimeout(() => !token.cancelled && addContext(id, line.context, line.interpret.cleaned), fastDemo() ? 500 : 900);
+      await pace(500);
       // Stopped while the words were landing: don't start this line's speech after the stop.
       if (token.cancelled) break;
       if (speakRef.current) await playerRef.current!.play(line.speech);
-      else await sleep(2600);
+      else await pace(2600);
       if (token.cancelled) break;
-      await sleep(1100);
+      await pace(1100);
     }
     if (demoToken.current === token) {
       demoToken.current = null;
@@ -630,15 +635,58 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const lastDone = turns.map((t) => t.status).lastIndexOf("done");
   const mood = toast ? "alert" : lastSpeaker || "idle";
   const first = persona.name.split(" ")[0];
+  const focus = settings.layout === "focus";
+  const latestTurn = turns[turns.length - 1];
+  const activeSpeaker: Speaker | null = (latestTurn && latestTurn.status !== "done" ? latestTurn.speaker || latestTurn.forced : null) || forced || lastSpeaker || null;
+  const typer = (
+            <form
+              className="typer"
+              onSubmit={(e) => {
+                e.preventDefault();
+                sendTyped();
+              }}
+            >
+              <input
+                autoFocus
+                value={draft}
+                onKeyDown={(e) => e.key === "Escape" && (e.stopPropagation(), setTyping(false))}
+                onChange={(e) => setDraft(e.target.value)}
+                placeholder="Type what was said"
+                aria-label="Type an utterance"
+                dir={dir(forced === "clinician" ? persona.trip.doctorLanguage : persona.language)}
+              />
+              <button className="send" type="submit" disabled={!draft.trim()} aria-label="Send">
+                <Icon name="chevron" size={18} />
+              </button>
+            </form>
+  );
 
   return (
-    <main className="talk" data-mood={mood}>
+    <main className={`talk ${focus ? "focus" : ""}`} data-mood={mood}>
       <div className="backdrop" aria-hidden>
         <span className="tint patient" />
         <span className="tint clinician" />
         <span className="tint alert" />
       </div>
 
+      {focus ? (
+        <FocusView
+          turns={turns}
+          ctx={ctx}
+          persona={persona}
+          live={live}
+          speak={settings.speak}
+          onBack={onBack}
+          onMenu={() => setSheet("menu")}
+          onRecord={() => setSheet("record")}
+          onToggleSpeak={() => setSettings((s) => ({ ...s, speak: !s.speak }))}
+          onDrug={(d, speaker) => setDrug({ d, speaker })}
+          onFlip={flipSpeaker}
+          onReplay={replay}
+          onOpenCtx={setOpenCtx}
+        />
+      ) : (
+        <>
       <header className="talk-bar panel">
         <button className="icon-btn" onClick={onBack} aria-label="Back">
           <Icon name="back" />
@@ -657,9 +705,14 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       </header>
 
 
-      {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
-      {toast && kindOf(toast.id) === "allergy" && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
 
+        </>
+      )}
+
+      {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
+      {toast && (kindOf(toast.id) === "allergy" || /allerg|anaphyla/i.test(`${toast.title} ${toast.detail}`)) && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
+
+      {!focus && (
       <div className="transcript" ref={stageRef}>
         {turns.length === 0 ? (
           <IdleHero persona={persona} live={live} />
@@ -678,6 +731,16 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         )}
       </div>
 
+      )}
+
+      {focus ? (
+        <div className="bottom">
+          {micError && <div className="mic-error">{micError}</div>}
+          <FocusDock persona={persona} active={activeSpeaker} forced={forced} setForced={setForced} orb={<Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />} label={orbLabel}>
+            {typing && typer}
+          </FocusDock>
+        </div>
+      ) : (
       <div className="bottom">
         {showLatest && turns.length > 0 && (
           <button className="latest-pill" onClick={jumpToLatest}>
@@ -689,27 +752,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           {/* The record lives inside the bottom bar: one panel, so the translation keeps the screen. */}
           <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />
           {micError && <div className="mic-error">{micError}</div>}
-          {typing && (
-            <form
-              className="typer"
-              onSubmit={(e) => {
-                e.preventDefault();
-                sendTyped();
-              }}
-            >
-              <input
-                autoFocus
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder="Type what was said"
-                aria-label="Type an utterance"
-                dir={dir(forced === "clinician" ? persona.trip.doctorLanguage : persona.language)}
-              />
-              <button className="send" type="submit" disabled={!draft.trim()} aria-label="Send">
-                <Icon name="chevron" size={18} />
-              </button>
-            </form>
-          )}
+          {typing && typer}
           <div className="control-row">
             <button className={`tool ${typing ? "on" : ""}`} onClick={() => setTyping((v) => !v)} aria-label="Type instead">
               <span className="tool-icon">
@@ -737,6 +780,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           </div>
         </footer>
       </div>
+      )}
 
       {sheet === "menu" && (
         <Sheet title="Options" onClose={() => setSheet("none")}>
@@ -769,6 +813,20 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
                   <strong>Play demo conversation</strong>
                 </span>
                 <kbd>D</kbd>
+              </button>
+            )}
+            {focus && (
+              <button
+                className="row"
+                onClick={() => {
+                  setTyping((v) => !v);
+                  setSheet("none");
+                }}
+              >
+                <Icon name="keyboard" />
+                <span className="row-main">
+                  <strong>{typing ? "Stop typing" : "Type instead"}</strong>
+                </span>
               </button>
             )}
             <button className="row" onClick={() => setSheet("record")}>
