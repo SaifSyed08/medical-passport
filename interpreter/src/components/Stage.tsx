@@ -4,6 +4,7 @@ import { dir, langName } from "../lib/langs";
 import { Reveal, StatusBadge, swapLabel } from "./bits";
 import Icon from "./Icon";
 import Flag from "./Flag";
+import LogoLoader from "./LogoLoader";
 
 const SPEAK_IN: Record<string, string> = {
   es: "Hable en español", en: "Speak in English", ne: "नेपालीमा बोल्नुहोस्", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
@@ -157,7 +158,7 @@ export function TurnBlock({
             {t.raw}
           </p>
           <div className="pending" dir={dir(listenerLang)}>
-            <span className="pending-orb" aria-hidden />
+            <LogoLoader size={30} />
             <span className="pending-text">Translating to {langName(listenerLang)}</span>
           </div>
         </>

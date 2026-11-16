@@ -382,44 +382,103 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   /* ---------------------------------------------------------------- recorded demo */
 
   /** Play one recorded voice clip, driving the orb from its real loudness. */
-  const playVoice = (url: string, token: { cancelled: boolean }, onProgress?: (fraction: number) => void) =>
+  /**
+   * Play one recorded line. Failsafe: if the clip can't load, is blocked, or stalls, the line carries on without
+   * sound (captions roll over the recording's own length) instead of leaving the demo stuck on an empty line.
+   */
+  const playVoice = (url: string, expectedMs: number, token: { cancelled: boolean }, onProgress?: (fraction: number) => void) =>
     new Promise<void>((resolve) => {
       const { el, meter } = demoVoice();
       void meter?.ctx.resume().catch(() => {});
+      const rate = fastDemo() ? FAST_RATE : 1;
+      const expected = Math.max(1500, (expectedMs || 6000) / rate);
+      const t0 = performance.now();
       const buf = new Float32Array(1024);
       let raf = 0;
+      let finished = false;
+      // Silent: no sound is coming, so captions and the orb follow the clock instead.
+      let silent = false;
+      let lastTime = -1;
+      let lastMove = t0;
       const tick = () => {
-        if (meter) {
+        const now = performance.now();
+        if (!silent && meter) {
           meter.analyser.getFloatTimeDomainData(buf);
           let s = 0;
           for (const v of buf) s += v * v;
           const rms = Math.sqrt(s / buf.length);
           setLevel(Math.min(1, Math.max(0, (20 * Math.log10(rms + 1e-9) + 62) / 46)));
-        } else setLevel(0.35 + Math.random() * 0.4);
-        if (onProgress && el.duration > 0) onProgress(el.currentTime / el.duration);
+        } else setLevel(0.35 + 0.3 * Math.abs(Math.sin(now / 160)));
+        if (onProgress) {
+          if (!silent && el.duration > 0) onProgress(el.currentTime / el.duration);
+          else if (silent) onProgress(Math.min(1, (now - t0) / expected));
+        }
         raf = requestAnimationFrame(tick);
       };
       const done = () => {
+        if (finished) return;
+        finished = true;
+        clearInterval(guard);
         cancelAnimationFrame(raf);
         setLevel(0);
         el.onended = el.onerror = null;
         resolve();
       };
+      const goSilent = () => {
+        if (silent || finished) return;
+        silent = true;
+        el.onended = el.onerror = null;
+        el.pause();
+        if (!raf) raf = requestAnimationFrame(tick);
+      };
       el.onended = done;
-      el.onerror = done;
+      el.onerror = goSilent;
       el.src = url;
       // Secret fast demo (F): the recording itself plays faster too.
-      el.defaultPlaybackRate = el.playbackRate = fastDemo() ? FAST_RATE : 1;
-      el.play().then(() => (raf = requestAnimationFrame(tick)), done);
+      el.defaultPlaybackRate = el.playbackRate = rate;
+      el.play().then(() => {
+        if (!finished && !silent) raf = requestAnimationFrame(tick);
+      }, goSilent);
       const guard = setInterval(() => {
         if (token.cancelled) {
-          clearInterval(guard);
+          el.pause();
+          return done();
+        }
+        const now = performance.now();
+        if (silent) {
+          if (now - t0 >= expected) done();
+          return;
+        }
+        if (el.currentTime !== lastTime) {
+          lastTime = el.currentTime;
+          lastMove = now;
+        }
+        // Not started after 2.5 s, or stuck for 2.5 s: finish the line silently. Way past its length: move on.
+        if (now - lastMove > 2500) goSilent();
+        else if (now - t0 > expected + 4000) {
           el.pause();
           done();
         }
-      }, 100);
-      el.addEventListener("ended", () => clearInterval(guard), { once: true });
+      }, 200);
     });
+
+  /** Fetch with a timeout and a couple of retries: a slow tunnel or dev server shouldn't kill the demo. */
+  const fetchRetry = async (url: string, tries = 3, timeout = 6000): Promise<Response> => {
+    for (let i = 0; ; i++) {
+      const ac = new AbortController();
+      const t = window.setTimeout(() => ac.abort(), timeout);
+      try {
+        const r = await fetch(url, { signal: ac.signal, cache: i ? "reload" : "default" });
+        if (r.ok) return r;
+        if (r.status === 404 || i >= tries - 1) throw new Error(String(r.status));
+      } catch (e) {
+        if (i >= tries - 1) throw e;
+      } finally {
+        window.clearTimeout(t);
+      }
+      await sleep(400 * (i + 1));
+    }
+  };
 
   const stopDemo = useCallback(() => {
     if (demoToken.current) demoToken.current.cancelled = true;
@@ -460,18 +519,35 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     setMicError("");
     let data: { equivalents: Equivalent[]; lines: DemoLine[] };
     try {
-      const r = await fetch(`/demo/${persona.id}.json`);
-      if (!r.ok) throw new Error();
+      const r = await fetchRetry(`/demo/${persona.id}.json`);
       data = await r.json();
-    } catch {
+    } catch (e) {
       if (demoToken.current === token) {
         demoToken.current = null;
         setDemo("off");
-        setMicError(`No recorded demo for ${persona.name}.`);
+        setMicError(/404/.test(String(e)) ? `No recorded demo for ${persona.name}.` : "Couldn't load the demo. Check the connection and press D again.");
       }
       return;
     }
     if (token.cancelled) return;
+    // Pull every clip into memory up front (in parallel, capped at a few seconds), so a slow connection mid-demo
+    // can't leave a line waiting on its audio. Anything that doesn't arrive in time streams as usual.
+    const clips = new Map<string, string>();
+    await Promise.race([
+      Promise.all(
+        data.lines.flatMap((l) => [l.audio, l.speech]).map(async (u) => {
+          try {
+            const blob = await (await fetchRetry(u, 2, 8000)).blob();
+            if (!token.cancelled) clips.set(u, URL.createObjectURL(blob));
+          } catch {
+            /* streams from the URL instead */
+          }
+        }),
+      ),
+      sleep(4000),
+    ]);
+    if (token.cancelled) return;
+    const clip = (u: string) => clips.get(u) || u;
     playerRef.current!.enabled = true;
     // The recording was made for the persona's own language pair; file its medicine names there.
     const base = PERSONAS.find((p) => p.id === persona.id) || persona;
@@ -491,7 +567,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       const words = /\s/.test(line.stt.text) ? line.stt.text.split(/(\s+)/) : [...line.stt.text];
       const wordCount = words.filter((w) => w.trim()).length;
       let shownWords = 0;
-      await playVoice(line.audio, token, (f) => {
+      await playVoice(clip(line.audio), line.audioMs, token, (f) => {
         const n = Math.max(0, Math.floor((f - 0.08) * wordCount * 1.05));
         if (n <= shownWords) return;
         shownWords = Math.min(n, wordCount);
@@ -522,7 +598,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       await pace(500);
       // Stopped while the words were landing: don't start this line's speech after the stop.
       if (token.cancelled) break;
-      if (speakRef.current) await playerRef.current!.play(line.speech);
+      if (speakRef.current) await playerRef.current!.play(clip(line.speech));
       else await pace(2600);
       if (token.cancelled) break;
       await pace(1100);
@@ -531,6 +607,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       demoToken.current = null;
       setDemo("off");
     }
+    window.setTimeout(() => clips.forEach((u) => URL.revokeObjectURL(u)), 30000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [addContext, patch, persona, stopDemo]);
 
@@ -638,6 +715,17 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
   const focus = settings.layout === "focus";
   const latestTurn = turns[turns.length - 1];
   const activeSpeaker: Speaker | null = (latestTurn && latestTurn.status !== "done" ? latestTurn.speaker || latestTurn.forced : null) || forced || lastSpeaker || null;
+  const hearing = latestTurn && latestTurn.status === "live" ? latestTurn.speaker || latestTurn.forced : null;
+  const orbEl = (
+    <Orb
+      mode={orbMode}
+      level={level}
+      onTap={orbTap}
+      label={forced && demo === "off" ? `${orbLabel} · next: ${forced === "patient" ? first : "clinician"}` : orbLabel}
+      who={orbMode === "speech" ? hearing || forced : null}
+      next={forced && demo === "off" ? { code: forced === "clinician" ? persona.trip.country : persona.home } : null}
+    />
+  );
   const typer = (
             <form
               className="typer"
@@ -736,7 +824,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       {focus ? (
         <div className="bottom">
           {micError && <div className="mic-error">{micError}</div>}
-          <FocusDock persona={persona} active={activeSpeaker} forced={forced} setForced={setForced} orb={<Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />} label={orbLabel}>
+          <FocusDock persona={persona} active={activeSpeaker} forced={forced} setForced={setForced} orb={orbEl} label={orbLabel}>
             {typing && typer}
           </FocusDock>
         </div>
@@ -761,7 +849,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
               <span className="tool-label">Type</span>
             </button>
             <div className="mic-wrap">
-              <Orb mode={orbMode} level={level} onTap={orbTap} label={orbLabel} />
+              {orbEl}
             </div>
             <button
               className={`tool ${settings.speak ? "" : "off"}`}

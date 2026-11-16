@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Persona, RecordDoc } from "../lib/types";
 import type { Suggestion } from "../../../shared/autofill";
 import { analyse, findingKindLabel, findingTitle, readPhoto, toItems } from "../lib/scan";
-import { addItems } from "../lib/edits";
+import { addItems, saveDocFile } from "../lib/edits";
 import { Sheet } from "./bits";
 import Icon from "./Icon";
 
@@ -47,6 +47,7 @@ export default function ScanFlow({ persona, file, onDone, onClose }: Props) {
   const save = () => {
     if (!doc) return;
     const chosen = findings.filter((f) => keep[f.id]);
+    saveDocFile(doc.id, { image: thumbnail(document.querySelector<HTMLImageElement>(".scan-photo img")), text: text.slice(0, 6000) });
     addItems(persona.id, { documents: [doc], ...toItems(chosen, doc.id) });
     onDone();
   };
@@ -135,4 +136,21 @@ export default function ScanFlow({ persona, file, onDone, onClose }: Props) {
       </div>
     </Sheet>
   );
+}
+
+/** A small JPEG of the photo for the record's thumbnail and preview (about 30 KB). */
+function thumbnail(img: HTMLImageElement | null): string | undefined {
+  if (!img || !img.naturalWidth) return undefined;
+  const scale = Math.min(1, 720 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.naturalWidth * scale);
+  c.height = Math.round(img.naturalHeight * scale);
+  const g = c.getContext("2d");
+  if (!g) return undefined;
+  g.drawImage(img, 0, 0, c.width, c.height);
+  try {
+    return c.toDataURL("image/jpeg", 0.72);
+  } catch {
+    return undefined;
+  }
 }

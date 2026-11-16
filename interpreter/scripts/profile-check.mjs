@@ -53,11 +53,13 @@ try {
   await page.waitForFunction(() => !/Matching/.test(document.querySelector(".patient-card")?.textContent || ""), { timeout: 60000 });
 
   const openRecord = async () => {
-    await page.click(".patient-card");
+    await page.click(".pc-open");
     await page.waitForSelector(".record .swipe-row");
     await new Promise((r) => setTimeout(r, 500));
   };
   await openRecord();
+
+  check(!/fictional|Swipe left/i.test(await page.$eval(".sheet", (e) => e.textContent)), "no '(fictional)' labels or swipe hint in the record");
 
   // 2. Local names carry the local flag.
   const locals = await page.$$eval(".rec-section.medication .local-name", (els) => els.map((e) => ({ text: e.textContent, flag: !!e.querySelector("svg, img") })));
@@ -90,7 +92,7 @@ try {
   check(await page.$('[data-id="alg_contrast"]'), "undo brings it back");
 
   // A long swipe deletes outright.
-  await swipeLeft('.swipe-row[data-id="con_gita"] > .list-row', 330);
+  await swipeLeft('.swipe-row[data-id="con_gita"] > .list-row', 372);
   await new Promise((r) => setTimeout(r, 400));
   check(!(await page.$('[data-id="con_gita"]')), "long swipe deletes outright");
 
@@ -120,10 +122,37 @@ try {
   await new Promise((r) => setTimeout(r, 900)); // let the sheet finish sliding in
   await page.screenshot({ path: path.join(OUT, `record-after-${brand}.png`) });
 
+  // The scanned page keeps its photo: a thumbnail in the list, the photo and the page when tapped.
+  const scannedRow = '.rec-section.document .swipe-row:first-child > .list-row';
+  check(await page.$(`${scannedRow} .doc-thumb img`), "scanned document shows a photo thumbnail");
+  await page.$eval(scannedRow, (e) => e.scrollIntoView({ block: "center" }));
+  await page.click(scannedRow);
+  await page.waitForSelector(".paper", { timeout: 5000 }).catch(() => {});
+  check(await page.$(".doc-photo"), "tapping it opens the photo");
+  check(await page.$(".paper"), "and the page of the note");
+  await new Promise((r) => setTimeout(r, 700));
+  await page.screenshot({ path: path.join(OUT, `preview-${brand}.png`) });
+  await page.click(".sheet-head .icon-btn");
+  await page.waitForSelector(".record .swipe-row");
+
+  // Typing an entry in: Add on any section, then "Type it in".
+  check(await page.$(".rec-section.contact .add-btn"), "an emptied section keeps its Add button");
+  await page.$eval(".rec-section.medication .add-btn", (e) => e.scrollIntoView({ block: "center" }));
+  await page.click(".rec-section.medication .add-btn");
+  await page.waitForSelector(".rec-section.medication .add-menu");
+  check((await page.$$(".rec-section.medication .add-menu button")).length === 2, "Add offers Type it in and Upload");
+  await page.click(".rec-section.medication .add-menu button");
+  await page.waitForSelector(".manual input");
+  await page.type(".manual input", "Metformin");
+  await page.click(".manual .btn-primary");
+  await page.waitForSelector(".record .swipe-row");
+  check(await page.$$eval(".rec-section.medication .swipe-row", (els) => els.some((e) => /Metformin/.test(e.textContent))), "typed-in medicine is in the record");
+
   // 5. It persists, and the deletion too.
   await page.reload({ waitUntil: "networkidle2" });
-  await page.waitForSelector(".patient-card");
+  await page.waitForSelector(".pc-open");
   await openRecord();
+  check(await page.$$eval(".rec-section.medication .swipe-row", (els) => els.some((e) => /Metformin/.test(e.textContent))), "typed-in medicine still there after reload");
   check(await page.$$eval(".rec-section.document .swipe-row", (els) => els.some((e) => /summary/i.test(e.textContent))), "document still there after reload");
   check(!(await page.$('[data-id="con_gita"]')), "deletion still there after reload");
   await page.evaluate(() => localStorage.removeItem("ti.edits.sita"));

@@ -2,17 +2,19 @@
 // scanning a document. Applied on top of the saved record everywhere (home, record sheet, the live context), so a
 // deleted allergy never surfaces in a conversation and a scanned one does.
 import { useSyncExternalStore } from "react";
-import type { Allergy, Condition, Medication, Persona, RecordDoc } from "./types";
+import type { Allergy, Condition, Contact, Lab, Medication, Persona, RecordDoc } from "./types";
 
 export type RecordEdits = {
   removed: string[];
   allergies: Allergy[];
   medications: Medication[];
   conditions: Condition[];
+  labs: Lab[];
   documents: RecordDoc[];
+  contacts: Contact[];
 };
 
-const EMPTY: RecordEdits = { removed: [], allergies: [], medications: [], conditions: [], documents: [] };
+const EMPTY: RecordEdits = { removed: [], allergies: [], medications: [], conditions: [], labs: [], documents: [], contacts: [] };
 const keyOf = (personaId: string) => `ti.edits.${personaId}`;
 const listeners = new Set<() => void>();
 const memo = new Map<string, { raw: string | null; value: RecordEdits }>();
@@ -67,7 +69,9 @@ export function addItems(personaId: string, add: Partial<Omit<RecordEdits, "remo
     allergies: [...e.allergies, ...(add.allergies || [])],
     medications: [...e.medications, ...(add.medications || [])],
     conditions: [...e.conditions, ...(add.conditions || [])],
+    labs: [...(add.labs || []), ...e.labs],
     documents: [...(add.documents || []), ...e.documents],
+    contacts: [...e.contacts, ...(add.contacts || [])],
   });
 }
 
@@ -83,21 +87,23 @@ export function resetEdits(personaId: string) {
 
 export function hasEdits(personaId: string) {
   const e = loadEdits(personaId);
-  return e.removed.length + e.allergies.length + e.medications.length + e.conditions.length + e.documents.length > 0;
+  return count(e) > 0;
 }
+
+const count = (e: RecordEdits) => e.removed.length + e.allergies.length + e.medications.length + e.conditions.length + e.labs.length + e.documents.length + e.contacts.length;
 
 /** The record with the patient's changes applied. Returns the same object when there are none. */
 export function applyEdits(p: Persona, e: RecordEdits = loadEdits(p.id)): Persona {
-  if (e === EMPTY || (!e.removed.length && !e.allergies.length && !e.medications.length && !e.conditions.length && !e.documents.length)) return p;
+  if (e === EMPTY || !count(e)) return p;
   const keep = <T extends { id: string }>(xs: T[]) => xs.filter((x) => !e.removed.includes(x.id));
   return {
     ...p,
     allergies: keep([...p.allergies, ...e.allergies]),
     medications: keep([...p.medications, ...e.medications]),
     conditions: keep([...p.conditions, ...e.conditions]),
-    labs: keep(p.labs),
+    labs: keep([...e.labs, ...p.labs]),
     documents: keep([...e.documents, ...p.documents]),
-    contacts: keep(p.contacts),
+    contacts: keep([...p.contacts, ...e.contacts]),
   };
 }
 
@@ -114,4 +120,25 @@ const subscribe = (l: () => void) => {
 /** Re-renders when this patient's edits change. */
 export function useEdits(personaId: string): RecordEdits {
   return useSyncExternalStore(subscribe, () => loadEdits(personaId));
+}
+
+/* A scanned document's photo (a small JPEG) and the text read from it, kept beside the record rather than in it,
+   so they never travel to translation or the live context. */
+export type DocFile = { image?: string; text?: string };
+
+export function saveDocFile(docId: string, f: DocFile) {
+  try {
+    localStorage.setItem(`ti.docfile.${docId}`, JSON.stringify(f));
+  } catch {
+    /* full: the document is still saved, just without its picture */
+  }
+}
+
+export function loadDocFile(docId: string): DocFile | null {
+  try {
+    const r = localStorage.getItem(`ti.docfile.${docId}`);
+    return r ? (JSON.parse(r) as DocFile) : null;
+  } catch {
+    return null;
+  }
 }
