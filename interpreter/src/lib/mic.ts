@@ -56,6 +56,14 @@ export class Mic {
   private partialAt = 0;
   private lastLevelAt = 0;
   private restoring: Promise<void> | null = null;
+  /** Typical loudness of this utterance's voiced frames: "quiet" is judged against it, not only the room. */
+  private speechLevel = 0;
+  /** Loudness of the last 2 s while someone talks: its quietest moments show the room noise as it is now. */
+  private speechHist: number[] = [];
+  private lastFrameAt = 0;
+  private watchdog: ReturnType<typeof setInterval> | undefined;
+  private healing = false;
+  private heals = 0;
 
   constructor(h: Handlers) {
     this.h = h;
@@ -132,6 +140,48 @@ export class Mic {
     });
     this.src = this.ctx.createMediaStreamSource(this.stream);
     this.src.connect(this.node);
+    this.lastFrameAt = performance.now();
+    // The system can end the track (a call, Siri, another app taking the mic): reopen it instead of going deaf.
+    const stream = this.stream;
+    stream.getTracks().forEach((t) => t.addEventListener("ended", () => this.stream === stream && void this.heal(true)));
+    this.watch();
+  }
+
+  /** While the mic should be hearing, make sure audio is really arriving; if not, wake the context or reopen the input. */
+  private watch() {
+    if (this.watchdog) return;
+    this.watchdog = setInterval(() => {
+      if (!this.ctx || this.pauses.size || this.state === "off" || this.state === "error" || this.state === "starting") return;
+      // A hidden page gets no audio on purpose; check again when it is back.
+      if (typeof document !== "undefined" && document.hidden) return void (this.lastFrameAt = performance.now());
+      if (this.ctx.state !== "running") void this.ctx.resume().catch(() => {});
+      if (performance.now() - this.lastFrameAt > 2500) void this.heal(false);
+    }, 1000);
+    // Node's test runner must not be kept alive by this timer.
+    (this.watchdog as { unref?: () => void }).unref?.();
+  }
+
+  private async heal(trackEnded: boolean) {
+    if (this.healing || !this.ctx || this.pauses.size) return;
+    this.healing = true;
+    try {
+      await this.ctx.resume().catch(() => {});
+      // Give a resumed context a moment before deciding the input itself is dead.
+      if (!trackEnded) await new Promise((r) => setTimeout(r, 400));
+      if (!this.ctx || this.pauses.size) return;
+      if (trackEnded || performance.now() - this.lastFrameAt > 2500) {
+        // Three reopenings in a row without hearing anything: stop pretending and ask for a tap.
+        if (++this.heals > 3) throw new Error("The microphone stopped responding. Tap to restart it.");
+        this.drop();
+        this.closeInput();
+        await this.openInput();
+        if (!this.pauses.size && this.state !== "speech") this.set("listening");
+      }
+    } catch (e) {
+      this.fail(e);
+    } finally {
+      this.healing = false;
+    }
   }
 
   private closeInput() {
@@ -142,6 +192,8 @@ export class Mic {
   }
 
   private teardown() {
+    clearInterval(this.watchdog);
+    this.watchdog = undefined;
     this.closeInput();
     this.node?.disconnect();
     this.node = null;
@@ -161,9 +213,12 @@ export class Mic {
     const was = this.pauses.size;
     this.pauses.add(reason);
     if (was) return;
-    // A tap-to-talk recording in progress is sent rather than lost.
+    // Whatever was being said is sent rather than lost (the phone starting to speak must not eat a sentence).
     if (this.pushing) this.endPush();
-    else this.drop();
+    else if (this.state === "speech" && this.voiced >= MIN_VOICED) {
+      this.emit(this.seg, true);
+      this.reset();
+    } else this.drop();
     if (this.state !== "off" && this.state !== "error") this.set("paused");
     if (this.releaseWhilePaused && reason === "speaking") this.closeInput();
   }
@@ -172,7 +227,10 @@ export class Mic {
     if (!this.pauses.delete(reason) || this.pauses.size) return;
     if (!this.ctx) return;
     const go = async () => {
+      if (this.pauses.size || !this.ctx) return;
       if (!this.stream) {
+        // Reopening takes a moment on iOS: say so instead of looking ready while deaf.
+        this.set("starting");
         try {
           await this.openInput();
         } catch (e) {
@@ -181,7 +239,10 @@ export class Mic {
         }
       }
       await this.ctx?.resume().catch(() => {});
-      if (!this.pauses.size) this.set("listening");
+      this.lastFrameAt = performance.now();
+      if (this.pauses.size) {
+        if (this.state === "starting") this.set("paused");
+      } else if (this.state !== "speech") this.set("listening");
     };
     this.restoring = (this.restoring || Promise.resolve()).then(go);
   }
@@ -236,6 +297,8 @@ export class Mic {
     this.voiced = 0;
     this.pushing = false;
     this.partialAt = 0;
+    this.speechLevel = 0;
+    this.speechHist = [];
   }
 
   private maybePartial() {
@@ -248,7 +311,9 @@ export class Mic {
   }
 
   private frame(f: Float32Array) {
-    if (this.pauses.size || !this.ctx) return;
+    this.lastFrameAt = performance.now();
+    this.heals = 0;
+    if (this.pauses.size || !this.ctx || this.state === "starting") return;
     let sum = 0;
     for (let i = 0; i < f.length; i++) sum += f[i] * f[i];
     const rms = Math.sqrt(sum / f.length);
@@ -281,6 +346,7 @@ export class Mic {
         this.seg = [...this.pre];
         this.voiced = this.loud;
         this.silent = 0;
+        this.speechLevel = rms;
         this.partialAt = 0;
         this.segId++;
         this.set("speech");
@@ -289,14 +355,31 @@ export class Mic {
     }
 
     this.seg.push(f);
-    const endAt = Math.max(0.008, this.floor * 2);
+    // The room can get louder mid-utterance (a fan, the phone's gain rising). The floor is normally learned only
+    // between utterances, so learn it here too from the quietest tenth of the last 2 s; otherwise steady noise
+    // reads as speech and the utterance runs to the 30 s cap.
+    this.speechHist.push(rms);
+    if (this.speechHist.length > 100) this.speechHist.shift();
+    if (this.speechHist.length === 100 && this.seg.length % 10 === 0) {
+      const dip = [...this.speechHist].sort((a, b) => a - b)[10];
+      if (dip > this.floor) this.floor = Math.min(0.06, dip);
+    }
+    // Quiet = near the room's noise floor, or far below how loud this person has been talking. The second test
+    // matters when the phone's automatic gain lifts the room noise after someone stops: without it the utterance
+    // never ends and the next person can't get a word in.
+    const endAt = Math.max(0.008, this.floor * 2, this.speechLevel * 0.14);
     if (rms > endAt) {
       this.voiced++;
       this.silent = 0;
+      this.speechLevel = this.speechLevel ? this.speechLevel * 0.97 + rms * 0.03 : rms;
     } else this.silent++;
     if (this.silent >= END_SILENCE || this.seg.length >= MAX_FRAMES) {
       const keep = this.seg.slice(0, this.seg.length - Math.max(0, this.silent - 20));
       this.emit(keep, this.voiced >= MIN_VOICED);
+      // Carry what was learned about the room into listening, so the same noise doesn't start a phantom utterance.
+      const tail = [...this.speechHist].sort((a, b) => a - b)[Math.floor(this.speechHist.length * 0.1)] ?? 0;
+      if (tail > this.floor) this.floor = Math.min(0.06, tail);
+      if (this.floorHist.length && this.floor > [...this.floorHist].sort((a, b) => a - b)[Math.floor(this.floorHist.length * 0.1)]) this.floorHist = new Array(this.floorHist.length).fill(this.floor);
       this.reset();
       this.set("listening");
     } else if (this.voiced >= MIN_VOICED) this.maybePartial();

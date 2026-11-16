@@ -8,10 +8,18 @@ type Item = { url: string; text: string; done: () => void };
 
 export class Player {
   enabled = true;
+  /** How long a line may take to start, and how long it may stand still once started, before it is given up on. */
+  startTimeoutMs = 12000;
+  stallTimeoutMs = 5000;
   private audio: HTMLAudioElement;
   private queue: Item[] = [];
   private current: Item | null = null;
   private unlocked = false;
+  private progressAt = 0;
+  private lastTime = -1;
+  private started = false;
+  private nudges = 0;
+  private guard: ReturnType<typeof setInterval> | undefined;
   private onBusy: (busy: boolean, text?: string) => void;
 
   constructor(onBusy: (busy: boolean, text?: string) => void) {
@@ -22,6 +30,38 @@ export class Player {
     const next = () => this.finish();
     this.audio.addEventListener("ended", next);
     this.audio.addEventListener("error", next);
+    this.audio.addEventListener("playing", () => (this.started = true));
+    // iOS can pause the element by itself (the audio route changes when the mic is released, a call comes in).
+    // No "ended" follows, so without this the app would wait forever with the mic held closed.
+    this.audio.addEventListener("pause", () => {
+      const item = this.current;
+      if (!item || this.audio.ended) return;
+      setTimeout(() => {
+        if (this.current !== item || !this.audio.paused) return;
+        if (this.nudges++ < 2) this.audio.play().catch(() => this.finish());
+        else this.finish();
+      }, 200);
+    });
+  }
+
+  /** A line that doesn't start within 12 s, or stops advancing for 5 s, is given up on so the mic comes back. */
+  private watch() {
+    clearInterval(this.guard);
+    this.progressAt = performance.now();
+    this.lastTime = -1;
+    this.started = false;
+    this.nudges = 0;
+    this.guard = setInterval(() => {
+      if (!this.current) return clearInterval(this.guard);
+      const now = performance.now();
+      if (this.audio.currentTime !== this.lastTime) {
+        this.lastTime = this.audio.currentTime;
+        this.progressAt = now;
+        return;
+      }
+      if (now - this.progressAt > (this.started ? this.stallTimeoutMs : this.startTimeoutMs)) this.finish();
+    }, 500);
+    (this.guard as { unref?: () => void }).unref?.();
   }
 
   /** Call inside a tap handler once. */
@@ -65,11 +105,13 @@ export class Player {
     const item = this.queue.shift();
     if (!item) {
       this.current = null;
+      clearInterval(this.guard);
       this.onBusy(false);
       return;
     }
     this.current = item;
     this.onBusy(true, item.text);
+    this.watch();
     this.audio.src = item.url;
     this.audio.play().catch(() => this.finish());
   }
@@ -78,6 +120,8 @@ export class Player {
     const item = this.current;
     if (!item) return;
     this.current = null;
+    // A line given up on mid-way must not keep sounding under the next one.
+    if (!this.audio.paused && !this.audio.ended) this.audio.pause();
     item.done();
     this.playNext();
   }

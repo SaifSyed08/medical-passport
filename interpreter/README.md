@@ -45,7 +45,7 @@ npm run demo     # production build + server
 The mic needs HTTPS, so pick one:
 
 1. **Same Wi-Fi:** open the `https://<laptop-IP>:5443` address printed at startup and accept the certificate warning.
-2. **Tunnel** (most reliable at events): run `npx cloudflared tunnel --url http://localhost:5173`. Start the server with `ACCESS_CODE=something` and open the link once as `…/?code=something`. Without the code the API answers 401, so nobody else can spend your credits.
+2. **Tunnel** (most reliable at events): run `npx cloudflared tunnel --url http://localhost:5173`. Start the server with `ACCESS_CODE=something` and open the link once as `…/?code=something`. Without the code the API answers 401, so nobody else can spend your credits. The Tessera app's Medicines tab sends the same code in an `X-Access-Code` header.
 
 In a loud room, switch to **Tap to talk** under ⋯. **⌨ Type** runs typed text through the same pipeline.
 
