@@ -12,6 +12,7 @@
     "demo": "vite build && node server/index.mjs --prod",
     "test": "node --experimental-strip-types --no-warnings --test \"tests/*.test.mjs\"",
     "test:api": "node --experimental-strip-types --no-warnings scripts/api-check.mjs",
+    "test:accuracy": "node --experimental-strip-types --no-warnings scripts/accuracy.mjs",
     "test:e2e": "node scripts/e2e-browser.mjs"
   },
   "engines": {
