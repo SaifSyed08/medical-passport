@@ -75,7 +75,8 @@ try {
   await dots[0].click();
   await sleep(900);
   const first = await page.$eval(".f-translation", (e) => e.textContent);
-  const squash = (x) => String(x || "").replace(/\s+/g, " ").trim();
+  // Spaces and brackets aside: a medicine shows as a stack ("albuterol" over "Ventolin") where the text says "albuterol (Ventolin)".
+  const squash = (x) => String(x || "").replace(/[\s()（）]+/g, "");
   check(squash(first) === squash(demo.lines[0].interpret.translation), `tapping the first dot shows line 1 (${first.slice(0, 40)}…)`);
   check(await page.$(".f-live"), "a Back to now button appears");
   await page.screenshot({ path: path.join(OUT, `${persona}-${brand}-back.png`) });
