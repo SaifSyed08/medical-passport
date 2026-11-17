@@ -287,10 +287,19 @@
 [data-brand="tandem"] .drug, [data-brand="tandem"] .drug.danger { color: #0b2452; }
 [data-brand="tandem"] .drug { background: #f3c45f; }
 [data-brand="tandem"] .drug.danger { background: #ff9f92; }
-/* A swapped name: the new name in the line, the one that was said in small type right after it (it used to hang
-   underneath, centred, and collided with the next line). */
-.drug.swaps { display: inline; margin: 0; padding: 0 .14em; }
+/* A medicine whose name changes for the listener is a small stack: the name they use, highlighted, and the name that
+   was said in small type underneath ("albuterol" over "Ventolin"). In the speaker's own line the flip lands on top;
+   in the translation the server's "albuterol (Ventolin)" is split the same way. It is a real block in the line,
+   so the line just grows a little; nothing hangs over the next one. */
+.drug.swaps, .drug.named { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: baseline; margin: 0 .04em; padding: 0; background: none; cursor: pointer; }
+.drug.swaps .drug-stack, .drug.named .drug-main { background: #ffe08a; border-radius: 4px; padding: 0 .14em; }
+.drug.danger.swaps .drug-stack, .drug.danger.named .drug-main { background: #ffc8bf; }
+[data-brand="tandem"] .drug.swaps .drug-stack, [data-brand="tandem"] .drug.named .drug-main { background: #f3c45f; }
+[data-brand="tandem"] .drug.danger.swaps .drug-stack, [data-brand="tandem"] .drug.danger.named .drug-main { background: #ff9f92; }
+.drug.swaps, .drug.named, [data-brand="tandem"] .drug.swaps, [data-brand="tandem"] .drug.named { background: none; }
 .drug.swaps .drug-to { text-decoration: none; }
-.drug.swaps .drug-caption { position: static; transform: none; display: inline; margin-left: .35em; font-size: .62em; font-weight: 500; color: inherit; opacity: .7; animation: fadeIn .3s ease-out calc(var(--d) + 1200ms) both; }
+.drug.swaps .drug-caption, .drug.named .drug-sub { position: static; transform: none; display: block; margin: .12em 0 0 .14em; font-size: max(11px, .42em); font-weight: 550; line-height: 1.15; letter-spacing: 0; white-space: nowrap; color: var(--ink-3); opacity: 1; }
+.drug.swaps .drug-caption { animation: fadeIn .3s ease-out calc(var(--d) + 1200ms) both; }
+[data-brand="tandem"] .drug.swaps .drug-caption, [data-brand="tandem"] .drug.named .drug-sub { color: rgb(247 241 227 / 72%); }
 /* The profile's lists: the hairlines above and below are enough; the 1px border read as a bright frame in Tandem. */
 .rec-section .list, [data-brand="tandem"] .rec-section .list { border: 0; }

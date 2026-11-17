@@ -100,8 +100,8 @@ for (const [i, line] of persona.script.entries()) {
       check(/albuterol/i.test(it.translation), "English translation says albuterol");
     }
     // Scenes A and B raise no red flag; the climax does.
-    if (i < 5) check(!alerts.length, "no alert before the antibiotic question");
-    if (i === 5) check(alerts.includes("alg_penicillin"), "penicillin allergy alert on amoxicillin");
+    if (i < 3) check(!alerts.length, "no alert before the antibiotic question");
+    if (i === 3) check(alerts.includes("alg_penicillin"), "penicillin allergy alert on amoxicillin");
   }
   if (persona.id === "sita" && i === 2) {
     check(alerts.every((id) => shownBefore.includes(id)), "no new alert on small talk");

@@ -1,6 +1,6 @@
 {
  "persona": "ramesh",
- "recordedAt": "2026-11-17T21:44:45.163Z",
+ "recordedAt": "2026-11-17T22:21:50.493Z",
  "equivalents": [
   {
    "key": "salbutamol",
@@ -26,19 +26,19 @@
   {
    "speaker": "patient",
    "audio": "/demo/ramesh-0.wav",
-   "audioMs": 11650,
+   "audioMs": 8350,
    "speech": "/demo/ramesh-0-tr.mp3",
    "stt": {
-    "text": "हिजोदेखि मलाई सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, म भेन्टोलिन प्रयोग गर्छु, तर त्यसले खासै काम गरिरहेको छैन।",
-    "ms": 1008
+    "text": "हिजोदेखि सास फेर्न गाह्रो भरि रहेको छ। मलाई दम छ तर धेन्टोलिनले काम गरिरहेको छैन।",
+    "ms": 948
    },
    "interpret": {
     "language": "ne",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "हिजोदेखि मलाई सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, म भेन्टोलिन प्रयोग गर्छु, तर त्यसले खासै काम गरिरहेको छैन।",
-    "cleaned": "हिजोदेखि मलाई सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ। म भेन्टोलिन प्रयोग गर्छु, तर त्यसले खासै काम गरिरहेको छैन।",
-    "translation": "I’ve been having trouble breathing since yesterday. I have asthma. I use albuterol (Ventolin), but it isn’t really helping.",
+    "raw": "हिजोदेखि सास फेर्न गाह्रो भरि रहेको छ। मलाई दम छ तर धेन्टोलिनले काम गरिरहेको छैन।",
+    "cleaned": "हिजोदेखि सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, तर भेन्टोलिनले काम गरिरहेको छैन।",
+    "translation": "Since yesterday, I’ve been having trouble breathing. I have asthma, but albuterol (Ventolin) isn’t working.",
     "drugs": [
      {
       "key": "salbutamol",
@@ -58,182 +58,107 @@
       ],
       "local_strength": "90 mcg per puff",
       "status": "different_name",
-      "note_listener": "In the US, inhalers state 90 mcg per puff rather than 100 mcg per puff.",
-      "note_doctor": "US albuterol inhalers label the delivered dose as 90 mcg per puff; the patient's Ventolin is labeled 100 mcg per puff.",
+      "note_listener": "अमेरिकामा यो albuterol नामले पाइन्छ; इनहेलरमा प्रति पफ ९० mcg लेखिएको हुन्छ, जबकि नेपालमा १०० mcg लेखिन्छ।",
+      "note_doctor": "Same medicine; US labeling states 90 mcg delivered dose per puff versus 100 mcg valve dose on the patient's inhaler.",
       "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       "med_id": "med_ventolin",
       "source": "curated"
      }
     ],
-    "ms": 2757
+    "ms": 3828
    },
    "context": [
     {
      "id": "cnd_asthma",
      "level": "relevant",
      "title": "Moderate asthma",
-     "detail": "Since childhood; attacks with colds and dust.",
-     "why": "The patient reports worsening shortness of breath despite using Ventolin."
+     "detail": "Asthma since childhood; attacks with colds and dust.",
+     "why": "Breathing difficulty since yesterday with poor response to Ventolin may be an asthma flare."
     },
     {
      "id": "med_ventolin",
      "level": "relevant",
      "title": "Ventolin inhaler",
      "detail": "Albuterol 100 mcg/puff; 2 puffs as needed, up to every 4 hours.",
-     "why": "The patient says this rescue inhaler is not helping much."
+     "why": "The patient says Ventolin is not helping."
     },
     {
      "id": "doc_er_2025",
      "level": "relevant",
      "title": "Asthma ER visit 2025",
-     "detail": "Severe attack after a cold; treated with nebulized albuterol, ipratropium, and prednisolone; discharged after 6 hours.",
-     "why": "Prior severe exacerbation may inform assessment of the current breathing difficulty."
+     "detail": "Severe attack after a cold on Dec 14, 2025; treated with nebulized albuterol, ipratropium, and prednisolone.",
+     "why": "Prior severe asthma attack may inform assessment of the current breathing difficulty."
     }
    ]
   },
   {
    "speaker": "clinician",
    "audio": "/demo/ramesh-1.wav",
-   "audioMs": 5100,
+   "audioMs": 7200,
    "speech": "/demo/ramesh-1-tr.mp3",
    "stt": {
-    "text": "Okay, you're using albuterol. How often have you needed it?",
-    "ms": 708
+    "text": "I see you were in the emergency room for an asthma attack last year, does this feel the same?",
+    "ms": 673
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "ne",
-    "raw": "Okay, you're using albuterol. How often have you needed it?",
-    "cleaned": "Okay, you're using albuterol. How often have you needed it?",
-    "translation": "ठीक छ, तपाईं salbutamol (albuterol, Ventolin) प्रयोग गर्दै हुनुहुन्छ। तपाईंले यो कति-कति बेला प्रयोग गर्नुपरेको छ?",
-    "drugs": [
-     {
-      "key": "salbutamol",
-      "mentioned": "albuterol",
-      "translated": "salbutamol (albuterol, Ventolin)",
-      "inCleaned": true,
-      "inTranslation": true,
-      "generic": "salbutamol (albuterol)",
-      "drug_class": "",
-      "home_name": "salbutamol (Asthalin, Ventolin)",
-      "home_strength": "100 mcg per puff",
-      "local_name": "albuterol",
-      "local_brands": [
-       "Ventolin HFA",
-       "Proventil HFA",
-       "ProAir HFA"
-      ],
-      "local_strength": "90 mcg per puff",
-      "status": "different_name",
-      "note_listener": "नेपालमा इनहेलरको मात्रा १०० mcg प्रति पफ लेखिएको हुन्छ; अमेरिकामा मुखबाट निस्कने मात्रा ९० mcg प्रति पफ लेखिन्छ।",
-      "note_doctor": "Same medicine; US inhalers state 90 mcg delivered per puff, while the patient's inhaler states 100 mcg valve dose.",
-      "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
-      "med_id": "med_ventolin",
-      "source": "curated"
-     }
-    ],
-    "ms": 2894
+    "raw": "I see you were in the emergency room for an asthma attack last year, does this feel the same?",
+    "cleaned": "I see you were in the emergency room for an asthma attack last year. Does this feel the same?",
+    "translation": "म देख्छु, तपाईं गएको वर्ष दमको आक्रमणका कारण आकस्मिक कक्षमा जानुभएको थियो। के अहिले पनि त्यस्तै महसुस भइरहेको छ?",
+    "drugs": [],
+    "ms": 1683
    },
    "context": []
   },
   {
    "speaker": "patient",
    "audio": "/demo/ramesh-2.wav",
-   "audioMs": 6500,
+   "audioMs": 1900,
    "speech": "/demo/ramesh-2-tr.mp3",
    "stt": {
-    "text": "आज धेरै पटक लियो, तर अझै पनि सास फेर्न गाह्रो छ।",
-    "ms": 483
+    "text": "हो, त्यस्तै छ।",
+    "ms": 343
    },
    "interpret": {
     "language": "ne",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "आज धेरै पटक लियो, तर अझै पनि सास फेर्न गाह्रो छ।",
-    "cleaned": "आज धेरै पटक लिएँ, तर अझै पनि सास फेर्न गाह्रो छ।",
-    "translation": "I took it many times today, but I’m still having trouble breathing.",
+    "raw": "हो, त्यस्तै छ।",
+    "cleaned": "हो, त्यस्तै छ।",
+    "translation": "Yes, it feels the same.",
     "drugs": [],
-    "ms": 2620
+    "ms": 1220
    },
-   "context": [
-    {
-     "id": "lab_peakflow",
-     "level": "relevant",
-     "title": "Peak flow baseline",
-     "detail": "Personal best 480 L/min, measured June 10, 2026.",
-     "why": "Provides a baseline for assessing his ongoing breathing difficulty."
-    }
-   ]
+   "context": []
   },
   {
    "speaker": "clinician",
    "audio": "/demo/ramesh-3.wav",
-   "audioMs": 6900,
+   "audioMs": 5850,
    "speech": "/demo/ramesh-3-tr.mp3",
    "stt": {
-    "text": "I can see you have a history of asthma. Have you had an attack like this before?",
-    "ms": 451
+    "text": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "ms": 585
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "ne",
-    "raw": "I can see you have a history of asthma. Have you had an attack like this before?",
-    "cleaned": "I can see you have a history of asthma. Have you had an attack like this before?",
-    "translation": "तपाईंलाई दमको इतिहास रहेछ। के तपाईंलाई यसअघि पनि यस्तो दमको आक्रमण भएको थियो?",
-    "drugs": [],
-    "ms": 1886
-   },
-   "context": []
-  },
-  {
-   "speaker": "patient",
-   "audio": "/demo/ramesh-4.wav",
-   "audioMs": 3700,
-   "speech": "/demo/ramesh-4-tr.mp3",
-   "stt": {
-    "text": "हो, गएको वर्ष एक पटक।",
-    "ms": 319
-   },
-   "interpret": {
-    "language": "ne",
-    "speaker": "patient",
-    "listenerLang": "en",
-    "raw": "हो, गएको वर्ष एक पटक।",
-    "cleaned": "हो, गएको वर्ष एक पटक।",
-    "translation": "Yes, once last year.",
-    "drugs": [],
-    "ms": 1245
-   },
-   "context": []
-  },
-  {
-   "speaker": "clinician",
-   "audio": "/demo/ramesh-5.wav",
-   "audioMs": 8300,
-   "speech": "/demo/ramesh-5-tr.mp3",
-   "stt": {
-    "text": "Before we decide on treatment, I also want to check whether you need an antibiotic. Have you ever taken amoxicillin?",
-    "ms": 596
-   },
-   "interpret": {
-    "language": "en",
-    "speaker": "clinician",
-    "listenerLang": "ne",
-    "raw": "Before we decide on treatment, I also want to check whether you need an antibiotic. Have you ever taken amoxicillin?",
-    "cleaned": "Before we decide on treatment, I also want to check whether you need an antibiotic. Have you ever taken amoxicillin?",
-    "translation": "उपचारबारे निर्णय गर्नुअघि, तपाईंलाई एन्टिबायोटिक चाहिन्छ कि चाहिँदैन भनेर पनि जाँच्न चाहन्छु। तपाईंले कहिल्यै एमोक्सिसिलिन (Amoxil) लिनुभएको छ?",
+    "raw": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "cleaned": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "translation": "उपचारबारे निर्णय गर्नुअघि, तपाईंले कहिल्यै एमोक्सिसिलिन लिनुभएको छ?",
     "drugs": [
      {
       "key": "amoxicillin",
       "mentioned": "amoxicillin",
-      "translated": "एमोक्सिसिलिन (Amoxil)",
+      "translated": "एमोक्सिसिलिन",
       "inCleaned": true,
       "inTranslation": true,
       "generic": "amoxicillin",
       "drug_class": "penicillin",
-      "home_name": "amoxicillin",
+      "home_name": "एमोक्सिसिलिन",
       "home_strength": "",
       "local_name": "amoxicillin",
       "local_brands": [
@@ -248,7 +173,7 @@
       "source": "curated"
      }
     ],
-    "ms": 4799
+    "ms": 1951
    },
    "context": [
     {
@@ -256,26 +181,26 @@
      "level": "alert",
      "title": "Penicillin anaphylaxis",
      "detail": "Amoxicillin caused throat swelling and hypotension in 2019; treated with epinephrine.",
-     "why": "Amoxicillin is being considered before deciding whether to prescribe an antibiotic."
+     "why": "Amoxicillin is being considered; prior anaphylaxis makes it unsafe."
     }
    ]
   },
   {
    "speaker": "clinician",
-   "audio": "/demo/ramesh-6.wav",
-   "audioMs": 7500,
-   "speech": "/demo/ramesh-6-tr.mp3",
+   "audio": "/demo/ramesh-4.wav",
+   "audioMs": 7550,
+   "speech": "/demo/ramesh-4-tr.mp3",
    "stt": {
-    "text": "Wait, I see a documented penicillin allergy; let's verify that before considering this medication.",
-    "ms": 344
+    "text": "Wait, your record shows a penicillin allergy, let's verify that first.",
+    "ms": 515
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "ne",
-    "raw": "Wait, I see a documented penicillin allergy; let's verify that before considering this medication.",
-    "cleaned": "I see a documented penicillin allergy; let's verify that before considering this medication.",
-    "translation": "म देख्छु, तपाईंलाई पेनिसिलिनको एलर्जी भएको अभिलेख छ। यो औषधि दिने विचार गर्नुअघि त्यसको पुष्टि गरौँ।",
+    "raw": "Wait, your record shows a penicillin allergy, let's verify that first.",
+    "cleaned": "Your record shows a penicillin allergy. Let's verify that first.",
+    "translation": "तपाईंको अभिलेखमा पेनिसिलिनको एलर्जी देखिन्छ। पहिले त्यसलाई पुष्टि गरौँ।",
     "drugs": [
      {
       "key": "penicillin",
@@ -298,17 +223,9 @@
       "source": "ai"
      }
     ],
-    "ms": 3162
+    "ms": 1880
    },
-   "context": [
-    {
-     "id": "alg_penicillin",
-     "level": "alert",
-     "title": "Penicillin anaphylaxis",
-     "detail": "Amoxicillin caused throat swelling and hypotension in 2019; treated with epinephrine.",
-     "why": "Verify before considering amoxicillin or another penicillin."
-    }
-   ]
+   "context": []
   }
  ]
 }

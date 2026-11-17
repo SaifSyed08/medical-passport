@@ -196,8 +196,8 @@ export const sita: Persona = {
   ],
 };
 
-// Nepali skit in three scenes: Ramesh can't breathe and his Ventolin isn't helping (it flips to albuterol for the
-// US doctor); his asthma and last year's ER visit come up as the doctor asks; then the doctor asks about
+// Nepali skit, five short lines: Ramesh can't breathe and his Ventolin isn't helping (it flips to albuterol for the
+// US doctor); his asthma and last year's ER visit come up on screen and the doctor reads them; then the doctor asks about
 // amoxicillin, which he had anaphylaxis to, and the penicillin allergy fires. The antibiotic question comes before
 // any treatment decision: amoxicillin is never offered for the asthma itself.
 export const ramesh: Persona = {
@@ -226,9 +226,7 @@ export const ramesh: Persona = {
   conditions: [
     { id: "cnd_asthma", name: "Asthma, moderate", since: "childhood", note: "Attacks with colds and dust; one emergency visit (December 2025)." },
   ],
-  labs: [
-    { id: "lab_peakflow", name: "Peak flow, personal best", value: "480", unit: "L/min", ref: "", flag: "", date: "2026-06-10", source: "Kathmandu Chest Clinic" },
-  ],
+  labs: [],
   documents: [
     {
       id: "doc_er_2025",
@@ -241,13 +239,11 @@ export const ramesh: Persona = {
   ],
   contacts: [{ id: "con_sunita", name: "Sunita Shrestha", relationship: "Wife (in Kathmandu)", phone: "+977 1 555 0192" }],
   script: [
-    { speaker: "patient", text: "हिजोदेखि मलाई सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, म भेन्टोलिन प्रयोग गर्छु, तर त्यसले खासै काम गरिरहेको छैन।", shows: "Scene A: Nepali captions; Ventolin flips to albuterol for the US doctor" },
-    { speaker: "clinician", text: "Okay, you're using albuterol. How often have you needed it?", shows: "Nepali translation spoken" },
-    { speaker: "patient", text: "आज धेरै पटक लिएँ, तर अझै पनि सास फेर्न गाह्रो छ।", shows: "Translated; asthma and inhaler cards" },
-    { speaker: "clinician", text: "I can see you have a history of asthma. Have you had an attack like this before?", shows: "Scene B: asthma history, last year's ER visit" },
-    { speaker: "patient", text: "हो, गएको वर्ष एक पटक।", shows: "Translated; the ER visit is on file" },
-    { speaker: "clinician", text: "Before we decide on treatment, I also want to check whether you need an antibiotic. Have you ever taken amoxicillin?", shows: "Scene C: penicillin anaphylaxis alert" },
-    { speaker: "clinician", text: "Wait, I see a documented penicillin allergy. Let's verify that before considering this medication.", shows: "The doctor reacts; translated into Nepali" },
+    { speaker: "patient", text: "हिजोदेखि सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, तर भेन्टोलिनले काम गरिरहेको छैन।", shows: "Ventolin flips to albuterol for the US doctor; his asthma, inhaler and last year's ER visit come up as plain cards" },
+    { speaker: "clinician", text: "I see you were in the emergency room for an asthma attack last year. Does this feel the same?", shows: "The doctor reads the record on screen; Nepali translation spoken" },
+    { speaker: "patient", text: "हो, त्यस्तै छ।", shows: "Translated; nothing new" },
+    { speaker: "clinician", text: "Before we decide on treatment, have you ever taken amoxicillin?", shows: "Penicillin anaphylaxis alert" },
+    { speaker: "clinician", text: "Wait, your record shows a penicillin allergy. Let's verify that first.", shows: "The doctor reacts; translated into Nepali" },
   ],
 };
 
