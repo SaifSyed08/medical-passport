@@ -137,6 +137,17 @@ export const CURATED = [
     },
   },
   {
+    key: "ketorolac",
+    generic: "ketorolac",
+    cls: "NSAID",
+    by: {
+      US: { name: "ketorolac", brands: ["Toradol"] },
+      NP: { name: "ketorolac", brands: [] },
+      IN: { name: "ketorolac", brands: [] },
+      MX: { name: "ketorolaco", brands: ["Dolac"] },
+    },
+  },
+  {
     key: "budesonide-inhaler",
     generic: "budesonide inhaler",
     by: {

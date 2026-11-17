@@ -22,6 +22,15 @@ const PATHS: Record<string, string> = {
   chevron: "M9 6l6 6-6 6",
   refresh: "M20 11a8 8 0 1 0-2.3 5.7 M20 5v6h-6",
   user: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z M4.5 20a7.5 7.5 0 0 1 15 0",
+  plus: "M12 5v14 M5 12h14",
+  trash: "M4 7h16 M9.5 7V4.5h5V7 M6.5 7l1 13h9l1-13 M10 11v5.5 M14 11v5.5",
+  camera: "M4 8h3.5L9 5.5h6L16.5 8H20v11H4z M12 16.5a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z",
+  undo: "M9 14 4 9l5-5 M4 9h10.5a5.5 5.5 0 0 1 0 11H11",
+  micOff: "M15 9.5V6a3 3 0 0 0-5.7-1.3 M9 9v3a3 3 0 0 0 4.8 2.4 M5.5 11a6.5 6.5 0 0 0 10.9 4.8 M18.5 11c0 .8-.1 1.5-.4 2.2 M12 17.5V21 M4 4l16 16",
+  pin: "M12 21s-6.5-6-6.5-11a6.5 6.5 0 0 1 13 0c0 5-6.5 11-6.5 11Z M12 12.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8Z",
+  pencil: "M4 20h4L19.5 8.5a2.1 2.1 0 0 0-4-4L4 16z M13.5 6.5l4 4",
+  upload: "M12 15V4 M7.5 8.5 12 4l4.5 4.5 M5 14.5v4A1.5 1.5 0 0 0 6.5 20h11a1.5 1.5 0 0 0 1.5-1.5v-4",
+  phone: "M6.6 3.5h2.6l1.5 4-2 1.3a11 11 0 0 0 6.5 6.5l1.3-2 4 1.5v2.6a2 2 0 0 1-2.2 2A16.5 16.5 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2Z",
 };
 
 export default function Icon({ name, size = 20, className = "" }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {

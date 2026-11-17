@@ -1,5 +1,7 @@
 // Plays the recorded demo (the D key) in headless Chrome, checks it reaches the end, and screenshots key moments.
-//   npm run dev   then   node scripts/demo-check.mjs [sofia|jordan]
+//   npm run dev   then   node scripts/demo-check.mjs [sofia|jordan] [--fast] [--stall]
+// --stall tests the failsafe: the script's first request fails, and one voice clip and one spoken translation
+// hang forever. The demo must still play every line (the stuck ones without sound).
 import fs from "node:fs";
 import path from "node:path";
 import puppeteer from "puppeteer-core";
@@ -23,13 +25,28 @@ await page.evaluate((p) => {
 }, persona);
 await page.reload({ waitUntil: "networkidle0" });
 await new Promise((r) => setTimeout(r, 1200));
+const stall = process.argv.includes("--stall");
+if (stall) {
+  await page.setRequestInterception(true);
+  let failedJson = false;
+  page.on("request", (req) => {
+    const u = req.url();
+    if (u.endsWith(`/demo/${persona}.json`) && !failedJson) {
+      failedJson = true;
+      return req.abort("connectionreset");
+    }
+    if (u.endsWith(`/demo/${persona}-0.wav`) || u.endsWith(`/demo/${persona}-1-tr.mp3`)) return; // never answered
+    req.continue();
+  });
+}
 await page.screenshot({ path: path.join(OUT, `${persona}-0-home.png`) });
 
 const t0 = Date.now();
+if (process.argv.includes("--fast")) await page.keyboard.press("f"); // secret fast demo
 await page.keyboard.press("d");
 let shot = 1;
 const seen = new Set();
-const deadline = Date.now() + 120_000;
+const deadline = Date.now() + (stall ? 150_000 : 120_000);
 let toastShot = false;
 let captionShot = "";
 let bannerSeen = false;

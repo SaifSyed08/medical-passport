@@ -89,7 +89,7 @@ export const jordan: Persona = {
     { id: "cnd_asthma", name: "Asthma, moderate persistent", note: "Triggered by exercise and cold air. Last urgent visit 2025." },
   ],
   labs: [
-    { id: "lab_ketones", name: "Blood ketones (during DKA)", value: "4.8", unit: "mmol/L", ref: "<0.6", flag: "H", date: "2023-11-04", source: "Hill Country General Hospital (fictional)" },
+    { id: "lab_ketones", name: "Blood ketones (during DKA)", value: "4.8", unit: "mmol/L", ref: "<0.6", flag: "H", date: "2023-11-04", source: "Hill Country General Hospital" },
   ],
   documents: [
     {
@@ -97,7 +97,7 @@ export const jordan: Persona = {
       kind: "visit",
       title: "Emergency admission: diabetic ketoacidosis",
       date: "2023-11-04",
-      facility: "Hill Country General Hospital (fictional)",
+      facility: "Hill Country General Hospital",
       body: "Admitted 2 days for mild DKA after a missed basal insulin dose during illness. Treated with IV fluids and insulin infusion. Discharged on prior regimen with sick-day education.",
     },
     {
@@ -105,7 +105,7 @@ export const jordan: Persona = {
       kind: "visit",
       title: "Urgent care: asthma exacerbation",
       date: "2025-01-18",
-      facility: "Riverbend Urgent Care (fictional)",
+      facility: "Riverbend Urgent Care",
       body: "Wheezing after outdoor exercise in cold weather. Improved with nebulized albuterol. Advised to carry rescue inhaler at all times.",
     },
     {
@@ -113,7 +113,7 @@ export const jordan: Persona = {
       kind: "document",
       title: "Allergy clinic letter: penicillin",
       date: "2019-09-12",
-      facility: "Lakeside Allergy Clinic (fictional)",
+      facility: "Lakeside Allergy Clinic",
       body: "History of anaphylaxis to amoxicillin. Avoid all penicillin-class antibiotics. Alert all treating clinicians before any antibiotic is given.",
     },
   ],
@@ -126,8 +126,9 @@ export const jordan: Persona = {
 };
 
 
-// Nepali skit: Sita doesn't know her Flexon (a common Nepali pain reliever) contains ibuprofen, an NSAID,
-// and NSAIDs set off her asthma. The app flips the name and raises the allergy while she's still talking.
+// Nepali skit (mirrors Sofía's): Sita has back pain and took her Flexon, not knowing it contains ibuprofen, an
+// NSAID, which sets off her asthma. The doctor then proposes ketorolac (another NSAID) and a CT with contrast,
+// and her record has a contrast-dye reaction too. The app flags each one as it is said.
 export const sita: Persona = {
   id: "sita",
   name: "Sita Gurung",
@@ -142,48 +143,56 @@ export const sita: Persona = {
   allergies: [
     {
       id: "alg_nsaid",
-      substance: "Aspirin and NSAIDs (ibuprofen, diclofenac)",
+      substance: "Aspirin and NSAIDs (ibuprofen, ketorolac, diclofenac)",
       reaction: "Severe wheezing and asthma attack within an hour of aspirin (2022); treated in emergency",
       severity: "severe",
       since: "2022",
     },
+    {
+      id: "alg_contrast",
+      substance: "Iodinated contrast dye (CT)",
+      reaction: "Hives and throat tightness during a contrast CT (2023)",
+      severity: "moderate",
+      since: "2023",
+    },
   ],
   medications: [
-    { id: "med_flexon", name: "Flexon", generic: "ibuprofen 400 mg + paracetamol 325 mg", dose: "1 tablet", schedule: "When needed for headache", purpose: "Headache and body pain (bought over the counter)" },
+    { id: "med_flexon", name: "Flexon", generic: "ibuprofen 400 mg + paracetamol 325 mg", dose: "1 tablet", schedule: "When needed for pain", purpose: "Back and body pain (bought over the counter)" },
     { id: "med_asthalin", name: "Asthalin inhaler", generic: "salbutamol 100 mcg/puff", dose: "2 puffs", schedule: "When wheezy, up to every 4 hours", purpose: "Asthma reliever" },
     { id: "med_budecort", name: "Budecort 200 inhaler", generic: "budesonide 200 mcg/puff", dose: "1 puff", schedule: "Twice daily", purpose: "Asthma controller" },
   ],
   conditions: [
     { id: "cnd_asthma", name: "Asthma", since: "childhood", note: "Usually controlled on budesonide; worse with colds and dust." },
     { id: "cnd_aerd", name: "Aspirin-exacerbated respiratory disease (AERD)", since: "2022", note: "Asthma attacks triggered by aspirin and other NSAIDs. Paracetamol is tolerated." },
+    { id: "cnd_backpain", name: "Low back pain", since: "2025", note: "Recurring after lifting at work; no injury on X-ray (2025)." },
   ],
   labs: [
-    { id: "lab_peakflow", name: "Peak flow", value: "290", unit: "L/min", ref: "personal best 420", flag: "L", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
-    { id: "lab_eos", name: "Blood eosinophils", value: "9", unit: "%", ref: "1–6", flag: "H", date: "2026-09-02", source: "Pokhara Lung Clinic (fictional)" },
+    { id: "lab_creat", name: "Creatinine", value: "0.8", unit: "mg/dL", ref: "0.5–1.1", flag: "", date: "2026-09-02", source: "Pokhara Lung Clinic" },
+    { id: "lab_eos", name: "Blood eosinophils", value: "9", unit: "%", ref: "1–6", flag: "H", date: "2026-09-02", source: "Pokhara Lung Clinic" },
   ],
   documents: [
-    {
-      id: "doc_er_2022",
-      kind: "visit",
-      title: "Emergency visit: asthma attack after aspirin",
-      date: "2022-07-14",
-      facility: "Pokhara City Hospital (fictional)",
-      body: "Acute wheeze and chest tightness 40 minutes after aspirin for a headache. Treated with nebulised salbutamol and oral steroids.",
-    },
     {
       id: "doc_pulm_2022",
       kind: "document",
       title: "Pulmonology note: AERD",
       date: "2022-08-02",
-      facility: "Pokhara Lung Clinic (fictional)",
-      body: "Diagnosis: aspirin-exacerbated respiratory disease. Avoid aspirin and all NSAIDs, including ibuprofen combination products. Paracetamol up to 500 mg per dose is tolerated.",
+      facility: "Pokhara Lung Clinic",
+      body: "Diagnosis: aspirin-exacerbated respiratory disease. Avoid aspirin and all NSAIDs, including ibuprofen combination products and ketorolac. Paracetamol up to 500 mg per dose is tolerated.",
+    },
+    {
+      id: "doc_ct_2023",
+      kind: "visit",
+      title: "Radiology: reaction to CT contrast",
+      date: "2023-05-19",
+      facility: "Pokhara City Hospital",
+      body: "Hives and throat tightness 5 minutes into a contrast CT of the abdomen; treated with antihistamine and steroid. Future contrast only with premedication, or use a non-contrast scan or MRI.",
     },
   ],
-  contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148 (fictional)" }],
+  contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148" }],
   script: [
-    { speaker: "patient", text: "नमस्ते डाक्टर, हिजो राति देखि मलाई सास फेर्न गाह्रो भइरहेको छ, अनि छाती कसिएजस्तो लाग्छ।", shows: "Nepali captions and translation; asthma and AERD from the record" },
-    { speaker: "patient", text: "टाउको दुखेकोले मैले दुई वटा फ्लेक्सन खाएँ, अनि एस्थालिन पनि प्रयोग गरेँ, तर कम भएन।", shows: "Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner; Asthalin → albuterol" },
-    { speaker: "clinician", text: "Flexon has ibuprofen in it, and that can set off your asthma. Please stop it and use plain acetaminophen for headaches.", shows: "Nepali for Sita, with the Nepali name for acetaminophen" },
+    { speaker: "patient", text: "डाक्टर, अँ... मेरो ढाड एकदमै दुखिरहेको छ। मैले दुई वटा फ्लेक्सन खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner" },
+    { speaker: "clinician", text: "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.", shows: "Nepali translation spoken; ketorolac (NSAID) and contrast-dye alerts" },
+    { speaker: "patient", text: "ठिक छ, धन्यवाद डाक्टर।", shows: "Small talk: translated, no false alarms" },
   ],
 };
 

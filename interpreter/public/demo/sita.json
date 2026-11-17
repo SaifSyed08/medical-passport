@@ -1,6 +1,6 @@
 {
  "persona": "sita",
- "recordedAt": "2026-11-16T05:00:06.863Z",
+ "recordedAt": "2026-11-16T09:44:21.445Z",
  "equivalents": [
   {
    "key": "ibuprofen-paracetamol",
@@ -60,62 +60,19 @@
   {
    "speaker": "patient",
    "audio": "/demo/sita-0.wav",
-   "audioMs": 9150,
+   "audioMs": 8900,
    "speech": "/demo/sita-0-tr.mp3",
    "stt": {
-    "text": "नमस्ते, डाक्टर। हिजो राति देखि मलाई सास फेर्न गाह्रो भैरहेको छ, अनि छाती कसिए जस्तो लाग्छ।",
-    "ms": 1654
+    "text": "डाक्टर, आं, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
+    "ms": 804
    },
    "interpret": {
     "language": "ne",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "नमस्ते, डाक्टर। हिजो राति देखि मलाई सास फेर्न गाह्रो भैरहेको छ, अनि छाती कसिए जस्तो लाग्छ।",
-    "cleaned": "नमस्ते, डाक्टर। हिजो राति देखि मलाई सास फेर्न गाह्रो भैरहेको छ, अनि छाती कसिए जस्तो लाग्छ।",
-    "translation": "Hello, doctor. Since last night, I have been having difficulty breathing, and my chest feels tight.",
-    "drugs": [],
-    "ms": 961
-   },
-   "context": [
-    {
-     "id": "cnd_asthma",
-     "level": "relevant",
-     "title": "Asthma",
-     "detail": "Since childhood, usually controlled on budesonide; worsens with colds and dust",
-     "why": "Patient reports difficulty breathing and chest tightness, typical asthma symptoms"
-    },
-    {
-     "id": "lab_peakflow",
-     "level": "relevant",
-     "title": "Peak flow",
-     "detail": "290 L/min, personal best 420, low on 2026-09-02",
-     "why": "Low peak flow indicates current airway obstruction, relevant to breathing difficulty"
-    },
-    {
-     "id": "med_budecort",
-     "level": "relevant",
-     "title": "Asthma controller",
-     "detail": "Budesonide 200 mcg, 1 puff twice daily",
-     "why": "Current asthma controller medication relevant to symptom management"
-    }
-   ]
-  },
-  {
-   "speaker": "patient",
-   "audio": "/demo/sita-1.wav",
-   "audioMs": 9300,
-   "speech": "/demo/sita-1-tr.mp3",
-   "stt": {
-    "text": "टाउको दुखेपछि मैले दुईवटा फ्लेक्सन खाए अनि एस्थालिन पनि प्रयोग गरे तर कम भएन।",
-    "ms": 632
-   },
-   "interpret": {
-    "language": "ne",
-    "speaker": "patient",
-    "listenerLang": "en",
-    "raw": "टाउको दुखेपछि मैले दुईवटा फ्लेक्सन खाए अनि एस्थालिन पनि प्रयोग गरे तर कम भएन।",
-    "cleaned": "टाउको दुखेपछि मैले दुईवटा फ्लेक्सन खाए अनि एस्थालिन पनि प्रयोग गरे तर कम भएन।",
-    "translation": "After I had a headache, I took two ibuprofen + acetaminophen (Flexon) tablets and also used albuterol (Asthalin), but it didn't get better.",
+    "raw": "डाक्टर, आं, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
+    "cleaned": "डाक्टर, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
+    "translation": "Doctor, my back is extremely painful. I took two ibuprofen + acetaminophen (Flexon) tablets, but it didn't get better at all.",
     "drugs": [
      {
       "key": "ibuprofen-paracetamol",
@@ -134,156 +91,123 @@
       "local_strength": "125 mg + 250 mg per tablet",
       "status": "different_strength",
       "note_listener": "US combination tablets are lower strength than Flexon.",
-      "note_doctor": "US Advil Dual Action is 125 mg ibuprofen + 250 mg acetaminophen per tablet; patient took 2 Flexon (400 mg ibuprofen + 325 mg paracetamol each).",
+      "note_doctor": "US Advil Dual Action is 125 mg ibuprofen + 250 mg acetaminophen per tablet; Flexon is 400 mg + 325 mg.",
       "curated_note": "Contains ibuprofen, an NSAID. US combination tablets are lower strength (Advil Dual Action 125 mg + 250 mg).",
       "med_id": "med_flexon",
       "source": "curated"
-     },
-     {
-      "key": "salbutamol",
-      "mentioned": "एस्थालिन",
-      "translated": "albuterol (Asthalin)",
-      "inCleaned": true,
-      "inTranslation": true,
-      "generic": "salbutamol (albuterol)",
-      "drug_class": "",
-      "home_name": "salbutamol (Asthalin)",
-      "home_strength": "100 mcg per puff",
-      "local_name": "albuterol",
-      "local_brands": [
-       "Ventolin HFA",
-       "Proventil HFA",
-       "ProAir HFA"
-      ],
-      "local_strength": "90 mcg per puff",
-      "status": "different_name",
-      "note_listener": "In the US, this is called albuterol, and the inhaler states 90 mcg per puff instead of 100 mcg.",
-      "note_doctor": "Same medicine as albuterol; US inhalers state 90 mcg per puff (dose leaving mouthpiece).",
-      "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
-      "med_id": "med_asthalin",
-      "source": "curated"
      }
     ],
-    "ms": 2185
+    "ms": 2017
    },
    "context": [
     {
-     "id": "alg_nsaid",
-     "level": "alert",
-     "title": "NSAID Allergy",
-     "detail": "Severe wheezing and asthma attack after aspirin in 2022; avoid ibuprofen (in Flexon).",
-     "why": "Patient took Flexon (ibuprofen) despite NSAID allergy, worsening breathing."
+     "id": "cnd_backpain",
+     "level": "relevant",
+     "title": "Low back pain",
+     "detail": "Recurring after lifting at work; no injury on X-ray (2025)",
+     "why": "Patient reports severe back pain despite taking Flexon"
     },
     {
-     "id": "med_asthalin",
-     "level": "relevant",
-     "title": "Asthalin inhaler use",
-     "detail": "Albuterol 100 mcg/puff, 2 puffs as needed for wheeze.",
-     "why": "Patient used inhaler for breathing difficulty, relevant to current symptoms."
+     "id": "med_flexon",
+     "level": "alert",
+     "title": "NSAID allergy",
+     "detail": "Severe wheezing and asthma attack after aspirin and NSAIDs (2022)",
+     "why": "Flexon contains ibuprofen, an NSAID, which can trigger asthma attacks"
     }
    ]
   },
   {
    "speaker": "clinician",
-   "audio": "/demo/sita-2.wav",
-   "audioMs": 9250,
-   "speech": "/demo/sita-2-tr.mp3",
+   "audio": "/demo/sita-1.wav",
+   "audioMs": 8000,
+   "speech": "/demo/sita-1-tr.mp3",
    "stt": {
-    "text": "Flexon has ibuprofen in it, and that can set off your asthma. Please stop it and use plain acetaminophen for headaches.",
-    "ms": 1429
+    "text": "Okay. I'm going to give you Ketorolac for the pain and get a CT scan with contrast.",
+    "ms": 530
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "ne",
-    "raw": "Flexon has ibuprofen in it, and that can set off your asthma. Please stop it and use plain acetaminophen for headaches.",
-    "cleaned": "Flexon has ibuprofen in it, and that can set off your asthma. Please stop it and use plain acetaminophen for headaches.",
-    "translation": "फ्लेक्सनमा इबुप्रोफेन हुन्छ, र त्योले तपाईंको दम बढाउन सक्छ। कृपया फ्लेक्सन नखानुहोस् र टाउको दुख्दा सिधा सेतामोल मात्र प्रयोग गर्नुहोस्।",
+    "raw": "Okay. I'm going to give you Ketorolac for the pain and get a CT scan with contrast.",
+    "cleaned": "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.",
+    "translation": "ठीक छ। म तपाईंलाई दुखाइका लागि केटोरोलेक दिन्छु र कन्क्रास्टसहितको सीटी स्क्यान गराउँछु।",
     "drugs": [
      {
-      "key": "ibuprofen-paracetamol",
-      "mentioned": "Flexon",
-      "translated": "फ्लेक्सन",
+      "key": "ketorolac",
+      "mentioned": "ketorolac",
+      "translated": "केटोरोलेक",
       "inCleaned": true,
       "inTranslation": true,
-      "generic": "ibuprofen + paracetamol",
+      "generic": "ketorolac",
       "drug_class": "NSAID",
-      "home_name": "ibuprofen + paracetamol (Flexon)",
-      "home_strength": "400 mg + 325 mg",
-      "local_name": "ibuprofen + acetaminophen",
-      "local_brands": [
-       "Advil Dual Action"
-      ],
-      "local_strength": "125 mg + 250 mg per tablet",
-      "status": "different_strength",
-      "note_listener": "अमेरिकामा फ्लेक्सन भन्दा कम मात्रामा इबुप्रोफेन र सेतामोल भएको ट्याब्लेट पाइन्छ।",
-      "note_doctor": "US combination tablets are lower strength (Advil Dual Action 125 mg + 250 mg).",
-      "curated_note": "Contains ibuprofen, an NSAID. US combination tablets are lower strength (Advil Dual Action 125 mg + 250 mg).",
-      "med_id": "med_flexon",
-      "source": "curated"
-     },
-     {
-      "key": "ibuprofen",
-      "mentioned": "ibuprofen",
-      "translated": "इबुप्रोफेन",
-      "inCleaned": true,
-      "inTranslation": true,
-      "generic": "ibuprofen",
-      "drug_class": "",
-      "home_name": "इबुप्रोफेन",
+      "home_name": "ketorolac",
       "home_strength": "",
-      "local_name": "ibuprofen",
+      "local_name": "ketorolac",
       "local_brands": [
-       "Advil",
-       "Motrin"
+       "Toradol"
       ],
       "local_strength": "",
       "status": "same_name",
-      "note_listener": "",
+      "note_listener": "यो औषधि नेपाल र अमेरिकामा एउटै नाममा पाइन्छ।",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
-     },
-     {
-      "key": "acetaminophen",
-      "mentioned": "acetaminophen",
-      "translated": "सेतामोल",
-      "inCleaned": true,
-      "inTranslation": true,
-      "generic": "acetaminophen (paracetamol)",
-      "drug_class": "",
-      "home_name": "paracetamol (Cetamol)",
-      "home_strength": "",
-      "local_name": "acetaminophen",
-      "local_brands": [
-       "Tylenol"
-      ],
-      "local_strength": "",
-      "status": "different_name",
-      "note_listener": "अमेरिकामा सेतामोललाई एसिटामिनोफेन भनिन्छ।",
-      "note_doctor": "Paracetamol is called acetaminophen in the US.",
-      "curated_note": "",
-      "med_id": "med_flexon",
-      "source": "curated"
      }
     ],
-    "ms": 2654
+    "ms": 1415
    },
    "context": [
     {
      "id": "alg_nsaid",
      "level": "alert",
      "title": "NSAID Allergy",
-     "detail": "Severe wheezing and asthma attack after aspirin and NSAIDs in 2022",
-     "why": "Flexon contains ibuprofen, an NSAID triggering her asthma attacks"
+     "detail": "Severe wheezing and asthma attack with aspirin and NSAIDs (2022)",
+     "why": "Ketorolac is an NSAID and patient has severe allergy to NSAIDs"
     },
     {
-     "id": "med_flexon",
+     "id": "alg_contrast",
      "level": "alert",
-     "title": "Flexon (Ibuprofen + Acetaminophen)",
-     "detail": "Contains ibuprofen, contraindicated due to NSAID allergy and asthma exacerbation",
-     "why": "Patient took Flexon causing worsening asthma symptoms"
+     "title": "Contrast Allergy",
+     "detail": "Hives and throat tightness during contrast CT (2023)",
+     "why": "Planned CT with contrast risks allergic reaction without premedication"
+    }
+   ]
+  },
+  {
+   "speaker": "patient",
+   "audio": "/demo/sita-2.wav",
+   "audioMs": 3500,
+   "speech": "/demo/sita-2-tr.mp3",
+   "stt": {
+    "text": "ठीक छ, धन्यवाद डक्टर.",
+    "ms": 1265
+   },
+   "interpret": {
+    "language": "ne",
+    "speaker": "patient",
+    "listenerLang": "en",
+    "raw": "ठीक छ, धन्यवाद डक्टर.",
+    "cleaned": "ठीक छ, धन्यवाद डक्टर।",
+    "translation": "Okay, thank you doctor.",
+    "drugs": [],
+    "ms": 738
+   },
+   "context": [
+    {
+     "id": "alg_nsaid",
+     "level": "alert",
+     "title": "NSAID Allergy",
+     "detail": "Severe wheezing and asthma attack after aspirin and NSAIDs (2022)",
+     "why": "Ketorolac is an NSAID and contraindicated due to allergy"
+    },
+    {
+     "id": "alg_contrast",
+     "level": "alert",
+     "title": "Contrast Dye Allergy",
+     "detail": "Hives and throat tightness during contrast CT (2023)",
+     "why": "Contrast CT planned but patient has moderate allergy"
     }
    ]
   }

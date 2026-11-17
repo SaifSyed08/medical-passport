@@ -4,6 +4,7 @@ import { dir, langName } from "../lib/langs";
 import { Reveal, StatusBadge, swapLabel } from "./bits";
 import Icon from "./Icon";
 import Flag from "./Flag";
+import LogoLoader from "./LogoLoader";
 
 const SPEAK_IN: Record<string, string> = {
   es: "Hable en español", en: "Speak in English", ne: "नेपालीमा बोल्नुहोस्", ja: "日本語で話してください", fr: "Parlez en français", de: "Sprechen Sie Deutsch",
@@ -60,7 +61,7 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
  * Live caption: new words drift in softly as the recogniser catches up (no dictation caret),
  * and a small voice wave trails the text while the person is still talking.
  */
-function LiveCaption({ text, lang }: { text: string; lang: string }) {
+export function LiveCaption({ text, lang }: { text: string; lang: string }) {
   const words = text ? (/\s/.test(text) ? text.split(/(\s+)/) : [...text]) : [];
   const prev = useRef(0);
   const firstNew = Math.min(prev.current, words.length);
@@ -90,7 +91,7 @@ function LiveCaption({ text, lang }: { text: string; lang: string }) {
   );
 }
 
-function sizeFor(text: string) {
+export function sizeFor(text: string) {
   // A CJK character takes about two Latin letters of width.
   const n = [...text].reduce((w, ch) => w + (/[　-鿿가-힯＀-￯]/.test(ch) ? 1.9 : 1), 0);
   if (n < 60) return "lg";
@@ -159,7 +160,7 @@ export function TurnBlock({
             {t.raw}
           </p>
           <div className="pending" dir={dir(listenerLang)}>
-            <span className="pending-orb" aria-hidden />
+            <LogoLoader size={30} />
             <span className="pending-text">Translating to {langName(listenerLang)}</span>
           </div>
         </>

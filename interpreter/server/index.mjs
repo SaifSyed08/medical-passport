@@ -226,8 +226,10 @@ app.post("/api/context", wrap(async (req, res) => {
     system: contextPrompt({ doctorLang, local }),
     user: contextUser({ record, text, speaker: str(req.body?.speaker, 40), history, shown, doctorLang }),
     model: MODELS.context,
-    // Picks up to 3 record ids from a list: speed matters more than deliberation.
-    effort: "none",
+    // Picks up to 3 record ids from a list. On the accuracy set (scripts/accuracy.mjs), gpt-6-luna with no reasoning missed
+    // a CT-dye allergy alert that gpt-4.1 caught; with "low" it catches it (5/5, no false alarms). The flags arrive about a
+    // second later, but the translation never waits for them (they run beside the interpreter call).
+    effort: process.env.CONTEXT_EFFORT || "low",
   });
   const ids = recordIds(record);
   // Medicine names on the cards read the local way (salbutamol -> albuterol for a US clinician).

@@ -12,6 +12,7 @@
     "demo": "vite build && node server/index.mjs --prod",
     "test": "node --experimental-strip-types --no-warnings --test \"tests/*.test.mjs\"",
     "test:api": "node --experimental-strip-types --no-warnings scripts/api-check.mjs",
+    "test:accuracy": "node --experimental-strip-types --no-warnings scripts/accuracy.mjs",
     "test:e2e": "node scripts/e2e-browser.mjs"
   },
   "engines": {
@@ -19,7 +20,8 @@
   },
   "dependencies": {
     "express": "^5.3.0",
-    "selfsigned": "^5.5.0"
+    "selfsigned": "^5.5.0",
+    "tesseract.js": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

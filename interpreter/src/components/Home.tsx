@@ -9,6 +9,8 @@ import Icon from "./Icon";
 import { TandemWordmark } from "./TandemLogo";
 import Flag from "./Flag";
 import RecordSheet from "./RecordSheet";
+import Picker, { type PickerOption } from "./Picker";
+import LogoLoader from "./LogoLoader";
 import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslation";
 
 type Props = {
@@ -20,6 +22,9 @@ type Props = {
   onStart: () => void;
   onDemo: () => void;
 };
+
+const LANG_OPTIONS: PickerOption[] = Object.entries(LANGS).map(([c, l]) => ({ value: c, label: l.name, hint: l.native !== l.name ? l.native : undefined }));
+const COUNTRY_OPTIONS: PickerOption[] = Object.entries(COUNTRIES).map(([c, x]) => ({ value: c, label: x.name, icon: <Flag code={c} size={20} /> }));
 
 function age(dob: string) {
   const d = new Date(dob);
@@ -78,13 +83,15 @@ export default function Home({ persona, personas, settings, setSettings, onStart
   return (
     <main className="home">
       <header className="home-top">
+        <span className="home-top-side" aria-hidden />
         {settings.brand === "tandem" ? <TandemWordmark /> : <Wordmark />}
         <button className="icon-btn" onClick={() => setSheet("settings")} aria-label="Settings">
           <Icon name="settings" />
         </button>
       </header>
 
-      <button className="panel patient-card" onClick={() => setSheet("record")}>
+      <section className="panel patient-card">
+      <button className="pc-open" onClick={() => setSheet("record")}>
         <span className="pc-head">
           <span className="avatar">{persona.initials}</span>
           <span className="pc-name">
@@ -112,8 +119,9 @@ export default function Home({ persona, personas, settings, setSettings, onStart
           </span>
           <span className="pc-row">
             <span className="pc-label">Medicines</span>
-            <span className={prep === "busy" ? "muted" : ""}>
-              {sameCountry ? "No changes needed" : prep === "busy" ? "Matching local names…" : `${ready} of ${persona.medications.length} matched to local names`}
+            <span className={`pc-val ${prep === "busy" ? "muted" : ""}`}>
+              {prep === "busy" && <LogoLoader size={18} />}
+              {sameCountry ? "No changes needed" : prep === "busy" ? "Matching local names…" : `${ready} of ${persona.medications.length} matched locally`}
             </span>
           </span>
           {severe.length > 0 && (
@@ -124,32 +132,31 @@ export default function Home({ persona, personas, settings, setSettings, onStart
           )}
         </span>
       </button>
-
-      <div className="panel translate-to">
-        <Flag code={local} size={26} />
-        <span>
-          You're in {["US", "GB", "PH"].includes(local) ? "the " : ""}
-          {country(local).name}, so we'll translate to{" "}
-          <label className="inline-select">
-            <select value={persona.trip.doctorLanguage} onChange={(e) => setDoctorLang(e.target.value)} aria-label="Clinician's language">
-              {Object.entries(LANGS).map(([c, l]) => (
-                <option key={c} value={c}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-            <Icon name="chevron" size={14} className="chev-down" />
-          </label>
-        </span>
-      </div>
+        {/* Which language the clinician hears, picked right on the card. */}
+        <div className="pc-row pc-lang">
+          <span className="pc-label">Clinician</span>
+          <span className="pc-val">
+            <Flag code={local} size={22} />
+            <Picker label="Clinician's language" value={persona.trip.doctorLanguage} options={LANG_OPTIONS} onChange={setDoctorLang} className="inline" />
+          </span>
+        </div>
+      </section>
 
       <div className="home-actions">
-        <button className="btn-primary" onClick={onStart}>
-          <Icon name="mic" />
-          Start interpreting
+        <button className="btn-primary btn-start" onClick={onStart}>
+          <span className="btn-start-icon">
+            <Icon name="mic" />
+          </span>
+          <span className="btn-start-text">
+            <strong>Start interpreting</strong>
+            <span>
+              {langName(persona.language)} <Icon name="swap" size={14} /> {langName(persona.trip.doctorLanguage)}
+            </span>
+          </span>
+          <Icon name="chevron" className="btn-start-chev" />
         </button>
         {hasDemo(persona.id) && (
-          <button className="btn-quiet" onClick={onDemo}>
+          <button className="btn-outline" onClick={onDemo}>
             <Icon name="play" size={16} />
             Play demo conversation <kbd>D</kbd>
           </button>
@@ -157,7 +164,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
       </div>
 
 
-      {sheet === "record" && <RecordSheet persona={persona} onClose={() => setSheet("none")} />}
+      {sheet === "record" && <RecordSheet persona={persona} editable onClose={() => setSheet("none")} />}
       {sheet === "settings" && (
         <Sheet title="Settings" onClose={() => setSheet("none")}>
           <div className="group">
@@ -184,6 +191,17 @@ export default function Home({ persona, personas, settings, setSettings, onStart
               </button>
               <button className={settings.brand === "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tandem" }))}>
                 Tandem <kbd>3</kbd>
+              </button>
+            </div>
+          </div>
+          <div className="group">
+            <div className="group-title">Conversation layout</div>
+            <div className="seg">
+              <button className={settings.layout !== "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "classic" }))}>
+                Transcript
+              </button>
+              <button className={settings.layout === "focus" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, layout: "focus" }))}>
+                Focus <kbd>L</kbd>
               </button>
             </div>
           </div>
@@ -224,37 +242,28 @@ function LanguageFields({ persona, setSettings }: { persona: Persona; setSetting
       const cur = s.pairs[persona.id] || { patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, local: persona.trip.country };
       return { ...s, pairs: { ...s.pairs, [persona.id]: { ...cur, ...patch } } };
     });
-  const select = (value: string, onChange: (v: string) => void, options: [string, string][]) => (
-    <select value={value} onChange={(e) => onChange(e.target.value)}>
-      {options.map(([c, label]) => (
-        <option key={c} value={c}>
-          {label}
-        </option>
-      ))}
-    </select>
-  );
-  const langs = Object.entries(LANGS).map(([c, l]) => [c, l.name] as [string, string]);
+
   return (
     <div className="group">
       <div className="group-title">Languages</div>
-      <label className="row static">
+      <div className="row static">
         <span className="row-main">
           <strong>Patient speaks</strong>
         </span>
-        {select(persona.language, (v) => setPair({ patientLang: v }), langs)}
-      </label>
-      <label className="row static">
+        <Picker label="Patient speaks" value={persona.language} options={LANG_OPTIONS} onChange={(v) => setPair({ patientLang: v })} />
+      </div>
+      <div className="row static">
         <span className="row-main">
           <strong>Clinician speaks</strong>
         </span>
-        {select(persona.trip.doctorLanguage, (v) => setPair({ doctorLang: v }), langs)}
-      </label>
-      <label className="row static">
+        <Picker label="Clinician speaks" value={persona.trip.doctorLanguage} options={LANG_OPTIONS} onChange={(v) => setPair({ doctorLang: v })} />
+      </div>
+      <div className="row static">
         <span className="row-main">
           <strong>Current country</strong>
         </span>
-        {select(persona.trip.country, (v) => setPair({ local: v }), Object.entries(COUNTRIES).map(([c, x]) => [c, x.name] as [string, string]))}
-      </label>
+        <Picker label="Current country" value={persona.trip.country} options={COUNTRY_OPTIONS} onChange={(v) => setPair({ local: v })} />
+      </div>
     </div>
   );
 }

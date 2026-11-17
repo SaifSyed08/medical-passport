@@ -9,8 +9,8 @@ type Item = { url: string; text: string; done: () => void };
 export class Player {
   enabled = true;
   /** How long a line may take to start, and how long it may stand still once started, before it is given up on. */
-  startTimeoutMs = 12000;
-  stallTimeoutMs = 5000;
+  startTimeoutMs = 15000; // live speech can take a while to arrive from the server
+  stallTimeoutMs = 6000;
   private audio: HTMLAudioElement;
   private queue: Item[] = [];
   private current: Item | null = null;
@@ -20,6 +20,7 @@ export class Player {
   private started = false;
   private nudges = 0;
   private guard: ReturnType<typeof setInterval> | undefined;
+  private rate = 1;
   private onBusy: (busy: boolean, text?: string) => void;
 
   constructor(onBusy: (busy: boolean, text?: string) => void) {
@@ -44,7 +45,7 @@ export class Player {
     });
   }
 
-  /** A line that doesn't start within 12 s, or stops advancing for 5 s, is given up on so the mic comes back. */
+  /** A line that doesn't start within 15 s, or stops advancing for 6 s, is given up on so the mic comes back. */
   private watch() {
     clearInterval(this.guard);
     this.progressAt = performance.now();
@@ -97,6 +98,12 @@ export class Player {
     }
   }
 
+  /** Playback speed for every line (the secret fast demo). */
+  setRate(rate: number) {
+    this.rate = rate;
+    this.audio.playbackRate = rate;
+  }
+
   get busy() {
     return Boolean(this.current);
   }
@@ -113,6 +120,7 @@ export class Player {
     this.onBusy(true, item.text);
     this.watch();
     this.audio.src = item.url;
+    this.audio.defaultPlaybackRate = this.audio.playbackRate = this.rate;
     this.audio.play().catch(() => this.finish());
   }
 

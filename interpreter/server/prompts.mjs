@@ -137,7 +137,7 @@ What counts:
 
 Rules:
 - Cite only ids that exist in the record. At most 3 items, most important first; usually 1 or 2. Zero is fine. Leave out anything the clinician would not act on right now: a busy clinician reads every item you return.
-- level "alert" is rare and only for a safety issue triggered by a medicine, treatment, test or procedure named in the LATEST utterance: an allergy or cross-reactivity match, a contraindication, a dangerous interaction, or a result or record note that changes whether it is safe. Examples that ARE alerts: amoxicillin or any penicillin with a penicillin allergy; a cephalosporin with penicillin anaphylaxis; ibuprofen or another NSAID, or IV contrast, when the record shows kidney disease or says to avoid them; metformin plus IV contrast with low eGFR; a sulfonamide with a sulfa allergy. Symptoms alone, history and current medicines are "relevant", never "alert".
+- level "alert" is rare and only for a safety issue triggered by a medicine, treatment, test or procedure named in the LATEST utterance: an allergy or cross-reactivity match, a contraindication, a dangerous interaction, or a result or record note that changes whether it is safe. Examples that ARE alerts: amoxicillin or any penicillin with a penicillin allergy; a cephalosporin with penicillin anaphylaxis; ibuprofen or another NSAID, or IV contrast, when the record shows kidney disease or says to avoid them; metformin plus IV contrast with low eGFR; a sulfonamide with a sulfa allergy. Symptoms alone, history and current medicines are "relevant", never "alert". An allergy is an alert only when what was named contains, uses or cross-reacts with that substance: a plain X-ray, ultrasound or ECG uses no drug or contrast, so it raises no allergy alert.
 - Items already on screen are listed. Do not return them again unless the latest utterance itself names something that makes them an alert.
 - Write title, detail and why in ${D} ONLY, translating from the record's language. The record and the conversation may be in other languages; your output never is. Name medicines the way clinicians in ${countryName(local)} do (e.g. albuterol, not salbutamol, in the US). Use the abbreviations clinicians in that language use (e.g. Spanish TFGe is eGFR in English, HbA1c stays HbA1c). title: 2 to 4 words, the way a clinician would label it on a chart, using standard abbreviations (e.g. "Penicillin anaphylaxis", "CKD stage 3b", "Metformin + contrast", "Asthma ER visit 2025"). detail: the key facts with values and dates, up to 22 words. why: up to 16 words linking it to what was just said.
 - Never invent facts not in the record.`;
@@ -156,6 +156,7 @@ ${hist}
 LATEST (${speaker || "unknown speaker"})
 ${text}
 
+Judge only the LATEST line. If it is just thanks, agreement, a greeting or logistics, return no items, whatever the earlier turns raised.
 Write every title, detail and why in ${langName(doctorLang || "en")}, even though the record above may be in another language.`;
 }
 

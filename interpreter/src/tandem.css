@@ -149,3 +149,13 @@ html[data-brand="tandem"] body { background: radial-gradient(1100px 760px at 50%
 [data-brand="tandem"].app > * { animation: brandIn .5s ease both; }
 @keyframes brandIn { from { opacity: 0; filter: blur(4px); } }
 [data-brand="tandem"] .art-bubble .typing i { background: var(--t-navy); }
+
+/* editable record + scanning */
+[data-brand="tandem"] .swipe-row > .list-row { background: var(--t-navy-2); }
+[data-brand="tandem"] .rec-section header .add-doc, [data-brand="tandem"] .add-doc-icon { background: rgb(243 178 60 / 16%); color: var(--t-gold); }
+[data-brand="tandem"] .undo-bar { background: var(--t-cream); color: var(--t-navy); }
+[data-brand="tandem"] .undo-bar button { background: rgb(11 36 82 / 10%); color: var(--t-navy); }
+[data-brand="tandem"] .scan-field input { background: rgb(255 255 255 / 7%); color: var(--t-cream); border-color: rgb(247 241 227 / 16%); color-scheme: dark; }
+[data-brand="tandem"] .scan-beam { background: linear-gradient(180deg, transparent, rgb(243 178 60 / 20%) 70%, rgb(243 178 60 / 70%) 98%, transparent); }
+[data-brand="tandem"] .scan-bar i { background: var(--t-gold); }
+[data-brand="tandem"] .scan-text { background: rgb(255 255 255 / 6%); }
