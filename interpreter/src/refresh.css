@@ -265,3 +265,17 @@
 [data-brand="tandem"] .f-note.alert, [data-brand="tandem"] .f-note.alert .f-note-text strong, [data-brand="tandem"] .f-note.alert .f-note-icon { color: var(--t-navy); }
 [data-brand="tandem"] .f-note.alert .f-note-text span { color: rgb(11 36 82 / 88%); }
 [data-brand="tandem"] .f-note.alert .f-note-icon { background: rgb(11 36 82 / 10%); box-shadow: inset 0 0 0 1.5px rgb(11 36 82 / 45%); }
+
+/* ---------------------------------------------------------------- private mode (P) */
+/* Solid fill, white icon: the lock in each header while everything runs on the device. */
+.device-tag { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--ok); color: #fff; vertical-align: middle; flex: none; }
+.talk-title strong .device-tag { width: 22px; height: 22px; border-radius: 7px; margin-left: 8px; }
+.talk-title strong .device-tag svg { width: 13px; height: 13px; }
+.home-top-side { display: flex; align-items: center; }
+.device-note { position: absolute; z-index: 40; left: 16px; right: 16px; top: 64px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 550; line-height: 1.3; box-shadow: 0 10px 28px rgb(0 0 0 / 22%); animation: deviceNote 3.2s ease both; pointer-events: none; }
+.device-note.on { background: var(--ok); }
+.device-note svg { flex: none; }
+@keyframes deviceNote { 0% { opacity: 0; transform: translateY(-8px); } 8%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.app.embedded .device-note { top: 12px; }
+/* Tandem's green is light: navy on it reads, white doesn't. */
+[data-brand="tandem"] .device-tag, [data-brand="tandem"] .device-note.on { color: #0b2452; }

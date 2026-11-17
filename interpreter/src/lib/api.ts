@@ -1,4 +1,5 @@
 import type { DrugMention, Equivalent, Speaker } from "./types";
+import { deviceHeaders } from "./onDevice.ts";
 
 /** Every call gives up after a while: a request that hangs on a weak connection must not freeze the conversation. */
 async function post<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
@@ -8,7 +9,7 @@ async function post<T>(path: string, body: unknown, timeoutMs = 30000): Promise<
   try {
     res = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...deviceHeaders() },
       body: JSON.stringify(body),
       signal: abort.signal,
     });
@@ -88,8 +89,8 @@ export function equivalents(body: { home: string; local: string; items: { id: st
   return post<{ items: Equivalent[] }>("/api/equivalents", body);
 }
 
-export function translateRecord<T>(record: T, to: string) {
-  return post<{ record: T; cached: boolean }>("/api/translate-record", { record, to });
+export function translateRecord<T>(record: T, to: string, from?: string) {
+  return post<{ record: T; cached: boolean }>("/api/translate-record", { record, to, from });
 }
 
 export async function health() {

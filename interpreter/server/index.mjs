@@ -9,6 +9,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { MODELS, HttpError, transcribe, chatJSON, chatJSONObject, speech } from "./openai.mjs";
 import { createHash } from "node:crypto";
+import { LOCAL_MODELS, transcribeLocal, chatJSONLocal, chatJSONObjectLocal, speechLocal, localStatus, translateRecordLocal } from "./local.mjs";
+import { interpretLocal } from "./localInterpret.mjs";
+import { contextByRules } from "./rules.mjs";
 import {
   INTERPRET_SCHEMA, interpretPrompt, interpretUser,
   CONTEXT_SCHEMA, contextPrompt, contextUser,
@@ -54,11 +57,26 @@ const str = (v, max = 4000) => (typeof v === "string" ? v.slice(0, max) : "");
 const arr = (v, max = 50) => (Array.isArray(v) ? v.slice(0, max) : []);
 const code = (v, fallback) => (typeof v === "string" && /^[A-Za-z-]{2,8}$/.test(v) ? v : fallback);
 
+// Private mode (P on the phone): every call that carries the patient's voice, words or record is answered on
+// this machine (server/local.mjs) instead of OpenAI. The phone marks each request, and nothing falls back to
+// the cloud when a local step fails.
+const onDevice = (req) => req.get("x-on-device") === "1" || req.query?.device === "1";
+const brain = (req) => (onDevice(req) ? { chatJSON: chatJSONLocal, chatJSONObject: chatJSONObjectLocal } : { chatJSON, chatJSONObject });
+// On the device the default is the phone-sized pipeline (translation model + rules); LOCAL_TRANSLATOR=llm
+// sends the same prompts to a local Ollama model instead.
+const phoneSized = (req) => onDevice(req) && process.env.LOCAL_TRANSLATOR !== "llm";
+
 /* ---------------------------------------------------------------- health */
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true, key: Boolean(process.env.OPENAI_API_KEY), locked: !cookieOk(req), models: MODELS });
+  res.json({ ok: true, key: Boolean(process.env.OPENAI_API_KEY), locked: !cookieOk(req), models: MODELS, localModels: LOCAL_MODELS });
 });
+
+// What private mode has to work with. ?warm=1 also loads the models so the first line isn't slow.
+app.get("/api/local", wrap(async (req, res) => {
+  const langs = String(req.query.langs || "").split(",").filter((l) => /^[a-z]{2,3}$/.test(l)).slice(0, 2);
+  res.json(await localStatus({ warm: req.query.warm === "1", langs }));
+}));
 
 /* ---------------------------------------------------------------- speech to text */
 
@@ -80,7 +98,9 @@ app.post("/api/transcribe", wrap(async (req, res) => {
   // Patient-aware recognition: prime the model with the patient's own medicine and condition names.
   const prompt = `A medical consultation between a ${langName(patientLang)}-speaking patient and a ${langName(doctorLang)}-speaking clinician. Transcribe exactly what is said, in the language it is spoken; do not translate. Keep filler words, hesitations, repetitions and self-corrections verbatim (um, uh, eh, este, I mean).${terms.length ? ` Names that may come up: ${terms.join(", ")}.` : ""}`;
   const t0 = Date.now();
-  const text = await transcribe(audio, { prompt, mime: str(req.body?.mime, 40) || "audio/wav", model: req.body?.fast ? MODELS.sttFast : MODELS.stt });
+  const text = onDevice(req)
+    ? await transcribeLocal(audio, { langs: [patientLang, doctorLang], terms, fast: Boolean(req.body?.fast) })
+    : await transcribe(audio, { prompt, mime: str(req.body?.mime, 40) || "audio/wav", model: req.body?.fast ? MODELS.sttFast : MODELS.stt });
   const ms = Date.now() - t0;
   // The model sometimes echoes its own prompt back on near-silent audio.
   if (!text || PHANTOMS.some((re) => re.test(text.trim())) || text.includes("Transcribe exactly what is said")) {
@@ -131,15 +151,17 @@ app.post("/api/interpret", wrap(async (req, res) => {
   const equivalents = groundingFor({ text, meds, home, local, clientEquivalents: req.body?.equivalents });
 
   const t0 = Date.now();
-  const out = await chatJSON({
-    name: "interpret",
-    schema: INTERPRET_SCHEMA,
-    system: interpretPrompt({ patientLang, doctorLang, home, local, forced }),
-    user: interpretUser({ text, meds, equivalents, history }),
-    model: MODELS.llm,
-    // On the live path (2–3 s budget): no reasoning unless INTERPRET_EFFORT asks for it.
-    effort: process.env.INTERPRET_EFFORT || "none",
-  });
+  const out = phoneSized(req)
+    ? await interpretLocal({ text, patientLang, doctorLang, home, local, forced, meds })
+    : await brain(req).chatJSON({
+        name: "interpret",
+        schema: INTERPRET_SCHEMA,
+        system: interpretPrompt({ patientLang, doctorLang, home, local, forced }),
+        user: interpretUser({ text, meds, equivalents, history }),
+        model: MODELS.llm,
+        // On the live path (2–3 s budget): no reasoning unless INTERPRET_EFFORT asks for it.
+        effort: process.env.INTERPRET_EFFORT || "none",
+      });
   const ms = Date.now() - t0;
 
   // Who spoke is decided by the language actually heard, unless the user forced it.
@@ -220,7 +242,8 @@ app.post("/api/context", wrap(async (req, res) => {
   const history = arr(req.body?.history, 6).map((h) => ({ speaker: str(h?.speaker, 20), text: str(h?.text, 600) }));
   const shown = arr(req.body?.shown, 40).map((s) => str(s, 60));
   const t0 = Date.now();
-  const out = await chatJSON({
+  // On the device the record is checked by rules: no model, nothing to send anywhere.
+  const out = onDevice(req) ? { items: contextByRules({ record, text, speaker: str(req.body?.speaker, 40), doctorLang }) } : await brain(req).chatJSON({
     name: "record_context",
     schema: CONTEXT_SCHEMA,
     system: contextPrompt({ doctorLang, local }),
@@ -247,6 +270,12 @@ app.get("/api/tts", wrap(async (req, res) => {
   if (!text) throw new HttpError(400, "text missing");
   const lang = code(req.query.lang, "en");
   const voice = /^[a-z]{3,10}$/.test(String(req.query.voice || "")) ? String(req.query.voice) : "coral";
+  if (onDevice(req)) {
+    const wav = await speechLocal(text, lang);
+    res.setHeader("Content-Type", "audio/wav");
+    res.setHeader("Cache-Control", "no-store");
+    return res.end(wav);
+  }
   const upstream = await speech(text, {
     voice,
     instructions: `Speak in ${langName(lang)} as a calm, warm professional medical interpreter. Clear and unhurried, natural native pronunciation, including medicine names.`,
@@ -296,8 +325,9 @@ app.post("/api/equivalents", wrap(async (req, res) => {
       else missing.push(idx);
     }
   });
-  if (missing.length) {
-    const ai = await chatJSON({
+  // On the device only the curated table answers; unknown medicines just show without an equivalent.
+  if (missing.length && !phoneSized(req)) {
+    const ai = await brain(req).chatJSON({
       name: "equivalents",
       schema: EQUIV_SCHEMA,
       system: equivPrompt({ home, local }),
@@ -337,9 +367,10 @@ app.post("/api/translate-record", wrap(async (req, res) => {
   const to = code(req.body?.to, "en");
   if (!record || typeof record !== "object") throw new HttpError(400, "record required");
   const body = JSON.stringify(record).slice(0, 60_000);
-  const ck = `${to}:${createHash("sha256").update(body).digest("hex").slice(0, 24)}`;
+  const ck = `${phoneSized(req) ? "local:" : ""}${to}:${createHash("sha256").update(body).digest("hex").slice(0, 24)}`;
   if (recordCache[ck]) return res.json({ record: recordCache[ck], cached: true });
-  const out = await chatJSONObject({
+  const from = code(req.body?.from, "");
+  const out = phoneSized(req) && from ? await translateRecordLocal(record, from, to) : await brain(req).chatJSONObject({
     system: `You translate a patient's health record into ${langName(to)} for a clinician. Return the SAME JSON structure with the same keys, arrays and item order. Translate every human-readable string value (names of conditions, allergies, reactions, notes, document titles and bodies, lab names, schedules, purposes, relationships) into clear clinical ${langName(to)}. Keep unchanged: "id" values, dates, numbers, units, reference ranges, flags, phone numbers, person names, facility names, and medicine brand names (you may add the ${langName(to)} generic name in parentheses). Do not add, drop or summarise information.`,
     user: body,
   });

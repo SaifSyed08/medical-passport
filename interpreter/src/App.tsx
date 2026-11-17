@@ -8,7 +8,9 @@ import Conversation from "./components/Conversation";
 import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, notifyHost, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
+import Icon from "./components/Icon";
 import { applyEdits, useEdits } from "./lib/edits";
+import { onDevice, setOnDevice, useOnDevice, warmLocal } from "./lib/onDevice";
 
 export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
   const base = personas.find((p) => p.id === settings.personaId) || personas[0];
@@ -34,6 +36,9 @@ export default function App() {
   // Bumped to start the recorded demo; 0 = a normal conversation.
   const [demoRequest, setDemoRequest] = useState(() => (new URLSearchParams(location.search).has("demo") ? 1 : 0));
   const [serverIssue, setServerIssue] = useState<string | null>(null);
+  // Private mode (P): a short note says what changed; the lock in each header says it's on.
+  const private_ = useOnDevice();
+  const [deviceNote, setDeviceNote] = useState<string | null>(null);
   // The patient's own edits (swipe to delete, scanned documents) re-derive the record everywhere.
   const edits = useEdits(settings.personaId);
   const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas, edits]);
@@ -77,6 +82,24 @@ export default function App() {
       .catch(() => setServerIssue("Can't reach the interpreter server."));
   }, []);
 
+  // Load the local models for this patient's two languages whenever private mode is on.
+  const langs = `${persona.language},${persona.trip.doctorLanguage}`;
+  useEffect(() => {
+    if (!private_) return;
+    let live = true;
+    warmLocal(langs.split(",")).then((s) => {
+      if (live && !s?.ready) setDeviceNote("Private mode can't load its models. On the laptop, run npm run local:setup.");
+    });
+    return () => {
+      live = false;
+    };
+  }, [private_, langs]);
+  useEffect(() => {
+    if (!deviceNote) return;
+    const t = window.setTimeout(() => setDeviceNote(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [deviceNote]);
+
   // D anywhere plays the recorded demo.
   useEffect(() => {
     const k = (e: KeyboardEvent) => {
@@ -89,6 +112,12 @@ export default function App() {
       if (e.key === "l" || e.key === "L") {
         // Experimental conversation layout (Focus): one line at a time, record notes pinned under it.
         setSettings((s) => ({ ...s, layout: s.layout === "focus" ? "classic" : "focus" }));
+        return;
+      }
+      if (e.key === "p" || e.key === "P") {
+        const next = !onDevice();
+        setOnDevice(next);
+        setDeviceNote(next ? "Private mode: speech, translation and record checks stay on this device." : "Cloud mode: the full models, online.");
         return;
       }
       if (e.key === "3") {
@@ -130,7 +159,13 @@ export default function App() {
           </svg>
         </span>
       </div>}
-      {serverIssue && <div className="banner">{serverIssue}</div>}
+      {serverIssue && !(private_ && /OPENAI_API_KEY/.test(serverIssue)) && <div className="banner">{serverIssue}</div>}
+      {deviceNote && (
+        <div className={`device-note${private_ ? " on" : ""}`} role="status">
+          <Icon name={private_ ? "lock" : "sparkle"} size={18} />
+          {deviceNote}
+        </div>
+      )}
       {screen === "home" ? (
         <Home
           persona={persona}

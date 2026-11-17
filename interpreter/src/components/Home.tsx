@@ -4,7 +4,8 @@ import type { Equivalent, Persona } from "../lib/types";
 import { equivalents } from "../lib/api";
 import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
 import { loadTrip, norm, saveEquivalents, type Settings, type TripCache } from "../lib/store";
-import { Sheet, StatusBadge } from "./bits";
+import { DeviceTag, Sheet, StatusBadge } from "./bits";
+import { useOnDevice } from "../lib/onDevice";
 import Icon from "./Icon";
 import { TandemWordmark } from "./TandemLogo";
 import Flag from "./Flag";
@@ -39,6 +40,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
   const [prep, setPrep] = useState<"idle" | "busy" | "error">("idle");
   const [prepError, setPrepError] = useState("");
   const [sheet, setSheet] = useState<"none" | "settings" | "record">("none");
+  const onDevice = useOnDevice();
 
   const prepare = useCallback(async () => {
     setPrep("busy");
@@ -83,7 +85,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
   return (
     <main className="home">
       <header className="home-top">
-        <span className="home-top-side" aria-hidden />
+        <span className="home-top-side">{onDevice && <DeviceTag />}</span>
         {settings.brand === "tandem" ? <TandemWordmark /> : <Wordmark />}
         <button className="icon-btn" onClick={() => setSheet("settings")} aria-label="Settings">
           <Icon name="settings" />

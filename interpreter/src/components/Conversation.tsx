@@ -18,7 +18,8 @@ import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
 import { FocusDock, FocusView } from "./Focus";
 import ContextSheet from "./ContextSheet";
-import { Sheet } from "./bits";
+import { DeviceTag, Sheet } from "./bits";
+import { useOnDevice } from "../lib/onDevice";
 import Icon from "./Icon";
 import Flag from "./Flag";
 
@@ -48,6 +49,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function Conversation({ persona, settings, setSettings, onBack, demoRequest }: Props) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [ctx, setCtx] = useState<ContextItem[]>([]);
+  const onDevice = useOnDevice();
   const [micState, setMicState] = useState<MicState>("off");
   const [level, setLevel] = useState(0);
   const [speaking, setSpeaking] = useState(false);
@@ -800,7 +802,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           <Icon name="back" />
         </button>
         <button className="talk-title" onClick={() => setSheet("record")}>
-          <strong>{persona.name}</strong>
+          <strong>
+            {persona.name}
+            {onDevice && <DeviceTag />}
+          </strong>
           <span>
             <Flag code={persona.home} size={20} className="pt" /> {langName(persona.language)}
             <span className="sep">↔</span>

@@ -196,3 +196,12 @@ export function kindOf(id: string) {
   if (id.startsWith("lab_")) return "lab";
   return "document";
 }
+
+/** Private mode is on: a solid lock badge in the screen's header (press P to switch). */
+export function DeviceTag() {
+  return (
+    <span className="device-tag" title="Private mode: on this device" aria-label="Private mode: on this device">
+      <Icon name="lock" size={15} />
+    </span>
+  );
+}
