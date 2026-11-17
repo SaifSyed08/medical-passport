@@ -29,6 +29,7 @@ Hidden keys:
 | **3** | Switches to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter |
 | **L** | Switches the conversation to **Focus**, an experimental layout (also under ⚙ → Conversation layout). One line at a time in very large type, the record's notes pinned under the sentence that raised them, earlier lines as a ribbon of dots at the top (tap one, or swipe sideways, to go back), and the two people as chips either side of the mic (tap one to say who talks next) |
 | **F** | Fast demo: the recording plays about 1.6× faster with shorter pauses. Press again for normal speed |
+| **P** | **Private mode**: the patient's voice, words and record are handled by small models on this machine instead of the cloud. A lock shows in the header. Press again for the cloud models. See [Private mode](#private-mode-p) |
 
 ## What it does
 
@@ -58,6 +59,29 @@ The mic needs HTTPS, so pick one:
 2. **Tunnel** (most reliable at events): run `npx cloudflared tunnel --url http://localhost:5173`. Start the server with `ACCESS_CODE=something` and open the link once as `…/?code=something`. Without the code the API answers 401, so nobody else can spend your credits. The Tessera app's Medicines tab sends the same code in an `X-Access-Code` header.
 
 In a loud room, switch to **Tap to talk** under ⋯. **⌨ Type** runs typed text through the same pipeline.
+
+## Private mode (P)
+
+Press **P** and everything that carries the patient's voice, words or record is answered on this machine. The phone marks each request, and the server sends it to local models instead of OpenAI. Nothing falls back to the cloud: if a local model is missing, the line fails and says so. The models are phone-sized (int8, about 1.6 GB in all), the same class that runs on a phone today. In this demo they run on the laptop that serves the app.
+
+| Step | Cloud | Private |
+| --- | --- | --- |
+| Speech to text | `gpt-transcribe` | Whisper small (464 MB, int8 at load) picks the language. Each language can have its own **speech pack**: Nepali uses a Whisper small fine-tuned on Nepali (240 MB int8), because the general model writes Nepali in Latin letters or as Hindi |
+| Translation | `gpt-6-luna` | NLLB-200 distilled 600M (618 MB int8): one translation model for 200 languages, about half a second a line on the CPU. Medicine names are swapped for placeholders before translating and put back afterwards in the listener's local form, e.g. *albuterol (Asthalin)* |
+| Medicine names | the model + the curated table | The curated table plus the patient's own list, matched by sound as well as spelling, so *glucofaje*, *एस्थालिन* and *アモチシシリン* still count |
+| Record alerts | `gpt-6-luna` | Rules (`server/rules.mjs`): a line naming a penicillin, an NSAID or contrast dye raises the matching allergy, and NSAIDs or contrast raise kidney trouble. Alert text is in the clinician's language. The rules know only those families; the cloud model knows every drug |
+| Voice | `gpt-4o-mini-tts` | Piper, one 60–75 MB voice per language |
+| Record translation | `gpt-6-luna` | NLLB, field by field |
+
+Set up once (free; needs Python 3.10+; downloads the models into `.cache/`):
+
+```sh
+npm run local:setup        # or: npm run local:setup -- --langs es,en
+```
+
+The server starts the local models (`server/local/sidecar.py`, on 127.0.0.1 only) the first time P is pressed. They use an NVIDIA GPU when one is there, borrowing Ollama's CUDA libraries if it's installed, and run on the CPU otherwise. `LOCAL_TRANSLATOR=llm` sends translation to a local Ollama model instead (default `gemma3:4b`, 3.4 GB). It's slower, about 6 s a line, and worse from English into Nepali. Smaller models (Gemma 3 1B, Qwen3 1.7B) mistranslated medical lines ("penicillin antibiotic" came back as "penile lesions"), so the default uses a translation model, not a chat model.
+
+Demo mode (D) is a recording either way: it makes no calls at all.
 
 ## How it works
 
@@ -105,6 +129,8 @@ npm run test:api -- sofia                  # live API: TTS-voiced lines → tran
 npm run test:accuracy                      # accuracy on 16 new lines across the 3 patients (paid, a few cents)
 node scripts/demo-check.mjs sita --stall   # demo failsafe: the script fetch fails once and two clips hang forever
 npm run test:e2e -- sofia                  # headless Chrome with a fake mic feeding the real pipeline (paid)
+npm run test:e2e -- sita --private         # the same in private mode (free); start the server with OPENAI_API_KEY= to prove no cloud call
+npm run test:accuracy -- --private         # accuracy in private mode; add --holdout for the lines it was never tuned on
 ```
 
 After changing prompts or the drug table, re-record the demo with `node --experimental-strip-types scripts/build-demo.mjs`.
@@ -131,11 +157,28 @@ Two caveats:
 - The set is small and the voices are synthetic, so treat these as a regression check, not a clinical validation.
 - The last prompt change (judge only the latest line; thanks and greetings raise nothing) was checked with `npm run test:api` for Sita and Sofía. A full accuracy rerun after it is still to do.
 
+### Private mode
+
+The same 16 lines through the private models (`npm run test:accuracy -- --private`, 2026-11-17, Whisper small, NLLB-200 600M, rules), and 9 lines written afterwards and never tuned on (`--holdout`, voiced by the local Piper voices because the OpenAI account was out of credit):
+
+| Measure | 16 lines | 9 held-out lines |
+| --- | --- | --- |
+| Transcription character error rate | 6.6% (Spanish 3%, English 6%, Japanese 6%, Nepali 10%) | 4.1% (Nepali 15%) |
+| Speaker told apart | 16/16 | 9/9 |
+| Medicines recognized | 11/11 | 3/4 on the blind run, 4/4 after one fix |
+| Required record alerts | 5/5 | 4/4 |
+| Quiet lines with no alert | 4/4 | 4/4 |
+| Key terms kept in the translation | 22/22 | 6/9 on the blind run, 7/9 after the fixes |
+| End of speech to translation | median 0.8 s, 90th percentile 0.9 s | median 0.7 s |
+
+Read the first column with care: private mode was built against those 16 lines, and two fixes target what they exposed. One is a short Nepali glossary ("दम" is asthma, which NLLB reads as breath). The other is reading "दाइ" (brother) as "डाइ" (dye) right after "scan". The held-out column is the honest number. The blind run's misses were "contrast" left untranslated and *फ्लेक्सन* not matched to Flexon, both general bugs fixed since, plus two Nepali lines whose words were misheard ("ढाड", back, became something else; "इन्हेलर" became "इनेलर"). Nepali speech is where private mode is weakest. In the browser run, two of Sita's three spoken lines came out with a wrong word ("stomach" for back) or a wrong meaning, although every alert still fired. The cloud translations read better throughout. The private ones are plainer and sometimes literal ("dos hinchas" for two puffs).
+
 ## Limits
 
 - Drug equivalents outside the curated table are AI suggestions and are labeled that way.
 - Document scanning downloads Tesseract's engine and English language data from a CDN the first time; scan once online before an offline demo.
 - `scripts/demo-regressions.mjs`'s scroll check is timing-sensitive and occasionally fails on a slow machine; rerun it.
-- The demo record is sent to the model to find context and to translate. A real version needs consent, data minimization and a BAA-covered provider.
+- In cloud mode the demo record is sent to the model to find context and to translate. A real version needs consent, data minimization and a BAA-covered provider, or private mode.
+- Private mode runs its models on the laptop serving the app, not yet inside the phone app itself; the models are sized for a phone (int8, about 1.6 GB).
 - Record tiles are AI summaries of the patient's own record. Each tile links back to its source entry.
 - Not yet tested on a physical iPhone or Android. On iOS the mic is released during playback, and audio is unlocked on the first tap.

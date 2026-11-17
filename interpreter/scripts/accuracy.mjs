@@ -3,7 +3,10 @@
 // The lines are NOT the demo scripts: they're new sentences for the same three patients, each with what a
 // correct answer must contain. Every line is voiced with TTS, then run through transcribe -> interpret + context
 // exactly as the phone does.
-//   node --experimental-strip-types --no-warnings scripts/accuracy.mjs [--base http://localhost:5173]
+//   node --experimental-strip-types --no-warnings scripts/accuracy.mjs [--base http://localhost:5173] [--private]
+// --private runs the same lines through private mode (phone-sized models on this machine; free).
+// --holdout runs HOLDOUT instead: lines written after private mode was tuned on CASES, never tuned on, voiced by
+// the local Piper voices (--piper does that for CASES too; needs no OpenAI credit).
 // Scores:
 //   transcription   character error rate vs what was said (punctuation and spacing ignored)
 //   speaker         patient/clinician told apart from the language alone
@@ -19,6 +22,9 @@ import { recordForContext, sttTerms } from "../src/lib/record.ts";
 
 const args = process.argv.slice(2);
 const BASE = args.includes("--base") ? args[args.indexOf("--base") + 1] : "http://localhost:5173";
+const PRIVATE = args.includes("--private");
+const HELD = args.includes("--holdout");
+const PIPER = HELD || args.includes("--piper");
 const CACHE = path.resolve(".cache/voice-acc");
 fs.mkdirSync(CACHE, { recursive: true });
 
@@ -49,9 +55,38 @@ const CASES = {
   ],
 };
 
+// Written 2026-11-17 before any run, after the private-mode fixes were made on CASES. Not to be tuned on: if a
+// line fails, the miss is the result.
+const HOLDOUT = {
+  sofia: [
+    { speaker: "patient", text: "Me duele el pecho cuando subo las escaleras.", quiet: true, say: [/chest/i] },
+    { speaker: "clinician", text: "We'll do a CT scan with contrast this afternoon.", alert: ["cnd_erc", "lab_tfge", "lab_creatinina"], say: [/contraste/i] },
+    { speaker: "patient", text: "Uso el Ventolin cuando me falta el aire.", drugs: ["salbutamol"], say: [/albuterol/i] },
+  ],
+  jordan: [
+    { speaker: "patient", text: "I'm allergic to amoxicillin, I had a bad reaction.", drugs: ["amoxicillin"], alert: ["alg_penicillin"], say: [/アモキシシリン/] },
+    { speaker: "clinician", text: "インスリンは続けてください。", quiet: true, say: [/insulin/i] },
+  ],
+  sita: [
+    { speaker: "patient", text: "मलाई ढाड दुख्छ, फ्लेक्सन खाँदा पनि कम भएन।", drugs: ["ibuprofen-paracetamol"], alert: ["alg_nsaid", "med_flexon", "cnd_aerd"], say: [/back/i] },
+    { speaker: "clinician", text: "I'll give you a ketorolac injection for the pain.", drugs: ["ketorolac"], alert: ["alg_nsaid", "cnd_aerd"], say: [/केटोरोलाक|ketorolac/i] },
+    { speaker: "clinician", text: "Please drink plenty of water today.", quiet: true, say: [/पानी/] },
+    { speaker: "patient", text: "मेरो इन्हेलर घरमा छुट्यो।", quiet: true, say: [/inhaler/i] },
+  ],
+};
+
 const LANG = { ne: "Nepali", es: "Spanish", ja: "Japanese", en: "English" };
 
 async function voice(text, lang, who) {
+  if (PIPER) {
+    const f = path.join(CACHE, `piper-${crypto.createHash("sha1").update(`${lang}|${text}`).digest("hex").slice(0, 16)}.wav`);
+    if (fs.existsSync(f)) return fs.readFileSync(f);
+    const r = await fetch(`${BASE}/api/tts?${new URLSearchParams({ text, lang, device: "1" })}`);
+    if (!r.ok) throw new Error(`local tts ${r.status}`);
+    const buf = Buffer.from(await r.arrayBuffer());
+    fs.writeFileSync(f, buf);
+    return buf;
+  }
   const h = crypto.createHash("sha1").update(`${lang}|${who}|${text}`).digest("hex").slice(0, 16);
   const f = path.join(CACHE, `${h}.wav`);
   if (fs.existsSync(f)) return fs.readFileSync(f);
@@ -68,7 +103,7 @@ async function voice(text, lang, who) {
 
 async function post(route, body) {
   const t0 = Date.now();
-  const r = await fetch(BASE + route, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const r = await fetch(BASE + route, { method: "POST", headers: { "Content-Type": "application/json", ...(PRIVATE ? { "X-On-Device": "1" } : {}) }, body: JSON.stringify(body) });
   const j = await r.json();
   if (!r.ok) throw new Error(`${route} ${r.status}: ${j.error}`);
   return { ...j, wall: Date.now() - t0 };
@@ -96,7 +131,7 @@ const hit = (k, ok) => {
   return ok;
 };
 
-for (const [pid, cases] of Object.entries(CASES)) {
+for (const [pid, cases] of Object.entries(HELD ? HOLDOUT : CASES)) {
   const persona = PERSONAS.find((p) => p.id === pid);
   const common = { patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, home: persona.home, local: persona.trip.country };
   const eq = await post("/api/equivalents", { home: persona.home, local: persona.trip.country, items: persona.medications.map((m) => ({ id: m.id, name: m.name, generic: m.generic })) });
@@ -133,6 +168,9 @@ const q = (p) => sorted[Math.min(sorted.length - 1, Math.floor(p * sorted.length
 const cerAll = Object.values(tally.cer).flat();
 const summary = {
   when: new Date().toISOString(),
+  mode: PRIVATE ? "private (on this machine)" : "cloud",
+  set: HELD ? "holdout" : "cases",
+  voices: PIPER ? "piper (local)" : "gpt-4o-mini-tts",
   lines: tally.lines,
   transcriptionCER: `${(mean(cerAll) * 100).toFixed(1)}%`,
   transcriptionCERByLanguage: Object.fromEntries(Object.entries(tally.cer).map(([l, xs]) => [LANG[l] || l, `${(mean(xs) * 100).toFixed(1)}%`])),
@@ -147,4 +185,4 @@ const summary = {
 console.log("\n== summary");
 console.log(JSON.stringify(summary, null, 2));
 fs.mkdirSync(".cache/accuracy", { recursive: true });
-fs.writeFileSync(".cache/accuracy/latest.json", JSON.stringify(summary, null, 2));
+fs.writeFileSync(`.cache/accuracy/latest${PRIVATE ? "-private" : ""}${HELD ? "-holdout" : ""}.json`, JSON.stringify(summary, null, 2));
