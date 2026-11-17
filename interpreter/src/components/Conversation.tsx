@@ -651,7 +651,8 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     if (demo === "loading") return "Listening";
     if (demo === "working") return speaking ? "Speaking · tap to skip" : "Translating…";
     if (micState === "off") return "Tap to start listening";
-    if (micState === "starting") return "Starting the mic…";
+    // On iPhone the mic is released while the phone speaks and reopened after: that's a pause, not a fresh start.
+    if (micState === "starting") return turns.length ? "One moment…" : "Starting the mic…";
     // Between the phone finishing a line and the mic being open again.
     if (micState === "paused" && !speaking && !muted) return "One moment…";
     if (micState === "error") return "Mic problem · tap to retry";
@@ -789,6 +790,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           onDrug={(d, speaker) => setDrug({ d, speaker })}
           onFlip={flipSpeaker}
           onReplay={replay}
+          onRetry={retry}
           onOpenCtx={setOpenCtx}
         />
       ) : (

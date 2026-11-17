@@ -211,6 +211,7 @@ i.dot.clinician { background: var(--clinician); }
 /* ---------------------------------------------------------------- alert */
 .toast { position: absolute; z-index: 6; left: 12px; right: 12px; top: calc(max(10px, env(safe-area-inset-top)) + 62px); display: flex; align-items: center; gap: 4px; padding: 6px 6px 6px 0; border-radius: 18px; background: rgb(255 255 255 / 88%); border-left: 0; box-shadow: 0 0 0 1px rgb(169 77 64 / 25%), 0 10px 26px rgb(23 36 58 / 10%); animation: drop .6s cubic-bezier(.2, 1.3, .4, 1) both, nudge .45s .6s ease-in-out; overflow: hidden; }
 @keyframes nudge { 25%, 75% { transform: translateX(-4px); } 50% { transform: translateX(4px); } }
+.toast::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--danger); }
 @keyframes drop { from { opacity: 0; transform: translateY(-40px) scale(.94); } }
 .toast-body { flex: 1; display: flex; gap: 12px; align-items: center; text-align: left; border: 0; background: none; padding: 8px 4px 8px 16px; }
 .toast-icon { flex: none; width: 46px; height: 46px; animation: ring .7s .5s ease-in-out 2; border-radius: 12px; display: grid; place-items: center; color: var(--danger); background: var(--danger-soft); }
@@ -729,9 +730,10 @@ button:focus:not(:focus-visible) { outline: none; }
 .tiles { border-bottom-color: var(--line); }
 .dock-head .count, .dock-more { background: var(--bg); }
 
-/* the alert: a solid card with a red edge all round instead of a side stripe */
-.toast.panel { background: #fff; border: 1px solid var(--danger-line); border-radius: 12px; padding-left: 0; box-shadow: 0 10px 28px rgb(23 36 58 / 14%); }
-.toast-body { padding-left: 12px; }
+/* the alert banner */
+/* shape, outline and red edge come from refresh.css (main's alert design) */
+.toast.panel { background: #fff; }
+.toast-body { padding-left: 16px; }
 .toast-icon { border-radius: 10px; }
 
 /* bottom controls */
@@ -782,4 +784,7 @@ button:focus:not(:focus-visible) { outline: none; }
 .speaker-switch button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .speaker-switch button.on { background: var(--accent); color: #fff; }
 .turn-error { display: grid; gap: 6px; justify-items: start; }
-
+/* the speaker switch under Tandem (press 3): same treatment as Tandem's other segmented controls */
+[data-brand="tandem"] .speaker-switch { background: rgb(255 255 255 / 7%); border-color: var(--line-2); }
+[data-brand="tandem"] .speaker-switch button { color: var(--ink-2); border-left-color: var(--line-2); }
+[data-brand="tandem"] .speaker-switch button.on { background: var(--t-cream); color: var(--t-navy); }

@@ -111,7 +111,7 @@ await page.evaluate((p, speak) => {
   localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
 }, persona, SPEAK);
 await page.reload({ waitUntil: "networkidle0" });
-await page.waitForFunction(() => /matched to local names/.test(document.body.innerText), { timeout: 30000 });
+await page.waitForFunction(() => /matched (to local names|locally)/.test(document.body.innerText), { timeout: 30000 });
 await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
 await page.click(".btn-primary");
