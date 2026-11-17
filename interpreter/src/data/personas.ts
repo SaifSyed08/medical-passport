@@ -190,7 +190,7 @@ export const sita: Persona = {
   ],
   contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148" }],
   script: [
-    { speaker: "patient", text: "डाक्टर, अँ... मेरो ढाड एकदमै दुखिरहेको छ। मैले दुई वटा फ्लेक्सन खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner" },
+    { speaker: "patient", text: "डाक्टर, अँ... मेरो कम्मर एकदमै दुखिरहेको छ। मैले दुई वटा सिटामोल खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Cetamol flips to acetaminophen; no alert (paracetamol is fine with her NSAID allergy)" },
     { speaker: "clinician", text: "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.", shows: "Nepali translation spoken; ketorolac (NSAID) and contrast-dye alerts" },
     { speaker: "patient", text: "ठिक छ, धन्यवाद डाक्टर।", shows: "Small talk: translated, no false alarms" },
   ],

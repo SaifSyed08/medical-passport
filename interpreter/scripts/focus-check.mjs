@@ -1,5 +1,5 @@
 // The Focus layout (press L) through a recorded demo: one dot per line in the ribbon, record notes under the line
-// that raised them, the allergy banner above the line (never covering it), and tapping a dot goes back in time.
+// that raised them (alerts in red, no banner over the line), and tapping a dot or scrolling goes back in time.
 //   npm run dev   then   node scripts/focus-check.mjs [sofia|sita] [--tandem]
 // No paid calls: the demo is a recording.
 import fs from "node:fs";
@@ -39,7 +39,7 @@ try {
   await page.keyboard.press("d");
   await page.waitForSelector(".f-top", { timeout: 15000 });
 
-  let bannerOk = true;
+  let bannerOk = false; // an alert note showed under its line
   let sawBanner = false;
   let sawNotes = false;
   const t0 = Date.now();
@@ -52,14 +52,13 @@ try {
         toast: toast ? toast.bottom : null,
         line: line ? line.top : null,
         notes: document.querySelectorAll(".f-note").length,
+        alertNotes: document.querySelectorAll(".f-note.alert").length,
         done: /Tap to start|Tap to resume/.test(document.querySelector(".orb-label")?.textContent || ""),
         dots: document.querySelectorAll(".f-dot").length,
       };
     });
-    if (s.toast !== null && s.line !== null) {
-      sawBanner = true;
-      if (s.toast > s.line + 1) bannerOk = false;
-    }
+    if (s.toast !== null) sawBanner = true;
+    if (s.alertNotes) bannerOk = true;
     if (s.notes) sawNotes = true;
     if (s.done && s.dots >= lines) break;
   }
@@ -68,8 +67,8 @@ try {
   const dots = await page.$$(".f-dot");
   check(dots.length === lines, `one ribbon dot per line (${dots.length}/${lines})`);
   check(sawNotes, "record notes appear under a line");
-  check(sawBanner, "allergy banner shows");
-  check(bannerOk, "banner sits above the line, never over it");
+  check(bannerOk, "the allergy shows as a red note under its line");
+  check(!sawBanner, "no alert banner over the line");
   check(await page.$(".f-dot.alert"), "the line that raised an alert is ringed in the ribbon");
 
   await dots[0].click();
@@ -82,6 +81,18 @@ try {
   await page.click(".f-live");
   await sleep(600);
   check(!(await page.$(".f-live")), "Back to now returns to the latest line");
+
+  // Scrolling up pages back one line, scrolling down comes forward again.
+  const onIdx = () => page.evaluate(() => [...document.querySelectorAll(".f-dot")].findIndex((d) => d.classList.contains("on")));
+  const before = await onIdx();
+  const box = await (await page.$(".f-stage-wrap")).boundingBox();
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.wheel({ deltaY: -150 });
+  await sleep(700);
+  check((await onIdx()) === before - 1, `scrolling up shows the line before (${before} -> ${await onIdx()})`);
+  await page.mouse.wheel({ deltaY: 150 });
+  await sleep(700);
+  check((await onIdx()) === before, "scrolling down comes back");
 
   await page.click(".f-chip.clinician");
   await sleep(300);

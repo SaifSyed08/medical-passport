@@ -20,15 +20,16 @@ Press **D**, or tap **Play demo conversation**. It replays a real recorded run: 
 
 - **Sofía Hernández** is from Guadalajara and visiting Austin (Spanish ⇄ English). Her record is written in Spanish, and the doctor reads it in English.
 - **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Tessera medical passport](https://github.com/SaifSyed08/medical-passport) demo.
-- **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). She has back pain and took two **Flexon**, not knowing it contains ibuprofen, an NSAID, which sets off her asthma. The word flips to *ibuprofen + acetaminophen* and the NSAID-allergy banner drops in. The doctor then proposes ketorolac (another NSAID) and a CT with contrast, and her record shows a contrast-dye reaction too. The lines to say are in the [demo script doc](https://claude.ai/artifact/TKTvdwnDLx7LXDkdvCNk5k).
+- **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). Her lower back hurts and two **Cetamol** didn't help. The word flips to *acetaminophen*, her back-pain history and NSAID allergy show as plain record cards, and nothing turns red, because paracetamol is safe for her. Then the doctor proposes ketorolac (an NSAID) and a CT with contrast. Her NSAID allergy (she has aspirin-exacerbated asthma) and her contrast-dye reaction both turn into alerts. The lines to say are in the [demo script doc](https://claude.ai/artifact/TKTvdwnDLx7LXDkdvCNk5k).
 
 Hidden keys:
 
 | Key | |
 | --- | --- |
 | **3** | Switches to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter |
-| **L** | Switches the conversation to **Focus**, an experimental layout (also under ⚙ → Conversation layout). One line at a time in very large type, the record's notes pinned under the sentence that raised them, earlier lines as a ribbon of dots at the top (tap one, or swipe sideways, to go back), and the two people as chips either side of the mic (tap one to say who talks next) |
+| **L** | Switches the conversation to **Focus**, an experimental layout (also under ⚙ → Conversation layout). One line at a time in very large type, the record's notes pinned under the sentence that raised them, earlier lines as a ribbon of dots at the top (tap one, swipe sideways, or scroll or swipe down, to go back), and the two people as chips either side of the mic (tap one to say who talks next) |
 | **F** | Fast demo: the recording plays about 1.6× faster with shorter pauses. Press again for normal speed |
+| **V** | The demo without the speakers' recorded voices: captions still roll and the translations are still spoken (also in ⋯). Press again to bring the voices back |
 | **P** | **Private mode**: the patient's voice, words and record are handled by small models on this machine instead of the cloud. A lock shows in the header. Press again for the cloud models. See [Private mode](#private-mode-p) |
 
 ## What it does
