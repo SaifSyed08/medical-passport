@@ -50,6 +50,7 @@ const deadline = Date.now() + (stall ? 150_000 : 120_000);
 let toastShot = false;
 let captionShot = "";
 let bannerSeen = false;
+let flashSeen = false;
 for (;;) {
   const s = await page.evaluate(() => ({
     done: document.querySelectorAll(".turn.done").length,
@@ -60,6 +61,7 @@ for (;;) {
     banner: Boolean(document.querySelector(".toast")),
   }));
   if (s.banner) bannerSeen = true;
+  if (s.toast) flashSeen = true;
   if (!captionShot && s.caption.length > 18) {
     captionShot = s.caption;
     await page.screenshot({ path: path.join(OUT, `${persona}-${shot++}-live-caption.png`) });
@@ -105,7 +107,9 @@ const fails = [];
 if (final.history + 1 !== data.lines.length) fails.push(`expected ${data.lines.length} turns, saw ${final.history + 1}`);
 if (!final.cards.length) fails.push("no context cards");
 if (!captionShot) fails.push("no live caption while the recording played");
-if (!bannerSeen) fails.push("no allergy banner (both demos end on a penicillin allergy)");
+// A new alert flashes its tile in the dock; no banner covers the transcript (removed 2026-11-17).
+if (!flashSeen) fails.push("no alert tile flashed (every demo raises an allergy alert)");
+if (bannerSeen) fails.push("an alert banner covered the transcript");
 if (hiddenAfterAll !== null && hiddenAfterAll > 2) fails.push(`after "All", the latest translation is ${hiddenAfterAll}px under the bottom panel`);
 if (persona === "sofia" && !toastShot) fails.push("no alert toast");
 if (errors.length) fails.push(`page errors: ${errors.join(" | ")}`);

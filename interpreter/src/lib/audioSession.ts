@@ -68,3 +68,24 @@ export function toggleFastDemo() {
   demoVoice().el.playbackRate = fast ? FAST_RATE : 1;
   return fast;
 }
+
+/* Speakers' voices in the demo (V anywhere): off plays the recording silently (captions follow the clock) while
+   the translations are still spoken. Remembered on this phone. */
+let voices = (() => {
+  try {
+    return localStorage.getItem("ti.demoVoices") !== "0";
+  } catch {
+    return true;
+  }
+})();
+export const demoVoicesOn = () => voices;
+export function toggleDemoVoices() {
+  voices = !voices;
+  try {
+    localStorage.setItem("ti.demoVoices", voices ? "1" : "0");
+  } catch {
+    /* storage unavailable */
+  }
+  if (!voices) demoVoice().el.muted = true;
+  return voices;
+}

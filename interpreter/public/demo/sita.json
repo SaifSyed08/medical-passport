@@ -1,6 +1,6 @@
 {
  "persona": "sita",
- "recordedAt": "2026-11-16T09:44:21.445Z",
+ "recordedAt": "2026-11-17T20:20:43.931Z",
  "equivalents": [
   {
    "key": "ibuprofen-paracetamol",
@@ -60,59 +60,66 @@
   {
    "speaker": "patient",
    "audio": "/demo/sita-0.wav",
-   "audioMs": 8900,
+   "audioMs": 10600,
    "speech": "/demo/sita-0-tr.mp3",
    "stt": {
-    "text": "डाक्टर, आं, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
-    "ms": 804
+    "text": "डाक्टर, अ, मेरो कम्मर एकदमै दुखिरहेको छ। मैले दुई धेरे सिटामोल खाएँ तर कत्ति पनि कम भएन।",
+    "ms": 1092
    },
    "interpret": {
     "language": "ne",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "डाक्टर, आं, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
-    "cleaned": "डाक्टर, मेरो ढाड एकदमै दुखी रहेको छ। मैले दुई वटा फ्लेक्सन खाए तर कत्ति पनि कम भएन।",
-    "translation": "Doctor, my back is extremely painful. I took two ibuprofen + acetaminophen (Flexon) tablets, but it didn't get better at all.",
+    "raw": "डाक्टर, अ, मेरो कम्मर एकदमै दुखिरहेको छ। मैले दुई धेरे सिटामोल खाएँ तर कत्ति पनि कम भएन।",
+    "cleaned": "डाक्टर, मेरो कम्मर एकदमै दुखिरहेको छ। मैले दुईवटा सिटामोल खाएँ, तर कत्ति पनि कम भएन।",
+    "translation": "Doctor, my lower back hurts a lot. I took two acetaminophen (paracetamol, Cetamol), but it hasn’t eased at all.",
     "drugs": [
      {
-      "key": "ibuprofen-paracetamol",
-      "mentioned": "फ्लेक्सन",
-      "translated": "ibuprofen + acetaminophen (Flexon)",
+      "key": "acetaminophen",
+      "mentioned": "सिटामोल",
+      "translated": "acetaminophen (paracetamol, Cetamol)",
       "inCleaned": true,
       "inTranslation": true,
-      "generic": "ibuprofen + paracetamol",
-      "drug_class": "NSAID",
-      "home_name": "ibuprofen + paracetamol (Flexon)",
-      "home_strength": "400 mg + 325 mg",
-      "local_name": "ibuprofen + acetaminophen",
+      "generic": "acetaminophen (paracetamol)",
+      "drug_class": "",
+      "home_name": "paracetamol (Cetamol)",
+      "home_strength": "",
+      "local_name": "acetaminophen",
       "local_brands": [
-       "Advil Dual Action"
+       "Tylenol"
       ],
-      "local_strength": "125 mg + 250 mg per tablet",
-      "status": "different_strength",
-      "note_listener": "US combination tablets are lower strength than Flexon.",
-      "note_doctor": "US Advil Dual Action is 125 mg ibuprofen + 250 mg acetaminophen per tablet; Flexon is 400 mg + 325 mg.",
-      "curated_note": "Contains ibuprofen, an NSAID. US combination tablets are lower strength (Advil Dual Action 125 mg + 250 mg).",
+      "local_strength": "",
+      "status": "different_name",
+      "note_listener": "अमेरिकामा यसलाई acetaminophen भनिन्छ; Tylenol एउटा ब्रान्ड हो।",
+      "note_doctor": "",
+      "curated_note": "",
       "med_id": "med_flexon",
       "source": "curated"
      }
     ],
-    "ms": 2017
+    "ms": 3480
    },
    "context": [
     {
      "id": "cnd_backpain",
      "level": "relevant",
-     "title": "Low back pain",
-     "detail": "Recurring after lifting at work; no injury on X-ray (2025)",
-     "why": "Patient reports severe back pain despite taking Flexon"
+     "title": "Recurrent low back pain",
+     "detail": "Recurring after lifting at work; 2025 X-ray showed no injury.",
+     "why": "Relevant to her severe current back pain."
+    },
+    {
+     "id": "alg_nsaid",
+     "level": "relevant",
+     "title": "NSAID-induced asthma",
+     "detail": "Severe wheezing and asthma attack after aspirin; avoid aspirin and NSAIDs, including ibuprofen.",
+     "why": "Important when considering pain treatment for her back."
     },
     {
      "id": "med_flexon",
-     "level": "alert",
-     "title": "NSAID allergy",
-     "detail": "Severe wheezing and asthma attack after aspirin and NSAIDs (2022)",
-     "why": "Flexon contains ibuprofen, an NSAID, which can trigger asthma attacks"
+     "level": "relevant",
+     "title": "Flexon contains ibuprofen",
+     "detail": "OTC tablet contains ibuprofen 400 mg plus acetaminophen 325 mg; listed for pain as needed.",
+     "why": "Her pain medicine may contain an NSAID despite her report of taking acetaminophen."
     }
    ]
   },
@@ -122,21 +129,21 @@
    "audioMs": 8000,
    "speech": "/demo/sita-1-tr.mp3",
    "stt": {
-    "text": "Okay. I'm going to give you Ketorolac for the pain and get a CT scan with contrast.",
-    "ms": 530
+    "text": "Okay, I'm going to give you ketorolac for the pain and get a CT scan with contrast.",
+    "ms": 715
    },
    "interpret": {
     "language": "en",
     "speaker": "clinician",
     "listenerLang": "ne",
-    "raw": "Okay. I'm going to give you Ketorolac for the pain and get a CT scan with contrast.",
-    "cleaned": "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.",
-    "translation": "ठीक छ। म तपाईंलाई दुखाइका लागि केटोरोलेक दिन्छु र कन्क्रास्टसहितको सीटी स्क्यान गराउँछु।",
+    "raw": "Okay, I'm going to give you ketorolac for the pain and get a CT scan with contrast.",
+    "cleaned": "I'm going to give you ketorolac for the pain and get a CT scan with contrast.",
+    "translation": "म तपाईंलाई दुखाइका लागि ketorolac दिनेछु र कन्ट्रास्टसहितको CT स्क्यान गराउनेछु।",
     "drugs": [
      {
       "key": "ketorolac",
       "mentioned": "ketorolac",
-      "translated": "केटोरोलेक",
+      "translated": "ketorolac",
       "inCleaned": true,
       "inTranslation": true,
       "generic": "ketorolac",
@@ -149,29 +156,36 @@
       ],
       "local_strength": "",
       "status": "same_name",
-      "note_listener": "यो औषधि नेपाल र अमेरिकामा एउटै नाममा पाइन्छ।",
+      "note_listener": "",
       "note_doctor": "",
       "curated_note": "",
       "med_id": "",
       "source": "curated"
      }
     ],
-    "ms": 1415
+    "ms": 3188
    },
    "context": [
     {
      "id": "alg_nsaid",
      "level": "alert",
-     "title": "NSAID Allergy",
-     "detail": "Severe wheezing and asthma attack with aspirin and NSAIDs (2022)",
-     "why": "Ketorolac is an NSAID and patient has severe allergy to NSAIDs"
+     "title": "NSAID anaphylactoid reaction",
+     "detail": "Severe wheezing and asthma attack after aspirin (2022); allergy includes ketorolac and other NSAIDs.",
+     "why": "Ketorolac is an NSAID and could trigger a severe asthma attack."
     },
     {
      "id": "alg_contrast",
      "level": "alert",
-     "title": "Contrast Allergy",
-     "detail": "Hives and throat tightness during contrast CT (2023)",
-     "why": "Planned CT with contrast risks allergic reaction without premedication"
+     "title": "Iodinated contrast reaction",
+     "detail": "Hives and throat tightness during CT contrast (2023).",
+     "why": "The planned contrast CT may repeat this reaction."
+    },
+    {
+     "id": "doc_ct_2023",
+     "level": "alert",
+     "title": "Contrast CT precautions",
+     "detail": "Prior hives and throat tightness; future contrast only with premedication, or use non-contrast imaging or MRI.",
+     "why": "This record specifies precautions for the planned contrast CT."
     }
    ]
   },
@@ -181,35 +195,20 @@
    "audioMs": 3500,
    "speech": "/demo/sita-2-tr.mp3",
    "stt": {
-    "text": "ठीक छ, धन्यवाद डक्टर.",
-    "ms": 1265
+    "text": "ठीक छ, धन्यवाद डॉक्टर।",
+    "ms": 515
    },
    "interpret": {
     "language": "ne",
     "speaker": "patient",
     "listenerLang": "en",
-    "raw": "ठीक छ, धन्यवाद डक्टर.",
-    "cleaned": "ठीक छ, धन्यवाद डक्टर।",
-    "translation": "Okay, thank you doctor.",
+    "raw": "ठीक छ, धन्यवाद डॉक्टर।",
+    "cleaned": "ठीक छ, धन्यवाद, डाक्टर।",
+    "translation": "Okay, thank you, doctor.",
     "drugs": [],
-    "ms": 738
+    "ms": 2234
    },
-   "context": [
-    {
-     "id": "alg_nsaid",
-     "level": "alert",
-     "title": "NSAID Allergy",
-     "detail": "Severe wheezing and asthma attack after aspirin and NSAIDs (2022)",
-     "why": "Ketorolac is an NSAID and contraindicated due to allergy"
-    },
-    {
-     "id": "alg_contrast",
-     "level": "alert",
-     "title": "Contrast Dye Allergy",
-     "detail": "Hives and throat tightness during contrast CT (2023)",
-     "why": "Contrast CT planned but patient has moderate allergy"
-    }
-   ]
+   "context": []
   }
  ]
 }

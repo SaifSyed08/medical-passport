@@ -279,3 +279,18 @@
 .app.embedded .device-note { top: 12px; }
 /* Tandem's green is light: navy on it reads, white doesn't. */
 [data-brand="tandem"] .device-tag, [data-brand="tandem"] .device-note.on { color: #0b2452; }
+
+/* ---------------------------------------------------------------- round 8 */
+/* Medicine names are highlighted like a marker: dark text on a solid pale marker, not coloured text. */
+.drug, [data-brand="tandem"] .drug { color: var(--ink); background: #ffe08a; box-shadow: none; text-decoration: none; border-radius: 4px; padding: 0 .14em; font-weight: 650; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.drug.danger, [data-brand="tandem"] .drug.danger { color: var(--ink); background: #ffc8bf; box-shadow: none; }
+[data-brand="tandem"] .drug, [data-brand="tandem"] .drug.danger { color: #0b2452; }
+[data-brand="tandem"] .drug { background: #f3c45f; }
+[data-brand="tandem"] .drug.danger { background: #ff9f92; }
+/* A swapped name: the new name in the line, the one that was said in small type right after it (it used to hang
+   underneath, centred, and collided with the next line). */
+.drug.swaps { display: inline; margin: 0; padding: 0 .14em; }
+.drug.swaps .drug-to { text-decoration: none; }
+.drug.swaps .drug-caption { position: static; transform: none; display: inline; margin-left: .35em; font-size: .62em; font-weight: 500; color: inherit; opacity: .7; animation: fadeIn .3s ease-out calc(var(--d) + 1200ms) both; }
+/* The profile's lists: the hairlines above and below are enough; the 1px border read as a bright frame in Tandem. */
+.rec-section .list, [data-brand="tandem"] .rec-section .list { border: 0; }

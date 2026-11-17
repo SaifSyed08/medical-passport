@@ -85,9 +85,10 @@ for (const [i, line] of persona.script.entries()) {
     }
   }
   if (persona.id === "sita" && i === 0) {
-    check(it.drugs.some((d) => d.key === "ibuprofen-paracetamol"), "Flexon resolved to ibuprofen + paracetamol");
-    check(/ibuprofen/i.test(it.translation), "English translation says ibuprofen");
-    check(cx.items.some((c) => c.level === "alert" && /nsaid|allerg/i.test(`${c.title} ${c.detail}`)), "NSAID allergy alert on Flexon");
+    check(it.drugs.some((d) => d.key === "acetaminophen"), "Cetamol resolved to acetaminophen");
+    check(/acetaminophen/i.test(it.translation) && /back/i.test(it.translation), "English translation says acetaminophen and back");
+    // Paracetamol is fine with her NSAID allergy: the first line must not raise a red flag.
+    check(!cx.items.some((c) => c.level === "alert"), "no alert on paracetamol");
   }
   if (persona.id === "sita" && i === 1) {
     check(/[\u0900-\u097F]/.test(it.translation), "translated into Nepali (Devanagari)");

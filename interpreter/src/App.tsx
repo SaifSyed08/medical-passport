@@ -5,7 +5,7 @@ import { loadSettings, saveSettings, type Settings } from "./lib/store";
 import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
-import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
+import { toggleDemoVoices, toggleFastDemo, unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, notifyHost, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
 import Icon from "./components/Icon";
@@ -39,6 +39,8 @@ export default function App() {
   // Private mode (P): a short note says what changed; the lock in each header says it's on.
   const private_ = useOnDevice();
   const [deviceNote, setDeviceNote] = useState<string | null>(null);
+  // Which icon the note carries: the lock for private mode, a speaker for the demo voices (V).
+  const [noteIcon, setNoteIcon] = useState<"device" | "speaker" | "mute">("device");
   // The patient's own edits (swipe to delete, scanned documents) re-derive the record everywhere.
   const edits = useEdits(settings.personaId);
   const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas, edits]);
@@ -88,6 +90,7 @@ export default function App() {
     if (!private_) return;
     let live = true;
     warmLocal(langs.split(",")).then((s) => {
+      if (live && !s?.ready) setNoteIcon("device");
       if (live && !s?.ready) setDeviceNote("Private mode can't load its models. On the laptop, run npm run local:setup.");
     });
     return () => {
@@ -117,7 +120,14 @@ export default function App() {
       if (e.key === "p" || e.key === "P") {
         const next = !onDevice();
         setOnDevice(next);
+        setNoteIcon("device");
         setDeviceNote(next ? "Private mode: speech, translation and record checks stay on this device." : "Cloud mode: the full models, online.");
+        return;
+      }
+      if (e.key === "v" || e.key === "V") {
+        const on = toggleDemoVoices();
+        setNoteIcon(on ? "speaker" : "mute");
+        setDeviceNote(on ? "Demo: the speakers' recorded voices play." : "Demo: speakers' voices off. Captions still roll and translations are still spoken.");
         return;
       }
       if (e.key === "3") {
@@ -161,8 +171,8 @@ export default function App() {
       </div>}
       {serverIssue && !(private_ && /OPENAI_API_KEY/.test(serverIssue)) && <div className="banner">{serverIssue}</div>}
       {deviceNote && (
-        <div className={`device-note${private_ ? " on" : ""}`} role="status">
-          <Icon name={private_ ? "lock" : "sparkle"} size={18} />
+        <div className={`device-note${noteIcon === "device" && private_ ? " on" : ""}`} role="status">
+          <Icon name={noteIcon === "device" ? (private_ ? "lock" : "sparkle") : noteIcon} size={18} />
           {deviceNote}
         </div>
       )}
