@@ -46,7 +46,9 @@ if (process.argv.includes("--fast")) await page.keyboard.press("f"); // secret f
 await page.keyboard.press("d");
 let shot = 1;
 const seen = new Set();
-const deadline = Date.now() + (stall ? 150_000 : 120_000);
+// Scaled to the recording: its speech, about as much again for the spoken translations, plus pauses.
+const speechMs = data.lines.reduce((n, l) => n + (l.audioMs || 6000), 0);
+const deadline = Date.now() + Math.max(stall ? 150_000 : 120_000, 60_000 + speechMs * 2.5);
 let toastShot = false;
 let captionShot = "";
 let bannerSeen = false;
