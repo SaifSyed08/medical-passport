@@ -132,6 +132,7 @@ What counts:
 - A brand name can hide what is inside it: check the patient's medication list for its generic ingredients (e.g. a combination painkiller that contains ibuprofen is an NSAID).
 - A medicine, drug class or treatment named by either side -> allergies to it or a cross-reactive class (penicillins and cephalosporins, sulfonamides), contraindications, interactions with current medicines, and the labs that change dosing (e.g. kidney function for metformin, contrast or NSAIDs; potassium for ARBs).
 - A test or procedure -> results or conditions that change whether or how to do it (e.g. eGFR before IV contrast, metformin before contrast).
+- A question the record can answer (vaccinations, past visits or admissions, when something was diagnosed, what the patient takes, a letter or report on file) -> the record item that holds the answer, so the clinician can read it instead of relying on the patient's memory.
 - Small talk, greetings, thanks, logistics: return no items.
 
 Rules:

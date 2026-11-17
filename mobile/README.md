@@ -45,6 +45,9 @@ cloudflared tunnel --url http://127.0.0.1:8788                                  
 
 `extractor/.dev.vars` (git-ignored) holds `MAIN_API_URL=http://127.0.0.1:8787` and `OCR_URL=http://127.0.0.1:8790`. Run `--config wrangler.toml` from `extractor/`, or Wrangler picks up the main app's generated build config.
 
+### Medicines tab
+Looks up what a medicine from home is called in the destination country, and converts the traveler's own medicines. It asks the interpreter server's `/api/equivalents` (a checked reference list first, an AI suggestion otherwise, each result labelled). Only medicine names and two country codes are sent. It needs the same `EXPO_PUBLIC_INTERPRETER_URL` and `EXPO_PUBLIC_INTERPRETER_CODE` as the Interpreter tab; without them the tab says the lookup isn't set up.
+
 ### Interpreter tab (optional)
 The **Interpreter** tab embeds the Tessera Interpreter (`../interpreter`) in a WebView, with the same screens, live captions, spoken translation and recorded demo. It is given the signed-in traveler's record: allergies, medicines, conditions and the text of their records and documents. While someone talks, it flags whatever is relevant, for example a penicillin allergy when the doctor mentions amoxicillin. Contacts and insurance are not sent. The demo patients (Sofía, Jordan) are still under ⚙ in the interpreter, with **Play demo conversation**.
 
@@ -76,7 +79,7 @@ A development build needs `npx expo run:ios` (Xcode) or `npx expo run:android` (
 
 ## What's where
 
-- `src/app/`: screens (Expo Router). Tabs: Card, Health, Interpreter (WebView of `../interpreter`, fed by `src/lib/interpreter.ts`), Records, Privacy, Activity. Modals: full-screen QR (`show`), Wallet preview, emergency-profile preview, presenter tools, item and basics editors.
+- `src/app/`: screens (Expo Router). Tabs: Card, Health, Medicines (what a medicine is called in another country, `src/lib/medicines.ts`), Interpreter (WebView of `../interpreter`, fed by `src/lib/interpreter.ts`), Records, Privacy. The access log (`activity`) opens from Privacy. Modals: full-screen QR (`show`), emergency-profile preview, presenter tools, item and basics editors.
 - `src/lib/`: API client, session (token in `expo-secure-store`), in-memory cache, activity polling and notifications, theme tokens, EN/JA strings.
 - `src/components/`: UI kit ported from the web app's `app/passport.css` (same palette, serif/sans pairing, card themes).
 - `../shared/tessera.ts`: API types shared with the backend, resolved through Metro `watchFolders` (no npm workspace).

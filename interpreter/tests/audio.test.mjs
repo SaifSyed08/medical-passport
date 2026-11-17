@@ -145,3 +145,55 @@ test("unlock() does not cut off a line that is playing", async () => {
   player.audio.fire("ended");
   await done;
 });
+
+/* ---- 2026-11-15: "after it translates, it sometimes won't let me talk" ---- */
+
+test("the phone starting to speak sends the sentence in progress instead of dropping it", () => {
+  const { mic, events } = fakeMic();
+  const discards = [];
+  mic.h.onDiscard = (seg) => discards.push(seg);
+  for (let i = 0; i < 20; i++) mic.frame(new Float32Array(320));
+  for (let i = 0; i < 80; i++) mic.frame(LOUD()); // mid-sentence
+  mic.pause("speaking"); // an earlier translation starts playing
+  assert.equal(events.utterances, 1, "the sentence being spoken was thrown away");
+  assert.equal(discards.length, 0);
+  assert.equal(mic.current, "paused");
+});
+
+test("an utterance still ends when the room noise sits above the fixed quiet threshold", () => {
+  const { mic, events } = fakeMic();
+  for (let i = 0; i < 20; i++) mic.frame(new Float32Array(320));
+  for (let i = 0; i < 100; i++) mic.frame(LOUD());
+  // Automatic gain lifts the background after speech stops: louder than "silence", far quieter than the voice.
+  for (let i = 0; i < 70; i++) mic.frame(new Float32Array(320).fill(0.02));
+  assert.equal(events.utterances, 1, "the utterance never ended, so nobody else could speak");
+  assert.equal(mic.current, "listening");
+});
+
+test("a spoken line that never starts is given up on, and the mic comes back", async () => {
+  const { mic } = fakeMic();
+  const duplex = halfDuplex(() => mic, 20);
+  const player = new Player((busy) => duplex.onBusy(busy));
+  player.startTimeoutMs = 100;
+  const line = player.say("a line whose audio never arrives", "es"); // no "ended", no "error"
+  await sleep(20);
+  assert.equal(mic.isPaused("speaking"), true);
+  await Promise.race([line, sleep(1500).then(() => assert.fail("the line hung forever"))]);
+  await sleep(60);
+  assert.equal(mic.isPaused(), false, "mic stayed closed after a stalled line");
+  duplex.cancel();
+});
+
+test("a line the system pauses by itself is resumed, then abandoned if it keeps happening", async () => {
+  const player = new Player(() => {});
+  const line = player.say("interrupted", "es");
+  await sleep(10);
+  player.audio.paused = true; // FakeAudio.play() doesn't clear this, like an element that refuses to resume
+  for (let i = 0; i < 3; i++) {
+    player.audio.fire("pause");
+    await sleep(230);
+  }
+  await Promise.race([line, sleep(500).then(() => assert.fail("still waiting on a paused line"))]);
+  assert.ok(player.audio.plays.length >= 3, "it should have tried to resume first");
+});
+

@@ -25,12 +25,13 @@ type ViewProps = {
   onDrug: (d: DrugMention, speaker: Turn["speaker"]) => void;
   onFlip: (t: Turn) => void;
   onReplay: (t: Turn) => void;
+  onRetry: (t: Turn) => void;
   onOpenCtx: (c: ContextItem) => void;
 };
 
 const whoOf = (t: Turn) => t.speaker || t.forced;
 
-export function FocusView({ turns, ctx, persona, live, speak, onBack, onMenu, onRecord, onToggleSpeak, onDrug, onFlip, onReplay, onOpenCtx }: ViewProps) {
+export function FocusView({ turns, ctx, persona, live, speak, onBack, onMenu, onRecord, onToggleSpeak, onDrug, onFlip, onReplay, onRetry, onOpenCtx }: ViewProps) {
   const [selected, setSelected] = useState<string | null>(null);
   const latest = turns[turns.length - 1];
   const shownIdx = selected ? turns.findIndex((t) => t.id === selected) : turns.length - 1;
@@ -116,6 +117,7 @@ export function FocusView({ turns, ctx, persona, live, speak, onBack, onMenu, on
             onDrug={(d) => onDrug(d, shown.speaker)}
             onFlip={() => onFlip(shown)}
             onReplay={() => onReplay(shown)}
+            onRetry={() => onRetry(shown)}
             onOpenCtx={onOpenCtx}
           />
         )}
@@ -140,6 +142,7 @@ function Line({
   onDrug,
   onFlip,
   onReplay,
+  onRetry,
   onOpenCtx,
 }: {
   turn: Turn;
@@ -152,6 +155,7 @@ function Line({
   onDrug: (d: DrugMention) => void;
   onFlip: () => void;
   onReplay: () => void;
+  onRetry: () => void;
   onOpenCtx: (c: ContextItem) => void;
 }) {
   const who = whoOf(t);
@@ -229,7 +233,19 @@ function Line({
         </>
       )}
 
-      {t.status === "error" && <p className="error-text">Couldn't translate this. {t.error}</p>}
+      {t.status === "error" && (
+        <div className="turn-error">
+          {t.raw && (
+            <p className="f-original" dir={dir(spokenLang)}>
+              {t.raw}
+            </p>
+          )}
+          <p className="error-text">{t.raw ? "Couldn't translate this." : "Couldn't hear that. Please say it again."} {t.error}</p>
+          <button className="link small" onClick={onRetry}>
+            {t.raw ? "Try again" : "Dismiss"}
+          </button>
+        </div>
+      )}
 
       {(notes.length > 0 || drugNotes.length > 0) && (
         <ul className="f-notes" aria-label="From the record">

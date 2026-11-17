@@ -29,7 +29,6 @@ function Root() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="login" options={{ gestureEnabled: false }} />
         <Stack.Screen name="show" options={{ presentation: "fullScreenModal", animation: "fade" }} />
-        <Stack.Screen name="wallet-preview" options={{ presentation: "modal" }} />
         <Stack.Screen name="presenter" options={{ presentation: "modal" }} />
         <Stack.Screen name="emergency-preview" options={{ presentation: "modal" }} />
         <Stack.Screen name="item/[kind]" options={{ presentation: "modal" }} />
@@ -39,6 +38,7 @@ function Root() {
         <Stack.Screen name="insurance" options={{ presentation: "modal" }} />
         <Stack.Screen name="trip" options={{ presentation: "modal" }} />
         <Stack.Screen name="review" options={{ presentation: "modal" }} />
+        <Stack.Screen name="activity" options={{ headerShown: true, title: t.accessLog, headerBackTitle: t.tabPrivacy }} />
         <Stack.Screen name="record/[id]" options={{ headerShown: true, title: t.records, headerBackTitle: t.records }} />
       </Stack>
     </>

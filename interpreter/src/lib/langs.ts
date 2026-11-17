@@ -44,5 +44,19 @@ export const COUNTRIES: Record<string, { name: string; flag: string }> = {
 export const RTL = new Set(["ar", "ur", "fa"]);
 export const langName = (c: string) => LANGS[c]?.name || c;
 export const langNative = (c: string) => LANGS[c]?.native || c;
-export const country = (c: string) => COUNTRIES[c] || { name: c, flag: "🏳️" };
+// Countries outside COUNTRIES (e.g. AR, CR from the Tessera app) still get their full English name.
+let regionNames: Intl.DisplayNames | null = null;
+try {
+  regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+} catch {
+  /* very old engines: fall back to the code */
+}
+const regionName = (c: string) => {
+  try {
+    return regionNames?.of(c.toUpperCase()) || c;
+  } catch {
+    return c;
+  }
+};
+export const country = (c: string) => COUNTRIES[c] || { name: regionName(c), flag: "🏳️" };
 export const dir = (lang: string) => (RTL.has(lang) ? "rtl" : "ltr");

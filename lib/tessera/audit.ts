@@ -36,7 +36,7 @@ export async function appendAudit(db: TesseraDb, e: AuditInput) {
 
 const verbs: Record<AuditAction, string> = {
   scan: "scanned your card",
-  id_match: "checked your name and date of birth",
+  id_match: "confirmed your date of birth",
   sign_in: "signed in to view your card",
   profile_view: "viewed your emergency profile",
   ai_question: "asked a question about your records",
@@ -55,7 +55,7 @@ const verbs: Record<AuditAction, string> = {
 
 const attempts: Partial<Record<AuditAction, string>> = {
   scan: "scanned your card, but it couldn't be used",
-  id_match: "entered a name and date of birth that didn't match",
+  id_match: "entered a date of birth that didn't match",
   sign_in: "tried to sign in without verification",
   profile_view: "tried to view your emergency profile",
   full_record_request: "requested your full record",

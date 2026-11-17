@@ -12,7 +12,7 @@
 .app ::-webkit-scrollbar, .app::-webkit-scrollbar { display: none; }
 
 /* ---------- background: one faint glow at the top, otherwise flat ---------- */
-.app::before { background: radial-gradient(90% 38% at 50% -6%, rgb(11 122 117 / 9%), transparent 70%), var(--bg); }
+.app::before { background: radial-gradient(90% 38% at 50% -6%, rgb(49 95 152 / 9%), transparent 70%), var(--bg); }
 [data-brand="tandem"].app::before { background: radial-gradient(90% 36% at 50% -8%, rgb(243 178 60 / 10%), transparent 70%), #0b2452; }
 
 /* ---------- the logo as a loading loop ---------- */
@@ -53,12 +53,12 @@
 .picker.open .picker-btn { box-shadow: inset 0 0 0 1.5px var(--accent); }
 .picker.open .picker-chev { transform: rotate(-90deg); color: var(--accent); }
 .picker.inline .picker-btn { color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); background: transparent; }
-.picker-list { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 220px; max-height: 300px; overflow-y: auto; margin: 0; padding: 6px; list-style: none; border-radius: 16px; background: var(--panel-solid); box-shadow: 0 0 0 1px var(--line), 0 14px 40px rgb(17 26 34 / 18%); animation: pickIn .22s cubic-bezier(.2, .9, .3, 1.2) both; transform-origin: top right; }
+.picker-list { position: absolute; z-index: 30; top: calc(100% + 6px); right: 0; min-width: 220px; max-height: 300px; overflow-y: auto; margin: 0; padding: 6px; list-style: none; border-radius: 16px; background: var(--panel-solid); box-shadow: 0 0 0 1px var(--line), 0 14px 40px rgb(23 36 58 / 18%); animation: pickIn .22s cubic-bezier(.2, .9, .3, 1.2) both; transform-origin: top right; }
 .picker.up .picker-list { top: auto; bottom: calc(100% + 6px); transform-origin: bottom right; }
 .picker.inline .picker-list { left: 0; right: auto; transform-origin: top left; }
 @keyframes pickIn { from { opacity: 0; transform: scale(.92) translateY(-4px); } }
 .picker-list li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 11px; font-size: 16px; font-weight: 500; cursor: pointer; color: var(--ink); }
-.picker-list li.hi { background: rgb(17 26 34 / 5%); }
+.picker-list li.hi { background: rgb(23 36 58 / 5%); }
 .picker-list li.on { font-weight: 650; }
 .picker-list li .icon { margin-left: auto; color: var(--accent); flex: none; }
 .picker-label { display: grid; min-width: 0; }
@@ -88,7 +88,7 @@
 .orb.error .orb-core { background: var(--danger); animation: orbShake .5s ease 1; }
 .orb.error .orb-ring { background: transparent; }
 @keyframes orbShake { 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
-.orb-next { position: absolute; top: 2px; right: 0; z-index: 2; display: grid; place-items: center; padding: 3px; border-radius: 8px; background: var(--panel-solid); box-shadow: 0 1px 4px rgb(17 26 34 / 22%); animation: flagPop .45s cubic-bezier(.3, 1.6, .5, 1) both; }
+.orb-next { position: absolute; top: 2px; right: 0; z-index: 2; display: grid; place-items: center; padding: 3px; border-radius: 8px; background: var(--panel-solid); box-shadow: 0 1px 4px rgb(23 36 58 / 22%); animation: flagPop .45s cubic-bezier(.3, 1.6, .5, 1) both; }
 [data-brand="tandem"] .orb.listening .orb-core { background: var(--t-gold); }
 [data-brand="tandem"] .orb.speech .orb-core { background: var(--who); color: var(--t-navy); }
 [data-brand="tandem"] .orb.who-clinician { --who: var(--t-sky); }
@@ -140,7 +140,7 @@
 .home-top-side { width: 40px; }
 .home .patient-card { padding: 0; gap: 0; overflow: visible; text-align: left; position: relative; z-index: 2; }
 .pc-open { display: grid; gap: 16px; padding: 18px 18px 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; border-radius: 22px 22px 0 0; }
-.pc-open:active { background: rgb(17 26 34 / 3%); }
+.pc-open:active { background: rgb(23 36 58 / 3%); }
 .pc-open .pc-rows .pc-row:last-child { border-bottom: 1px solid var(--line); padding-bottom: 13px; }
 .pc-lang { margin: 0 18px; padding: 12px 0 14px !important; border-bottom: 0 !important; }
 .pc-lang .pc-val { gap: 10px; }
@@ -209,19 +209,19 @@
 .doc-place span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .doc-meta time { margin-left: auto; flex: none; color: var(--ink-3); font-weight: 600; }
 .doc-body { font-size: 14.5px; color: var(--ink-3) !important; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.doc-thumb { width: 46px; height: 60px; border-radius: 5px; overflow: hidden; flex: none; margin-top: 2px; background: #fff; box-shadow: 0 0 0 1px var(--line-2), 0 2px 6px rgb(17 26 34 / 10%); display: grid; transition: transform .2s; }
+.doc-thumb { width: 46px; height: 60px; border-radius: 5px; overflow: hidden; flex: none; margin-top: 2px; background: #fff; box-shadow: 0 0 0 1px var(--line-2), 0 2px 6px rgb(23 36 58 / 10%); display: grid; transition: transform .2s; }
 .doc-row:active .doc-thumb { transform: scale(.95); }
 .doc-thumb img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 .paper-mini { display: grid; align-content: start; gap: 4px; padding: 6px 6px; }
 .paper-mini b { height: 6px; width: 70%; border-radius: 1px; background: var(--c); margin-bottom: 3px; }
-.paper-mini i { height: 2.5px; border-radius: 1px; background: rgb(17 26 34 / 16%); }
+.paper-mini i { height: 2.5px; border-radius: 1px; background: rgb(23 36 58 / 16%); }
 .paper-mini i.short { width: 60%; }
 .doc-thumb.imaging .paper-mini { background: #1b2230; height: 100%; }
 .doc-thumb.imaging .paper-mini i { background: rgb(255 255 255 / 30%); }
 
 /* the document opened as a page */
 .doc-photo { width: 100%; border-radius: 14px; display: block; box-shadow: 0 0 0 1px var(--line); }
-.paper { background: #fff; color: #1d252d; border-radius: 4px; padding: 22px 22px 26px; display: grid; gap: 12px; box-shadow: 0 0 0 1px rgb(17 26 34 / 8%), 0 10px 30px rgb(17 26 34 / 12%); font-size: 15.5px; line-height: 1.6; animation: rise .4s ease both; }
+.paper { background: #fff; color: #1d252d; border-radius: 4px; padding: 22px 22px 26px; display: grid; gap: 12px; box-shadow: 0 0 0 1px rgb(23 36 58 / 8%), 0 10px 30px rgb(23 36 58 / 12%); font-size: 15.5px; line-height: 1.6; animation: rise .4s ease both; }
 .paper header { display: flex; align-items: center; gap: 10px; padding-bottom: 12px; border-bottom: 2px solid #1d252d; font-size: 13.5px; font-weight: 600; }
 .paper-place { display: inline-flex; align-items: center; gap: 6px; }
 .paper header time { margin-left: auto; font-variant-numeric: tabular-nums; color: #5b6670; }
@@ -246,7 +246,7 @@
 [data-brand="tandem"] .manual textarea { background: rgb(255 255 255 / 7%); color: var(--t-cream); border-color: rgb(247 241 227 / 16%); }
 
 /* the allergy banner: the red edge runs straight down a square left side, with a solid outline */
-.toast, .toast.panel { border-radius: 0 18px 18px 0; box-shadow: inset 0 0 0 1.5px var(--danger), 0 10px 26px rgb(17 26 34 / 12%); }
+.toast, .toast.panel { border-radius: 0 18px 18px 0; box-shadow: inset 0 0 0 1.5px var(--danger), 0 10px 26px rgb(23 36 58 / 12%); }
 .toast::before { width: 5px; border-radius: 0; }
 [data-brand="tandem"] .toast, [data-brand="tandem"] .toast.panel { box-shadow: inset 0 0 0 1.5px var(--danger), 0 12px 30px rgb(0 0 0 / 35%); }
 

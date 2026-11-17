@@ -6,11 +6,11 @@ import { markActivityRead } from "@/lib/activity";
 import { useResource } from "@/lib/cache";
 import { useSession } from "@/lib/session";
 import { color, space } from "@/lib/theme";
-import { Heading, LoadError, Loading, Logo, Pill, Screen, Section, T } from "@/components/ui";
+import { LoadError, Loading, Pill, Screen, Section, T } from "@/components/ui";
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 
-/** Access log: who, when, facility and what was viewed. Newest first. */
+/** Access log: who, when, facility and what was viewed. Newest first. Opened from the Privacy tab. */
 export default function Activity() {
   const { t } = useSession();
   const log = useResource<AccessEvent[]>("/access-log");
@@ -18,11 +18,7 @@ export default function Activity() {
 
   return (
     <Screen onRefresh={log.refresh} refreshing={log.loading} stale={log.stale}>
-      <Logo />
-      <View style={{ gap: 6 }}>
-        <Heading>{t.accessLog}</Heading>
-        <T style={{ color: color.muted }}>{t.accessLogLead}</T>
-      </View>
+      <T style={{ color: color.muted }}>{t.accessLogLead}</T>
       {!log.data && log.loading && <Loading />}
       {!log.data && log.error && <LoadError onRetry={log.refresh} />}
       {log.data?.length === 0 && <T style={{ color: color.body }}>{t.noActivity}</T>}

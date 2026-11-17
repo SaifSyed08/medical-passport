@@ -35,7 +35,8 @@ function buildTrack() {
   if (!files.length) throw new Error(`no voices for ${persona}; run api-check first`);
   const parts = files.map((f) => readWav(path.join(".cache/voice", f)));
   const rate = parts[0].rate;
-  const gap = Math.round(rate * (SPEAK ? 9 : 3.5));
+  // With voice on, the next person waits for the phone to finish reading the translation (the mic is closed meanwhile).
+  const gap = Math.round(rate * (SPEAK ? 14 : 3.5));
   const lead = Math.round(rate * 2.5);
   const total = lead + parts.reduce((n, p) => n + p.pcm.length + gap, 0);
   const pcm = new Int16Array(total);
@@ -83,13 +84,34 @@ await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile
 page.on("console", (m) => (m.type() === "error" || m.type() === "warn") && console.log(`  [page ${m.type()}] ${m.text()}`));
 page.on("pageerror", (e) => console.log(`  [page error] ${e.message}`));
 
+// Headless Chrome's file-backed fake microphone delivers silence on some machines (macOS), so the track is also
+// fed in from inside the page: getUserMedia returns a stream playing the same recording. The timeline starts at
+// the first call (the mic tap) and keeps running when the app releases and reopens the mic, like a real room.
+await page.evaluateOnNewDocument((b64) => {
+  let room = null;
+  navigator.mediaDevices.getUserMedia = async () => {
+    if (!room) {
+      const ctx = new AudioContext();
+      const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+      const buffer = await ctx.decodeAudioData(bytes.buffer);
+      const dest = ctx.createMediaStreamDestination();
+      const src = ctx.createBufferSource();
+      src.buffer = buffer;
+      src.connect(dest);
+      src.start();
+      room = dest.stream;
+    }
+    return room.clone();
+  };
+}, fs.readFileSync(track.file).toString("base64"));
+
 await page.goto(BASE, { waitUntil: "networkidle0" });
 await page.evaluate((p, speak) => {
   localStorage.clear();
   localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
 }, persona, SPEAK);
 await page.reload({ waitUntil: "networkidle0" });
-await page.waitForFunction(() => /matched to local names/.test(document.body.innerText), { timeout: 30000 });
+await page.waitForFunction(() => /matched (to local names|locally)/.test(document.body.innerText), { timeout: 30000 });
 await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
 await page.click(".btn-primary");

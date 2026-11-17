@@ -112,10 +112,18 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     const e = epoch.current;
     let release: (v: Line) => void = () => {};
     const ready = new Promise<Line>((r) => (release = r));
-    speechChain.current = speechChain.current.then(async () => {
-      const line = await ready;
-      if (line && speakRef.current && fresh(e)) await playerRef.current!.say(line.text, line.lang, line.voice);
-    });
+    speechChain.current = speechChain.current
+      .then(async () => {
+        const line = await ready;
+        if (!line || !speakRef.current || !fresh(e)) return;
+        // Never talk over someone: if a person is mid-sentence when the translation lands, wait for them to finish.
+        // (Speaking pauses the mic, so starting now would cut their sentence short.)
+        const t0 = performance.now();
+        while (fresh(e) && micRef.current?.current === "speech" && performance.now() - t0 < 20000) await sleep(150);
+        if (fresh(e) && speakRef.current) await playerRef.current!.say(line.text, line.lang, line.voice);
+      })
+      // One failed line must not silence every line after it.
+      .catch(() => {});
     return release;
   };
 
@@ -643,13 +651,17 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
     if (demo === "loading") return "Listening";
     if (demo === "working") return speaking ? "Speaking · tap to skip" : "Translating…";
     if (micState === "off") return "Tap to start listening";
-    if (micState === "starting") return "Starting the mic…";
+    // On iPhone the mic is released while the phone speaks and reopened after: that's a pause, not a fresh start.
+    if (micState === "starting") return turns.length ? "One moment…" : "Starting the mic…";
+    // Between the phone finishing a line and the mic being open again.
+    if (micState === "paused" && !speaking && !muted) return "One moment…";
     if (micState === "error") return "Mic problem · tap to retry";
     if (speaking) return "Speaking · tap to skip";
     if (muted) return "Paused · tap to listen";
     if (settings.mode === "push") return micState === "speech" ? "Recording · tap to send" : "Tap, then talk";
     if (micState === "speech") return "Hearing you…";
-    if (busy) return "Translating…";
+    // The mic stays open while a translation is on its way.
+    if (busy) return "Translating · keep talking";
     return "Listening";
   })();
 
@@ -682,6 +694,13 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       { id, at: Date.now(), status: "interpreting", raw: text, cleaned: "", translation: "", language: "", speaker: forced, listenerLang: "", forced, drugs: [], timings: {} },
     ]);
     void runText(id, text, forced, reserveSpeech(), { context: true });
+  };
+
+  /** A turn that failed on a slow connection can be sent again without repeating it aloud. */
+  const retry = (t: Turn) => {
+    if (!t.raw) return setTurns((all) => all.filter((x) => x.id !== t.id));
+    patch(t.id, { status: "interpreting", error: undefined });
+    void runText(t.id, t.raw, t.forced, reserveSpeech(), { context: true });
   };
 
   const flipSpeaker = (t: Turn) => {
@@ -771,6 +790,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           onDrug={(d, speaker) => setDrug({ d, speaker })}
           onFlip={flipSpeaker}
           onReplay={replay}
+          onRetry={retry}
           onOpenCtx={setOpenCtx}
         />
       ) : (
@@ -814,6 +834,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
               onDrug={(d) => setDrug({ d, speaker: t.speaker })}
               onFlip={() => flipSpeaker(t)}
               onReplay={() => replay(t)}
+              onRetry={() => retry(t)}
             />
           ))
         )}
@@ -841,6 +862,21 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           <ContextTiles items={ctx} persona={persona} flashId={toast?.id} onOpen={setOpenCtx} onOpenRecord={() => setSheet("record")} />
           {micError && <div className="mic-error">{micError}</div>}
           {typing && typer}
+          {/* Either person just talks and is recognised by language. The switch is for when that guess needs help. */}
+          <div className="speaker-switch" role="radiogroup" aria-label="Who is talking">
+            {([null, "patient", "clinician"] as const).map((s) => (
+              <button key={s || "auto"} role="radio" aria-checked={forced === s} className={forced === s ? "on" : ""} onClick={() => setForced(s)}>
+                {s === null ? (
+                  "Auto"
+                ) : (
+                  <>
+                    <Flag code={s === "patient" ? persona.home : persona.trip.country} size={18} />
+                    <span>{s === "patient" ? first : "Doctor"}</span>
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
           <div className="control-row">
             <button className={`tool ${typing ? "on" : ""}`} onClick={() => setTyping((v) => !v)} aria-label="Type instead">
               <span className="tool-icon">
@@ -864,7 +900,6 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           </div>
           <div className="orb-label" aria-live="polite">
             {orbLabel}
-            {forced && demo === "off" && <span className="forced"> · {forced === "patient" ? first : "clinician"}</span>}
           </div>
         </footer>
       </div>
@@ -872,16 +907,6 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
 
       {sheet === "menu" && (
         <Sheet title="Options" onClose={() => setSheet("none")}>
-          <div className="group">
-            <div className="group-title">Who is speaking</div>
-            <div className="seg">
-              {([null, "patient", "clinician"] as const).map((s) => (
-                <button key={s || "auto"} className={forced === s ? "on" : ""} onClick={() => setForced(s)}>
-                  {s === null ? "Detect" : s === "patient" ? first : "Clinician"}
-                </button>
-              ))}
-            </div>
-          </div>
           <div className="group">
             <div className="group-title">Microphone</div>
             <div className="seg">

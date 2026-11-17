@@ -6,7 +6,7 @@ import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
 import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
-import { embedded, hostPersona, onHostPersona } from "./lib/host";
+import { embedded, hostPersona, notifyHost, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
 import { applyEdits, useEdits } from "./lib/edits";
 
@@ -22,6 +22,8 @@ export default function App() {
   // Inside the Tessera app the signed-in traveler's own record comes first, and each visit starts on it.
   const [host, setHost] = useState<Persona | null>(hostPersona);
   useEffect(() => onHostPersona(setHost), []);
+  // The app shows a diagnostic instead of a blank tab until it hears this.
+  useEffect(() => notifyHost({ type: "tessera:ready" }), []);
   const personas = useMemo(() => (host ? [host, ...PERSONAS] : PERSONAS), [host]);
   const [settings, setSettings] = useState<Settings>(() => {
     const s = loadSettings();
@@ -46,7 +48,7 @@ export default function App() {
     document.title = brand === "tandem" ? "Tandem" : "Tessera Interpreter";
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (icon) icon.href = brand === "tandem" ? TANDEM_ICON : "/icon.svg";
-    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#eef2f5");
+    document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#f2f2ef");
   }, [brand]);
 
   // Screen changes animate inside the phone (the incoming screen and its header/mic glide in, clipped by the frame).

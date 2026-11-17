@@ -27,7 +27,8 @@ app.disable("x-powered-by");
 // Optional access code for when the server is reachable from the internet (e.g. through a tunnel):
 // open https://<host>/?code=<ACCESS_CODE> once on the phone; a cookie keeps it unlocked.
 const ACCESS_CODE = process.env.ACCESS_CODE || "";
-const cookieOk = (req) => !ACCESS_CODE || (req.headers.cookie || "").split(/;\s*/).includes(`ti_code=${encodeURIComponent(ACCESS_CODE)}`);
+// The Tessera app's own screens (not the embedded page) can't hold the cookie, so they send the code as a header.
+const cookieOk = (req) => !ACCESS_CODE || req.get("x-access-code") === ACCESS_CODE || (req.headers.cookie || "").split(/;\s*/).includes(`ti_code=${encodeURIComponent(ACCESS_CODE)}`);
 if (ACCESS_CODE) {
   app.use((req, res, next) => {
     if (req.query.code === ACCESS_CODE) {
@@ -136,6 +137,8 @@ app.post("/api/interpret", wrap(async (req, res) => {
     system: interpretPrompt({ patientLang, doctorLang, home, local, forced }),
     user: interpretUser({ text, meds, equivalents, history }),
     model: MODELS.llm,
+    // On the live path (2–3 s budget): no reasoning unless INTERPRET_EFFORT asks for it.
+    effort: process.env.INTERPRET_EFFORT || "none",
   });
   const ms = Date.now() - t0;
 
@@ -221,8 +224,12 @@ app.post("/api/context", wrap(async (req, res) => {
     name: "record_context",
     schema: CONTEXT_SCHEMA,
     system: contextPrompt({ doctorLang, local }),
-    user: contextUser({ record, text, speaker: str(req.body?.speaker, 20), history, shown, doctorLang }),
+    user: contextUser({ record, text, speaker: str(req.body?.speaker, 40), history, shown, doctorLang }),
     model: MODELS.context,
+    // Picks up to 3 record ids from a list. On the accuracy set (scripts/accuracy.mjs), gpt-6-luna with no reasoning missed
+    // a CT-dye allergy alert that gpt-4.1 caught; with "low" it catches it (5/5, no false alarms). The flags arrive about a
+    // second later, but the translation never waits for them (they run beside the interpreter call).
+    effort: process.env.CONTEXT_EFFORT || "low",
   });
   const ids = recordIds(record);
   // Medicine names on the cards read the local way (salbutamol -> albuterol for a US clinician).

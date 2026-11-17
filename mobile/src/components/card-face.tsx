@@ -4,6 +4,7 @@ import QRCode from "react-native-qrcode-svg";
 import type { CardStatus } from "@shared/tessera";
 import { useSession } from "@/lib/session";
 import { cardThemes, font, radius, type CardTheme } from "@/lib/theme";
+import { TesseraMark } from "./mark";
 import { Pill, T } from "./ui";
 
 /**
@@ -35,9 +36,14 @@ export function CardFace({
       style={styles.shadow}
     >
       <LinearGradient colors={th.fill} start={{ x: 0, y: 0.2 }} end={{ x: 1, y: 0.8 }} style={[styles.card, { borderColor: th.edge }]}>
-        <T style={[styles.watermark, { color: th.ink }]} importantForAccessibility="no">+</T>
+        <View style={styles.watermark} importantForAccessibility="no-hide-descendants">
+          <TesseraMark size={250} color={th.ink} opacity={0.07} />
+        </View>
         <View style={styles.top}>
-          <T style={{ color: th.ink, fontSize: 14, letterSpacing: -0.3, opacity: 0.9 }}>+  Tessera</T>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 7, opacity: 0.9 }}>
+            <TesseraMark size={16} color={th.ink} />
+            <T style={{ color: th.ink, fontSize: 14, letterSpacing: -0.3 }}>Tessera</T>
+          </View>
           <Pill tone={status === "active" ? "ok" : status === "frozen" ? "warn" : "muted"}>{statusLabel}</Pill>
         </View>
         <View style={styles.bottom}>
@@ -60,7 +66,7 @@ export function CardFace({
 const styles = StyleSheet.create({
   shadow: { borderRadius: radius.card, shadowColor: "#10243e", shadowOpacity: 0.3, shadowRadius: 20, shadowOffset: { width: 0, height: 14 }, elevation: 8 },
   card: { aspectRatio: 1.586, borderRadius: radius.card, borderWidth: 1, padding: 20, justifyContent: "space-between", overflow: "hidden" },
-  watermark: { position: "absolute", right: -30, top: -70, fontSize: 260, opacity: 0.06, transform: [{ rotate: "12deg" }] },
+  watermark: { position: "absolute", right: -60, top: -40, transform: [{ rotate: "12deg" }] },
   top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   bottom: { flexDirection: "row", alignItems: "flex-end", gap: 14 },
   qr: { backgroundColor: "white", padding: 7, borderRadius: 9 },

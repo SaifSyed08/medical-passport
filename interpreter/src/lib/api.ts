@@ -1,12 +1,22 @@
 import type { DrugMention, Equivalent, Speaker } from "./types";
 
-async function post<T>(path: string, body: unknown, signal?: AbortSignal): Promise<T> {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-    signal,
-  });
+/** Every call gives up after a while: a request that hangs on a weak connection must not freeze the conversation. */
+async function post<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: abort.signal,
+    });
+  } catch (e) {
+    throw new Error(abort.signal.aborted ? "The connection is too slow right now." : (e as Error)?.message === "Failed to fetch" || (e as Error)?.name === "TypeError" ? "Can't reach the interpreter. Check the connection." : (e as Error).message);
+  } finally {
+    clearTimeout(timer);
+  }
   let data: unknown = null;
   try {
     data = await res.json();
@@ -34,7 +44,7 @@ export async function transcribe(wav: Blob, pair: Pair, terms: string[], opts: {
     doctorLang: pair.doctorLang,
     terms,
     fast: Boolean(opts.fast),
-  });
+  }, opts.fast ? 8000 : 25000);
 }
 
 export type InterpretResult = {

@@ -85,3 +85,9 @@ Check each language column against the English.
 | Nothing to add | 追加できる項目なし | |
 | Couldn't read | 読み取れませんでした | |
 | You can leave this screen. Records will show Ready to review when it's done. | この画面を閉じても大丈夫です。完了すると、記録に「確認できます」と表示されます。 | |
+
+## Doctor page opened by the card's QR code (`components/tessera-scan.tsx`)
+The date-of-birth check and page labels are hand-written in Japanese, Spanish, French, Italian and German (`COPY` in that file) and have not been reviewed: "Confirm the patient", the date-of-birth prompt, "View information", the wrong-date and too-many-tries messages, "Emergency information" and "Entered by the patient. Confirm with the patient where possible."
+
+## Medicines tab (`mobile/src/lib/i18n.ts`, keys starting `med`)
+The Japanese strings for the medicine lookup are unreviewed, including the caution that a matching name does not mean two medicines can be swapped.

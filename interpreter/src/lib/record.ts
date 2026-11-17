@@ -1,5 +1,7 @@
 import type { Persona } from "./types";
 
+const DOC_CHARS = 1500;
+
 /** The slice of the record sent to the context finder. Contacts stay on the phone. */
 export function recordForContext(p: Persona) {
   return {
@@ -8,7 +10,8 @@ export function recordForContext(p: Persona) {
     medications: p.medications,
     conditions: p.conditions,
     labs: p.labs,
-    documents: p.documents,
+    // A scanned upload can run to pages; the start is enough to tell what it is, and every turn re-sends this.
+    documents: p.documents.map((d) => (d.body.length > DOC_CHARS ? { ...d, body: `${d.body.slice(0, DOC_CHARS)}…` } : d)),
   };
 }
 

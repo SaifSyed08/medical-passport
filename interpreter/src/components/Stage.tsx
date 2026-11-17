@@ -43,7 +43,7 @@ export function IdleHero({ persona, live }: { persona: Persona; live: boolean })
       </p>
       <p className="idle-hint">
         {live ? (
-          "Listening. Go ahead."
+          "Listening. Either of you can talk; each is translated for the other."
         ) : (
           <>
             Tap the microphone below to begin
@@ -108,6 +108,7 @@ export function TurnBlock({
   onDrug,
   onFlip,
   onReplay,
+  onRetry,
 }: {
   turn: Turn;
   persona: Persona;
@@ -115,6 +116,7 @@ export function TurnBlock({
   onDrug: (d: DrugMention) => void;
   onFlip: () => void;
   onReplay: () => void;
+  onRetry: () => void;
 }) {
   const [showRaw, setShowRaw] = useState(false);
   const who = t.speaker || t.forced;
@@ -123,7 +125,7 @@ export function TurnBlock({
   // In the speaker's own words, drug names turn into what the listener's side calls them.
   const swapToward = who === "clinician" ? "home" : "local";
   const cleanedDiffers = t.status === "done" && t.raw && normSpace(t.cleaned) !== normSpace(t.raw);
-  const name = who === "clinician" ? "Clinician" : who === "patient" ? persona.name.split(" ")[0] : "";
+  const name = who === "clinician" ? "Doctor" : who === "patient" ? persona.name.split(" ")[0] : "";
   const done = t.status === "done";
   // Renames already show inline (the word flips to the local name), so only real warnings get a note.
   const notable = t.drugs.filter((d) => d.status === "not_available_locally" || d.status === "different_strength" || d.status === "uncertain");
@@ -205,7 +207,19 @@ export function TurnBlock({
         </>
       )}
 
-      {t.status === "error" && <p className="error-text small">Couldn't translate this. {t.error}</p>}
+      {t.status === "error" && (
+        <div className="turn-error">
+          {t.raw && (
+            <p className="original" dir={dir(spokenLang)}>
+              {t.raw}
+            </p>
+          )}
+          <p className="error-text small">{t.raw ? "Couldn't translate this." : "Couldn't hear that. Please say it again."} {t.error}</p>
+          <button className="link small" onClick={onRetry}>
+            {t.raw ? "Try again" : "Dismiss"}
+          </button>
+        </div>
+      )}
     </article>
   );
 }
