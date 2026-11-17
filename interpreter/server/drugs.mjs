@@ -31,7 +31,7 @@ export const CURATED = [
         note: "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       },
       JP: { name: "サルブタモール", brands: ["サルタノールインヘラー"], strength: "100 µg/噴霧", note: "Same medicine; called salbutamol in Japan (albuterol in the US)." },
-      NP: { name: "salbutamol", brands: ["Asthalin"], strength: "100 mcg per puff" },
+      NP: { name: "salbutamol", brands: ["Asthalin", "Ventolin"], strength: "100 mcg per puff" },
       GB: { name: "salbutamol", brands: ["Ventolin Evohaler"], strength: "100 mcg per puff" },
     },
   },

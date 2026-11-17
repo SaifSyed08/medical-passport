@@ -94,6 +94,15 @@ for (const [i, line] of persona.script.entries()) {
     check(/[\u0900-\u097F]/.test(it.translation), "translated into Nepali (Devanagari)");
     check(alerts.includes("alg_contrast") || alerts.includes("doc_ct_2023"), "contrast-dye alert on CT with contrast");
   }
+  if (persona.id === "ramesh") {
+    if (i === 0) {
+      check(it.drugs.some((d) => d.key === "salbutamol"), "Ventolin resolved to salbutamol");
+      check(/albuterol/i.test(it.translation), "English translation says albuterol");
+    }
+    // Scenes A and B raise no red flag; the climax does.
+    if (i < 5) check(!alerts.length, "no alert before the antibiotic question");
+    if (i === 5) check(alerts.includes("alg_penicillin"), "penicillin allergy alert on amoxicillin");
+  }
   if (persona.id === "sita" && i === 2) {
     check(alerts.every((id) => shownBefore.includes(id)), "no new alert on small talk");
   }

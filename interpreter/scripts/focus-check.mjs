@@ -8,7 +8,8 @@ import puppeteer from "puppeteer-core";
 
 const BASE = process.env.BASE || "http://localhost:5173";
 const CHROME = process.env.CHROME || ["C:/Program Files/Google/Chrome/Application/chrome.exe", "/usr/bin/google-chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find((p) => fs.existsSync(p));
-const persona = process.argv.find((a) => ["sofia", "sita", "jordan"].includes(a)) || "sofia";
+// Any patient with a recorded demo (public/demo/<id>.json).
+const persona = process.argv.slice(2).find((a) => !a.startsWith("--") && fs.existsSync(`public/demo/${a}.json`)) || "sofia";
 const brand = process.argv.includes("--tandem") ? "tandem" : "tessera";
 const OUT = path.resolve(".cache/focus");
 fs.mkdirSync(OUT, { recursive: true });
