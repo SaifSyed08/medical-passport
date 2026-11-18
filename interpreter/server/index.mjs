@@ -31,13 +31,12 @@ app.disable("x-powered-by");
 // open https://<host>/?code=<ACCESS_CODE> once on the phone; a cookie keeps it unlocked.
 const ACCESS_CODE = process.env.ACCESS_CODE || "";
 // The Tessera app's own screens (not the embedded page) can't hold the cookie, so they send the code as a header.
-const cookieOk = (req) => !ACCESS_CODE || req.get("x-access-code") === ACCESS_CODE || (req.headers.cookie || "").split(/;\s*/).includes(`ti_code=${encodeURIComponent(ACCESS_CODE)}`);
+// The page also sends the code itself (src/lib/access.ts): a header on fetches, ?ac= on audio it streams.
+const cookieOk = (req) => !ACCESS_CODE || req.get("x-access-code") === ACCESS_CODE || req.query?.ac === ACCESS_CODE || (req.headers.cookie || "").split(/;\s*/).includes(`ti_code=${encodeURIComponent(ACCESS_CODE)}`);
 if (ACCESS_CODE) {
   app.use((req, res, next) => {
-    if (req.query.code === ACCESS_CODE) {
-      res.setHeader("Set-Cookie", `ti_code=${encodeURIComponent(ACCESS_CODE)}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax`);
-      return res.redirect(req.path);
-    }
+    // Set the cookie and serve the page as asked: the page reads ?code= too and keeps it.
+    if (req.query.code === ACCESS_CODE) res.setHeader("Set-Cookie", `ti_code=${encodeURIComponent(ACCESS_CODE)}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax`);
     if (req.path.startsWith("/api/") && req.path !== "/api/health" && !cookieOk(req)) return res.status(401).json({ error: "Locked: open the link with ?code=… first" });
     next();
   });

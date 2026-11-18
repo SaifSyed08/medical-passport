@@ -2,6 +2,7 @@
 // (one element, unlocked by a tap, is what iOS Safari needs for later programmatic playback).
 
 import { onDevice } from "./onDevice.ts";
+import { withAccess } from "./access.ts";
 
 const SILENT_WAV =
   "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
@@ -80,7 +81,7 @@ export class Player {
   say(text: string, lang: string, voice = "coral"): Promise<void> {
     if (!text.trim()) return Promise.resolve();
     // Private mode: the voice is made on this device too (Piper), so the translation never leaves it.
-    return this.play(`/api/tts?${new URLSearchParams({ text, lang, voice, ...(onDevice() ? { device: "1" } : {}) })}`, text);
+    return this.play(`/api/tts?${new URLSearchParams(withAccess({ text, lang, voice, ...(onDevice() ? { device: "1" } : {}) }))}`, text);
   }
 
   /** Play a recorded clip (demo mode). */

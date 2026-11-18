@@ -74,8 +74,9 @@ export default function App() {
     health()
       .then((h) =>
         setServerIssue(
+          // Locked servers say so on the line that fails; no red bar over the app.
           h.locked
-            ? "This server is locked. Open the link that ends in ?code=… once on this phone."
+            ? null
             : h.key
               ? null
               : "The server has no OPENAI_API_KEY, so live translation won't work. The demo (D) still does.",
