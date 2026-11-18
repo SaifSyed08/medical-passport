@@ -1,7 +1,7 @@
 // Focus: an experimental conversation layout (press L). No cards and no scrolling transcript. The screen holds one
 // line at a time in very large type, and what the record says about it is pinned underneath as margin notes, so
 // an alert sits next to the sentence that caused it. Earlier lines live in a ribbon of dots at the top: tap one,
-// or swipe the stage sideways, to go back. The two people sit either side of the mic as chips; tapping a chip
+// swipe the stage sideways, or scroll / swipe down, to go back. The two people sit either side of the mic as chips; tapping a chip
 // says who is talking next.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import type { ContextItem, DrugMention, Persona, Speaker, Turn } from "../lib/types";
@@ -54,7 +54,18 @@ export function FocusView({ turns, ctx, persona, live, speak, onBack, onMenu, on
     if (i < 0 || i >= turns.length) return;
     setSelected(i === turns.length - 1 ? null : turns[i].id);
   };
-  const swipe = useRef<{ x: number; y: number } | null>(null);
+  const swipe = useRef<{ x: number; y: number; target: EventTarget | null } | null>(null);
+  // Scrolling and vertical swipes page through the lines too, but only once whatever is under the finger has
+  // no more to scroll in that direction (a long line or its notes scroll first).
+  const atEdge = (target: EventTarget | null, dir: -1 | 1) => {
+    for (let el = target as HTMLElement | null; el && el !== document.body; el = el.parentElement) {
+      if (el.scrollHeight > el.clientHeight + 2 && /(auto|scroll)/.test(getComputedStyle(el).overflowY)) {
+        return dir < 0 ? el.scrollTop <= 1 : el.scrollTop + el.clientHeight >= el.scrollHeight - 2;
+      }
+    }
+    return true;
+  };
+  const wheel = useRef({ sum: 0, at: 0 });
 
   return (
     <>
@@ -94,13 +105,29 @@ export function FocusView({ turns, ctx, persona, live, speak, onBack, onMenu, on
 
       <div
         className="f-stage-wrap"
-        onPointerDown={(e) => (swipe.current = { x: e.clientX, y: e.clientY })}
+        onPointerDown={(e) => (swipe.current = { x: e.clientX, y: e.clientY, target: e.target })}
         onPointerUp={(e) => {
           const s = swipe.current;
           swipe.current = null;
           if (!s) return;
           const dx = e.clientX - s.x;
-          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(e.clientY - s.y) * 1.5) go(shownIdx + (dx > 0 ? -1 : 1));
+          const dy = e.clientY - s.y;
+          if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) go(shownIdx + (dx > 0 ? -1 : 1));
+          // Pull down for the line before, push up for the one after.
+          else if (Math.abs(dy) > 70 && Math.abs(dy) > Math.abs(dx) * 1.5 && atEdge(s.target, dy > 0 ? -1 : 1)) go(shownIdx + (dy > 0 ? -1 : 1));
+        }}
+        onWheel={(e) => {
+          const dir = e.deltaY < 0 ? -1 : 1;
+          if (!atEdge(e.target, dir)) return;
+          const w = wheel.current;
+          const now = performance.now();
+          // One line per deliberate scroll: a trackpad fires dozens of small events.
+          if (now - w.at < 450) return;
+          w.sum = Math.sign(w.sum) === dir ? w.sum + e.deltaY : e.deltaY;
+          if (Math.abs(w.sum) < 60) return;
+          w.sum = 0;
+          w.at = now;
+          go(shownIdx + dir);
         }}
       >
         {!shown ? (

@@ -17,10 +17,17 @@ type Props = {
   onClose: () => void;
   /** The patient's own view (home): swipe a row left to delete it, and add to any section. */
   editable?: boolean;
+  /** Only these sections (the health card leaves out documents; the Documents tab shows only them). */
+  sections?: Section[];
+  /** A tab's page instead of a sheet: no title or close; adding and previews open over it. */
+  page?: boolean;
+  /** Big "Scan or upload" / "Type it in" buttons above the list, for this section. */
+  addBar?: Section;
 };
 
 /** The saved record, in the clinician's language by default, colour-coded by section. */
-export default function RecordSheet({ persona: p, onClose, editable = false }: Props) {
+export default function RecordSheet({ persona: p, onClose, editable = false, sections, page = false, addBar }: Props) {
+  const show = (k: Section) => !sections || sections.includes(k);
   const doctorLang = p.trip.doctorLanguage;
   const needsTranslation = p.recordLanguage !== doctorLang;
   const [view, setView] = useState<"translated" | "original">(needsTranslation ? "translated" : "original");
@@ -75,9 +82,15 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
     setUndo(null);
   };
 
-  if (scan) return <ScanFlow persona={p} file={scan} onDone={() => setScan(null)} onClose={onClose} />;
-  if (manual) return <ManualAdd persona={p} section={manual} onDone={() => setManual(null)} onClose={onClose} />;
-  if (preview) return <DocPreview doc={preview} onClose={() => setPreview(null)} />;
+  // In the sheet these replace it; on a page they open over it and close back to it.
+  const flows = (
+    <>
+      {scan && <ScanFlow persona={p} file={scan} onDone={() => setScan(null)} onClose={page ? () => setScan(null) : onClose} />}
+      {manual && <ManualAdd persona={p} section={manual} onDone={() => setManual(null)} onClose={page ? () => setManual(null) : onClose} />}
+      {preview && <DocPreview doc={preview} onClose={() => setPreview(null)} />}
+    </>
+  );
+  if (!page && (scan || manual || preview)) return flows;
 
   const swipe = (id: string, title: string, children: ReactNode, className = "list-row", onTap?: () => void) =>
     editable ? (
@@ -103,7 +116,8 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
       count={count}
       always={editable}
       action={
-        editable && (
+        // The Documents tab has its own big buttons for its section.
+        editable && kind !== addBar && (
           <button className={`add-btn ${adding === kind ? "on" : ""}`} onClick={() => setAdding(adding === kind ? null : kind)} aria-expanded={adding === kind}>
             <Icon name={adding === kind ? "close" : "plus"} size={16} />
             Add
@@ -141,11 +155,25 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
     </Group>
   );
 
-  return (
-    <Sheet title={p.name} onClose={onClose}>
-      <p className="record-meta">
-        <Flag code={p.home} size={20} /> Born {p.dob} · blood type {p.bloodType}
-      </p>
+  const body = (
+    <>
+      {!page && (
+        <p className="record-meta">
+          <Flag code={p.home} size={20} /> Born {p.dob} · blood type {p.bloodType}
+        </p>
+      )}
+      {addBar && editable && (
+        <div className="add-bar">
+          <button className="btn-primary" onClick={() => fileRef.current?.click()}>
+            <Icon name="camera" size={20} />
+            Scan or upload
+          </button>
+          <button className="btn-outline" onClick={() => setManual(addBar)}>
+            <Icon name="pencil" size={18} />
+            Type it in
+          </button>
+        </div>
+      )}
       {needsTranslation && (
         <div className="seg record-lang">
           <button className={view === "translated" ? "on" : ""} onClick={() => setView("translated")}>
@@ -164,14 +192,14 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
         </p>
       )}
       <div className={`record ${loading ? "dim" : ""}`} onPointerDown={(e) => open && !(e.target as Element).closest(".swipe-row.open") && setOpen(null)}>
-        {group(
+        {show("allergy") && group(
           "allergy",
           "alert",
           "Allergies",
           r.allergies.length,
           r.allergies.map((a) => swipe(a.id, a.substance, <RowBody title={a.substance} badge={a.severity === "severe" ? { text: "Severe", tone: "danger" } : undefined} lines={[a.reaction]} />)),
         )}
-        {group(
+        {show("medication") && group(
           "medication",
           "pill",
           "Medicines",
@@ -196,14 +224,14 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
             );
           }),
         )}
-        {group(
+        {show("condition") && group(
           "condition",
           "heart",
           "Conditions",
           r.conditions.length,
           r.conditions.map((c) => swipe(c.id, c.name, <RowBody title={c.name} badge={c.since ? { text: /^\d{4}$/.test(c.since) ? `since ${c.since}` : c.since, tone: "plain" } : undefined} lines={[c.note]} />)),
         )}
-        {group(
+        {show("lab") && group(
           "lab",
           "lab",
           "Lab results",
@@ -227,7 +255,7 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
             ),
           ),
         )}
-        {group(
+        {show("document") && group(
           "document",
           "doc",
           "Visits and documents",
@@ -259,7 +287,7 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
             ),
           ),
         )}
-        {group(
+        {show("contact") && group(
           "contact",
           "user",
           "Emergency contacts",
@@ -308,6 +336,18 @@ export default function RecordSheet({ persona: p, onClose, editable = false }: P
           </button>
         </div>
       )}
+    </>
+  );
+  if (page)
+    return (
+      <div className="record-page">
+        {body}
+        {flows}
+      </div>
+    );
+  return (
+    <Sheet title={p.name} onClose={onClose}>
+      {body}
     </Sheet>
   );
 }

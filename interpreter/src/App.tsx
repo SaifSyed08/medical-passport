@@ -5,10 +5,12 @@ import { loadSettings, saveSettings, type Settings } from "./lib/store";
 import { health } from "./lib/api";
 import Home from "./components/Home";
 import Conversation from "./components/Conversation";
-import { toggleFastDemo, unlockAudio } from "./lib/audioSession";
+import { toggleDemoVoices, toggleFastDemo, unlockAudio } from "./lib/audioSession";
 import { embedded, hostPersona, notifyHost, onHostPersona } from "./lib/host";
 import { TANDEM_ICON } from "./components/TandemLogo";
+import Icon from "./components/Icon";
 import { applyEdits, useEdits } from "./lib/edits";
+import { onDevice, setOnDevice, useOnDevice, warmLocal } from "./lib/onDevice";
 
 export function effectivePersona(settings: Settings, personas: Persona[] = PERSONAS): Persona {
   const base = personas.find((p) => p.id === settings.personaId) || personas[0];
@@ -19,7 +21,7 @@ export function effectivePersona(settings: Settings, personas: Persona[] = PERSO
 }
 
 export default function App() {
-  // Inside the Parity app the signed-in traveler's own record comes first, and each visit starts on it.
+  // Inside the Tessera app the signed-in traveler's own record comes first, and each visit starts on it.
   const [host, setHost] = useState<Persona | null>(hostPersona);
   useEffect(() => onHostPersona(setHost), []);
   // The app shows a diagnostic instead of a blank tab until it hears this.
@@ -34,6 +36,11 @@ export default function App() {
   // Bumped to start the recorded demo; 0 = a normal conversation.
   const [demoRequest, setDemoRequest] = useState(() => (new URLSearchParams(location.search).has("demo") ? 1 : 0));
   const [serverIssue, setServerIssue] = useState<string | null>(null);
+  // Private mode (P): a short note says what changed; the lock in each header says it's on.
+  const private_ = useOnDevice();
+  const [deviceNote, setDeviceNote] = useState<string | null>(null);
+  // Which icon the note carries: the lock for private mode, a speaker for the demo voices (V).
+  const [noteIcon, setNoteIcon] = useState<"device" | "speaker" | "mute">("device");
   // The patient's own edits (swipe to delete, scanned documents) re-derive the record everywhere.
   const edits = useEdits(settings.personaId);
   const persona = useMemo(() => effectivePersona(settings, personas), [settings, personas, edits]);
@@ -45,7 +52,7 @@ export default function App() {
   const brand = settings.brand;
   useEffect(() => {
     document.documentElement.dataset.brand = brand;
-    document.title = brand === "tandem" ? "Tandem" : "Parity Interpreter";
+    document.title = brand === "tandem" ? "Tandem" : "Parity";
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (icon) icon.href = brand === "tandem" ? TANDEM_ICON : "/icon.svg";
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#f2f2ef");
@@ -67,8 +74,9 @@ export default function App() {
     health()
       .then((h) =>
         setServerIssue(
+          // Locked servers say so on the line that fails; no red bar over the app.
           h.locked
-            ? "This server is locked. Open the link that ends in ?code=… once on this phone."
+            ? null
             : h.key
               ? null
               : "The server has no OPENAI_API_KEY, so live translation won't work. The demo (D) still does.",
@@ -76,6 +84,25 @@ export default function App() {
       )
       .catch(() => setServerIssue("Can't reach the interpreter server."));
   }, []);
+
+  // Load the local models for this patient's two languages whenever private mode is on.
+  const langs = `${persona.language},${persona.trip.doctorLanguage}`;
+  useEffect(() => {
+    if (!private_) return;
+    let live = true;
+    warmLocal(langs.split(",")).then((s) => {
+      if (live && !s?.ready) setNoteIcon("device");
+      if (live && !s?.ready) setDeviceNote("Private mode can't load its models. On the laptop, run npm run local:setup.");
+    });
+    return () => {
+      live = false;
+    };
+  }, [private_, langs]);
+  useEffect(() => {
+    if (!deviceNote) return;
+    const t = window.setTimeout(() => setDeviceNote(null), 3200);
+    return () => window.clearTimeout(t);
+  }, [deviceNote]);
 
   // D anywhere plays the recorded demo.
   useEffect(() => {
@@ -91,10 +118,23 @@ export default function App() {
         setSettings((s) => ({ ...s, layout: s.layout === "focus" ? "classic" : "focus" }));
         return;
       }
+      if (e.key === "p" || e.key === "P") {
+        const next = !onDevice();
+        setOnDevice(next);
+        setNoteIcon("device");
+        setDeviceNote(next ? "Private mode: speech, translation and record checks stay on this device." : "Cloud mode: the full models, online.");
+        return;
+      }
+      if (e.key === "v" || e.key === "V") {
+        const on = toggleDemoVoices();
+        setNoteIcon(on ? "speaker" : "mute");
+        setDeviceNote(on ? "Demo: the speakers' recorded voices play." : "Demo: speakers' voices off. Captions still roll and translations are still spoken.");
+        return;
+      }
       if (e.key === "3") {
         // Don't leave a focus ring on whatever was clicked last.
         (document.activeElement as HTMLElement | null)?.blur?.();
-        setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "tessera" : "tandem" }));
+        setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "parity" : "tandem" }));
         return;
       }
       if (e.key === "d" || e.key === "D") {
@@ -130,7 +170,13 @@ export default function App() {
           </svg>
         </span>
       </div>}
-      {serverIssue && <div className="banner">{serverIssue}</div>}
+      {serverIssue && !(private_ && /OPENAI_API_KEY/.test(serverIssue)) && <div className="banner">{serverIssue}</div>}
+      {deviceNote && (
+        <div className={`device-note${noteIcon === "device" && private_ ? " on" : ""}`} role="status">
+          <Icon name={noteIcon === "device" ? (private_ ? "lock" : "sparkle") : noteIcon} size={18} />
+          {deviceNote}
+        </div>
+      )}
       {screen === "home" ? (
         <Home
           persona={persona}

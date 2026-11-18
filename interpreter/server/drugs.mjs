@@ -31,7 +31,7 @@ export const CURATED = [
         note: "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
       },
       JP: { name: "サルブタモール", brands: ["サルタノールインヘラー"], strength: "100 µg/噴霧", note: "Same medicine; called salbutamol in Japan (albuterol in the US)." },
-      NP: { name: "salbutamol", brands: ["Asthalin"], strength: "100 mcg per puff" },
+      NP: { name: "salbutamol", brands: ["Asthalin", "Ventolin"], strength: "100 mcg per puff" },
       GB: { name: "salbutamol", brands: ["Ventolin Evohaler"], strength: "100 mcg per puff" },
     },
   },
@@ -316,7 +316,17 @@ export function localizeDrug(translation, entry, { home, local, listener }) {
   const to = listener === "clinician" ? entry.by[local] : entry.by[home];
   if (!from || !to) return null;
   const target = to.unavailable ? entry.generic.replace(/\s*\(.*\)$/, "") : to.name;
-  if (!target || translation.toLowerCase().includes(target.toLowerCase())) return null;
+  if (!target) return null;
+  // The model sometimes writes it the other way round ("Ventolin (albuterol)"): the listener's name goes first,
+  // because the app shows it large with the other name underneath.
+  for (const n of [...new Set([...(from.brands || []), from.name])].filter(Boolean).sort((a, b) => b.length - a.length)) {
+    const flipped = translation.match(new RegExp(`(?<![A-Za-z0-9À-ɏ])(${escapeRe(n)})\\s*[(（]\\s*(${escapeRe(target)})\\s*[)）]`, "iu"));
+    if (flipped) {
+      const label = `${flipped[2]} (${flipped[1]})`;
+      return { translation: translation.slice(0, flipped.index) + label + translation.slice(flipped.index + flipped[0].length), label };
+    }
+  }
+  if (translation.toLowerCase().includes(target.toLowerCase())) return null;
   // People drop suffixes ("ProAir" for "ProAir HFA", "Aspirina" for "Aspirina Protect"), so try the first word too.
   const brands = (from.brands || []).flatMap((b) => {
     const first = b.split(/\s+/)[0];

@@ -2,7 +2,9 @@
 // into the real app; we wait for the turns and context cards and take screenshots.
 //   npm run dev   (in another terminal)
 //   node --experimental-strip-types scripts/api-check.mjs sofia   (creates .cache/voice/*.wav once)
-//   node scripts/e2e-browser.mjs [sofia|jordan] [--speak] [--show]
+//   node scripts/e2e-browser.mjs [sofia|jordan|sita] [--speak] [--show] [--private]
+// --private turns on private mode (P) first. Run the server with no key (OPENAI_API_KEY= npm run dev) to prove
+// nothing reaches the cloud: any cloud call would then fail.
 import fs from "node:fs";
 import path from "node:path";
 import puppeteer from "puppeteer-core";
@@ -10,6 +12,7 @@ import puppeteer from "puppeteer-core";
 const args = process.argv.slice(2);
 const persona = args.find((a) => !a.startsWith("--")) || "sofia";
 const SPEAK = args.includes("--speak");
+const PRIVATE = args.includes("--private");
 const BASE = process.env.BASE || "http://localhost:5173";
 const OUT = path.resolve(".cache/e2e");
 fs.mkdirSync(OUT, { recursive: true });
@@ -106,12 +109,14 @@ await page.evaluateOnNewDocument((b64) => {
 }, fs.readFileSync(track.file).toString("base64"));
 
 await page.goto(BASE, { waitUntil: "networkidle0" });
-await page.evaluate((p, speak) => {
+await page.evaluate((p, speak, priv) => {
   localStorage.clear();
-  localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
-}, persona, SPEAK);
+  localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: p, mode: "auto", speak, pairs: {} }));
+  if (priv) localStorage.setItem("ti.onDevice", "1");
+}, persona, SPEAK, PRIVATE);
 await page.reload({ waitUntil: "networkidle0" });
-await page.waitForFunction(() => /matched (to local names|locally)/.test(document.body.innerText), { timeout: 30000 });
+await page.waitForFunction(() => /matched (to local names|locally)|No changes needed/.test(document.body.innerText), { timeout: 60000 });
+const lockOnHome = Boolean(await page.$(".home-top .device-tag"));
 await page.screenshot({ path: path.join(OUT, `${persona}-home.png`) });
 
 await page.click(".btn-primary");
@@ -205,12 +210,16 @@ await browser.close();
 
 const failures = [];
 const done = result.turns;
+if (PRIVATE && !lockOnHome) failures.push("no private-mode lock on the home screen");
 if (done.length !== track.lines || result.history + 1 !== track.lines) failures.push(`expected ${track.lines} turns, got ${done.length} (a line was split or merged)`);
 if (done.some((t) => !t.translation?.trim())) failures.push("a turn has an empty translation");
 if (!captions.some((c) => c.trim().split(/\s+/).length >= 3)) failures.push("no live captions appeared while lines were being spoken");
 if (persona === "jordan") {
   if (!result.turns.some((t) => t.marks.some((m) => /サルブタモール/.test(m)))) failures.push("ProAir did not swap to サルブタモール");
   if (!result.context.some((c) => c.startsWith("alert"))) failures.push("no penicillin alert");
+}
+if (persona === "sita") {
+  if (!result.context.some((c) => c.startsWith("alert"))) failures.push("no NSAID / contrast alert");
 }
 if (persona === "sofia") {
   if (!result.turns.some((t) => t.marks.some((m) => /metamizol/i.test(m)))) failures.push("Neo-Melubrina did not swap to metamizole");

@@ -1,0 +1,231 @@
+{
+ "persona": "ramesh",
+ "recordedAt": "2026-11-17T22:21:50.493Z",
+ "equivalents": [
+  {
+   "key": "salbutamol",
+   "generic": "salbutamol (albuterol)",
+   "drug_class": "",
+   "home_name": "salbutamol (Asthalin, Ventolin)",
+   "home_strength": "100 mcg per puff",
+   "local_name": "albuterol",
+   "local_brands": [
+    "Ventolin HFA",
+    "Proventil HFA",
+    "ProAir HFA"
+   ],
+   "local_strength": "90 mcg per puff",
+   "status": "different_name",
+   "note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
+   "source": "curated",
+   "id": "med_ventolin",
+   "input": "Ventolin inhaler"
+  }
+ ],
+ "lines": [
+  {
+   "speaker": "patient",
+   "audio": "/demo/ramesh-0.wav",
+   "audioMs": 8350,
+   "speech": "/demo/ramesh-0-tr.mp3",
+   "stt": {
+    "text": "हिजोदेखि सास फेर्न गाह्रो भरि रहेको छ। मलाई दम छ तर धेन्टोलिनले काम गरिरहेको छैन।",
+    "ms": 948
+   },
+   "interpret": {
+    "language": "ne",
+    "speaker": "patient",
+    "listenerLang": "en",
+    "raw": "हिजोदेखि सास फेर्न गाह्रो भरि रहेको छ। मलाई दम छ तर धेन्टोलिनले काम गरिरहेको छैन।",
+    "cleaned": "हिजोदेखि सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, तर भेन्टोलिनले काम गरिरहेको छैन।",
+    "translation": "Since yesterday, I’ve been having trouble breathing. I have asthma, but albuterol (Ventolin) isn’t working.",
+    "drugs": [
+     {
+      "key": "salbutamol",
+      "mentioned": "भेन्टोलिन",
+      "translated": "albuterol (Ventolin)",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "salbutamol (albuterol)",
+      "drug_class": "",
+      "home_name": "salbutamol (Asthalin, Ventolin)",
+      "home_strength": "100 mcg per puff",
+      "local_name": "albuterol",
+      "local_brands": [
+       "Ventolin HFA",
+       "Proventil HFA",
+       "ProAir HFA"
+      ],
+      "local_strength": "90 mcg per puff",
+      "status": "different_name",
+      "note_listener": "अमेरिकामा यो albuterol नामले पाइन्छ; इनहेलरमा प्रति पफ ९० mcg लेखिएको हुन्छ, जबकि नेपालमा १०० mcg लेखिन्छ।",
+      "note_doctor": "Same medicine; US labeling states 90 mcg delivered dose per puff versus 100 mcg valve dose on the patient's inhaler.",
+      "curated_note": "Same medicine under its US name. US inhalers state the dose leaving the mouthpiece (90 mcg); Mexico and Japan state the valve dose (100 mcg).",
+      "med_id": "med_ventolin",
+      "source": "curated"
+     }
+    ],
+    "ms": 3828
+   },
+   "context": [
+    {
+     "id": "cnd_asthma",
+     "level": "relevant",
+     "title": "Moderate asthma",
+     "detail": "Asthma since childhood; attacks with colds and dust.",
+     "why": "Breathing difficulty since yesterday with poor response to Ventolin may be an asthma flare."
+    },
+    {
+     "id": "med_ventolin",
+     "level": "relevant",
+     "title": "Ventolin inhaler",
+     "detail": "Albuterol 100 mcg/puff; 2 puffs as needed, up to every 4 hours.",
+     "why": "The patient says Ventolin is not helping."
+    },
+    {
+     "id": "doc_er_2025",
+     "level": "relevant",
+     "title": "Asthma ER visit 2025",
+     "detail": "Severe attack after a cold on Dec 14, 2025; treated with nebulized albuterol, ipratropium, and prednisolone.",
+     "why": "Prior severe asthma attack may inform assessment of the current breathing difficulty."
+    }
+   ]
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/ramesh-1.wav",
+   "audioMs": 7200,
+   "speech": "/demo/ramesh-1-tr.mp3",
+   "stt": {
+    "text": "I see you were in the emergency room for an asthma attack last year, does this feel the same?",
+    "ms": 673
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "clinician",
+    "listenerLang": "ne",
+    "raw": "I see you were in the emergency room for an asthma attack last year, does this feel the same?",
+    "cleaned": "I see you were in the emergency room for an asthma attack last year. Does this feel the same?",
+    "translation": "म देख्छु, तपाईं गएको वर्ष दमको आक्रमणका कारण आकस्मिक कक्षमा जानुभएको थियो। के अहिले पनि त्यस्तै महसुस भइरहेको छ?",
+    "drugs": [],
+    "ms": 1683
+   },
+   "context": []
+  },
+  {
+   "speaker": "patient",
+   "audio": "/demo/ramesh-2.wav",
+   "audioMs": 1900,
+   "speech": "/demo/ramesh-2-tr.mp3",
+   "stt": {
+    "text": "हो, त्यस्तै छ।",
+    "ms": 343
+   },
+   "interpret": {
+    "language": "ne",
+    "speaker": "patient",
+    "listenerLang": "en",
+    "raw": "हो, त्यस्तै छ।",
+    "cleaned": "हो, त्यस्तै छ।",
+    "translation": "Yes, it feels the same.",
+    "drugs": [],
+    "ms": 1220
+   },
+   "context": []
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/ramesh-3.wav",
+   "audioMs": 5850,
+   "speech": "/demo/ramesh-3-tr.mp3",
+   "stt": {
+    "text": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "ms": 585
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "clinician",
+    "listenerLang": "ne",
+    "raw": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "cleaned": "Before we decide on treatment, have you ever taken amoxicillin?",
+    "translation": "उपचारबारे निर्णय गर्नुअघि, तपाईंले कहिल्यै एमोक्सिसिलिन लिनुभएको छ?",
+    "drugs": [
+     {
+      "key": "amoxicillin",
+      "mentioned": "amoxicillin",
+      "translated": "एमोक्सिसिलिन",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "amoxicillin",
+      "drug_class": "penicillin",
+      "home_name": "एमोक्सिसिलिन",
+      "home_strength": "",
+      "local_name": "amoxicillin",
+      "local_brands": [
+       "Amoxil"
+      ],
+      "local_strength": "",
+      "status": "same_name",
+      "note_listener": "",
+      "note_doctor": "",
+      "curated_note": "",
+      "med_id": "",
+      "source": "curated"
+     }
+    ],
+    "ms": 1951
+   },
+   "context": [
+    {
+     "id": "alg_penicillin",
+     "level": "alert",
+     "title": "Penicillin anaphylaxis",
+     "detail": "Amoxicillin caused throat swelling and hypotension in 2019; treated with epinephrine.",
+     "why": "Amoxicillin is being considered; prior anaphylaxis makes it unsafe."
+    }
+   ]
+  },
+  {
+   "speaker": "clinician",
+   "audio": "/demo/ramesh-4.wav",
+   "audioMs": 7550,
+   "speech": "/demo/ramesh-4-tr.mp3",
+   "stt": {
+    "text": "Wait, your record shows a penicillin allergy, let's verify that first.",
+    "ms": 515
+   },
+   "interpret": {
+    "language": "en",
+    "speaker": "clinician",
+    "listenerLang": "ne",
+    "raw": "Wait, your record shows a penicillin allergy, let's verify that first.",
+    "cleaned": "Your record shows a penicillin allergy. Let's verify that first.",
+    "translation": "तपाईंको अभिलेखमा पेनिसिलिनको एलर्जी देखिन्छ। पहिले त्यसलाई पुष्टि गरौँ।",
+    "drugs": [
+     {
+      "key": "penicillin",
+      "mentioned": "penicillin",
+      "translated": "पेनिसिलिन",
+      "inCleaned": true,
+      "inTranslation": true,
+      "generic": "penicillin",
+      "drug_class": "",
+      "home_name": "penicillin",
+      "home_strength": "",
+      "local_name": "penicillin",
+      "local_brands": [],
+      "local_strength": "",
+      "status": "same_name",
+      "note_listener": "",
+      "note_doctor": "",
+      "curated_note": "",
+      "med_id": "",
+      "source": "ai"
+     }
+    ],
+    "ms": 1880
+   },
+   "context": []
+  }
+ ]
+}

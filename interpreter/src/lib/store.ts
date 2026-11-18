@@ -33,16 +33,27 @@ export type Settings = {
   mode: MicMode;
   speak: boolean;
   pairs: Record<string, { patientLang: string; doctorLang: string; local: string }>;
-  /** Visual identity: the original Parity look, or Tandem (press 3 to switch). */
-  brand: "tessera" | "tandem";
+  /** Visual identity: Parity (the original light look, formerly "Tessera"), or Tandem (press 3 to switch). */
+  brand: "parity" | "tandem";
   /** Conversation layout: the scrolling transcript, or Focus (one line at a time; press L to switch). */
   layout: "classic" | "focus";
+  /** Which of the four parts is open: the health card, documents, the medicine converter, or the interpreter. */
+  tab: Tab;
 };
 
-const SETTINGS_KEY = "ti.settings.v1";
-const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {}, brand: "tessera", layout: "classic" };
+export type Tab = "card" | "docs" | "meds" | "talk";
+export const TABS: Tab[] = ["card", "docs", "meds", "talk"];
 
-export const loadSettings = (): Settings => ({ ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(SETTINGS_KEY, {}) });
+const SETTINGS_KEY = "ti.settings.v1";
+const DEFAULT_SETTINGS: Settings = { personaId: "sofia", mode: "auto", speak: true, pairs: {}, brand: "parity", layout: "classic", tab: "card" };
+
+export const loadSettings = (): Settings => {
+  const s = { ...DEFAULT_SETTINGS, ...read<Partial<Settings>>(SETTINGS_KEY, {}) };
+  // The original look was called Tessera; phones that saved that name get Parity.
+  if (s.brand !== "tandem") s.brand = "parity";
+  if (!TABS.includes(s.tab)) s.tab = "card";
+  return s;
+};
 export const saveSettings = (s: Settings) => write(SETTINGS_KEY, s);
 
 /* ---------------------------------------------------------------- medication equivalents */

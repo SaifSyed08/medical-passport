@@ -147,6 +147,24 @@ export function Reveal({
         const to = swap ? swapLabel(p.drug, swap) : "";
         const changes = Boolean(swap && to && !nearlySame(to, p.s) && p.drug.status !== "same_name");
         const tone = p.drug.status === "not_available_locally" ? "danger" : p.drug.status === "different_strength" || p.drug.status === "uncertain" ? "warn" : "";
+        // In a translation the server writes "albuterol (Ventolin)": the listener's name, then the speaker's. Show
+        // the listener's name in the line and the speaker's in small type under it, not as a bracket.
+        const named = !swap && field === "translated" ? p.s.match(/^(.+?)\s*[(（]([^()（）]+)[)）]$/u) : null;
+        if (named)
+          return (
+            <span
+              key={i}
+              role="button"
+              tabIndex={0}
+              className={`drug ${tone} named`}
+              onClick={() => onDrug?.(p.drug)}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onDrug?.(p.drug)}
+              style={{ "--d": `${delay}ms` } as CSSProperties}
+            >
+              <span className="drug-main">{named[1]}</span>
+              <span className="drug-sub">{named[2]}</span>
+            </span>
+          );
         if (!changes)
           // A <span>, not a <button>: buttons always render as blocks, and this has to wrap like a marker stroke.
           return (
@@ -195,4 +213,13 @@ export function kindOf(id: string) {
   if (id.startsWith("cnd_")) return "condition";
   if (id.startsWith("lab_")) return "lab";
   return "document";
+}
+
+/** Private mode is on: a solid lock badge in the screen's header (press P to switch). */
+export function DeviceTag() {
+  return (
+    <span className="device-tag" title="Private mode: on this device" aria-label="Private mode: on this device">
+      <Icon name="lock" size={15} />
+    </span>
+  );
 }

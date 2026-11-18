@@ -126,8 +126,8 @@ export const jordan: Persona = {
 };
 
 
-// Nepali skit (mirrors Sofía's): Sita has back pain and took her Flexon, not knowing it contains ibuprofen, an
-// NSAID, which sets off her asthma. The doctor then proposes ketorolac (another NSAID) and a CT with contrast,
+// Nepali skit (mirrors Sofía's): Sita's lower back hurts and two Cetamol (paracetamol, safe for her) didn't help, so
+// nothing turns red. The doctor then proposes ketorolac (an NSAID, which sets off her asthma) and a CT with contrast,
 // and her record has a contrast-dye reaction too. The app flags each one as it is said.
 export const sita: Persona = {
   id: "sita",
@@ -190,13 +190,64 @@ export const sita: Persona = {
   ],
   contacts: [{ id: "con_gita", name: "Gita Gurung", relationship: "Sister (in New York)", phone: "+1 212 555 0148" }],
   script: [
-    { speaker: "patient", text: "डाक्टर, अँ... मेरो ढाड एकदमै दुखिरहेको छ। मैले दुई वटा फ्लेक्सन खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Flexon flips to ibuprofen + acetaminophen; NSAID allergy banner" },
+    { speaker: "patient", text: "डाक्टर, अँ... मेरो कम्मर एकदमै दुखिरहेको छ। मैले दुई वटा सिटामोल खाएँ, तर कत्ति पनि कम भएन।", shows: "Nepali live captions and cleanup; Cetamol flips to acetaminophen; no alert (paracetamol is fine with her NSAID allergy)" },
     { speaker: "clinician", text: "Okay. I'm going to give you ketorolac for the pain and get a CT scan with contrast.", shows: "Nepali translation spoken; ketorolac (NSAID) and contrast-dye alerts" },
     { speaker: "patient", text: "ठिक छ, धन्यवाद डाक्टर।", shows: "Small talk: translated, no false alarms" },
   ],
 };
 
-export const PERSONAS: Persona[] = [sofia, jordan, sita];
+// Nepali skit, five short lines: Ramesh can't breathe and his Ventolin isn't helping (it flips to albuterol for the
+// US doctor); his asthma and last year's ER visit come up on screen and the doctor reads them; then the doctor asks about
+// amoxicillin, which he had anaphylaxis to, and the penicillin allergy fires. The antibiotic question comes before
+// any treatment decision: amoxicillin is never offered for the asthma itself.
+export const ramesh: Persona = {
+  id: "ramesh",
+  name: "Ramesh Shrestha",
+  initials: "RS",
+  dob: "1989-11-21",
+  sex: "Male",
+  bloodType: "O+",
+  language: "ne",
+  home: "NP",
+  trip: { country: "US", city: "Chicago", doctorLanguage: "en", reason: "Work conference" },
+  recordLanguage: "en",
+  allergies: [
+    {
+      id: "alg_penicillin",
+      substance: "Penicillin (amoxicillin, ampicillin)",
+      reaction: "Anaphylaxis (2019): throat swelling and low blood pressure after amoxicillin; treated with epinephrine",
+      severity: "severe",
+      since: "2019",
+    },
+  ],
+  medications: [
+    { id: "med_ventolin", name: "Ventolin inhaler", generic: "salbutamol 100 mcg/puff", dose: "2 puffs", schedule: "When short of breath, up to every 4 hours", purpose: "Asthma reliever (rescue inhaler)" },
+  ],
+  conditions: [
+    { id: "cnd_asthma", name: "Asthma, moderate", since: "childhood", note: "Attacks with colds and dust; one emergency visit (December 2025)." },
+  ],
+  labs: [],
+  documents: [
+    {
+      id: "doc_er_2025",
+      kind: "visit",
+      title: "Emergency visit: asthma attack",
+      date: "2025-12-14",
+      facility: "Bir Hospital, Kathmandu",
+      body: "Severe asthma attack after a cold. Treated with nebulised salbutamol and ipratropium, then oral prednisolone 40 mg for 5 days. Discharged after 6 hours. No antibiotic given: documented penicillin anaphylaxis.",
+    },
+  ],
+  contacts: [{ id: "con_sunita", name: "Sunita Shrestha", relationship: "Wife (in Kathmandu)", phone: "+977 1 555 0192" }],
+  script: [
+    { speaker: "patient", text: "हिजोदेखि सास फेर्न गाह्रो भइरहेको छ। मलाई दम छ, तर भेन्टोलिनले काम गरिरहेको छैन।", shows: "Ventolin flips to albuterol for the US doctor; his asthma, inhaler and last year's ER visit come up as plain cards" },
+    { speaker: "clinician", text: "I see you were in the emergency room for an asthma attack last year. Does this feel the same?", shows: "The doctor reads the record on screen; Nepali translation spoken" },
+    { speaker: "patient", text: "हो, त्यस्तै छ।", shows: "Translated; nothing new" },
+    { speaker: "clinician", text: "Before we decide on treatment, have you ever taken amoxicillin?", shows: "Penicillin anaphylaxis alert" },
+    { speaker: "clinician", text: "Wait, your record shows a penicillin allergy. Let's verify that first.", shows: "The doctor reacts; translated into Nepali" },
+  ],
+};
+
+export const PERSONAS: Persona[] = [sofia, jordan, sita, ramesh];
 
 /** Personas with a recorded run in public/demo/. */
 export const hasDemo = (id: string) => PERSONAS.some((p) => p.id === id);

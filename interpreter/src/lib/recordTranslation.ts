@@ -41,7 +41,7 @@ export function loadTranslatedRecord(p: Persona, lang: string): Promise<RecordBo
   if (!inflight.has(k)) {
     inflight.set(
       k,
-      translateRecord(recordBody(p), lang)
+      translateRecord(recordBody(p), lang, p.recordLanguage)
         .then((r) => {
           const merged = mergeIds(recordBody(p), r.record);
           try {

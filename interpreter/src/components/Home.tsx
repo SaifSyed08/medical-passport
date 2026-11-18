@@ -4,7 +4,8 @@ import type { Equivalent, Persona } from "../lib/types";
 import { equivalents } from "../lib/api";
 import { COUNTRIES, LANGS, country, langName } from "../lib/langs";
 import { loadTrip, norm, saveEquivalents, type Settings, type TripCache } from "../lib/store";
-import { Sheet, StatusBadge } from "./bits";
+import { DeviceTag, Sheet } from "./bits";
+import { useOnDevice } from "../lib/onDevice";
 import Icon from "./Icon";
 import { TandemWordmark } from "./TandemLogo";
 import Flag from "./Flag";
@@ -12,10 +13,13 @@ import RecordSheet from "./RecordSheet";
 import Picker, { type PickerOption } from "./Picker";
 import LogoLoader from "./LogoLoader";
 import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslation";
+import type { Tab } from "../lib/store";
+import Medicines from "./Medicines";
+import { embedded } from "../lib/host";
 
 type Props = {
   persona: Persona;
-  /** Everyone selectable under Settings: the Parity traveler (when embedded), then the demo patients. */
+  /** Everyone selectable under Settings: the Tessera app's traveler (when embedded), then the demo patients. */
   personas: Persona[];
   settings: Settings;
   setSettings: (f: (s: Settings) => Settings) => void;
@@ -39,6 +43,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
   const [prep, setPrep] = useState<"idle" | "busy" | "error">("idle");
   const [prepError, setPrepError] = useState("");
   const [sheet, setSheet] = useState<"none" | "settings" | "record">("none");
+  const onDevice = useOnDevice();
 
   const prepare = useCallback(async () => {
     setPrep("busy");
@@ -74,6 +79,14 @@ export default function Home({ persona, personas, settings, setSettings, onStart
     if (persona.recordLanguage !== persona.trip.doctorLanguage) loadTranslatedRecord(persona, persona.trip.doctorLanguage).catch(() => {});
   }, [persona]);
 
+  // Inside the Tessera app's own Interpreter tab, this page is only the interpreter: no second tab bar.
+  const inApp = embedded();
+  const tab: Tab = inApp ? "talk" : settings.tab;
+  const setTab = (t: Tab) => {
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    setSettings((s) => ({ ...s, tab: t }));
+  };
+
   const setDoctorLang = (doctorLang: string) =>
     setSettings((s) => {
       const cur = s.pairs[persona.id] || { patientLang: persona.language, doctorLang: persona.trip.doctorLanguage, local: persona.trip.country };
@@ -81,15 +94,32 @@ export default function Home({ persona, personas, settings, setSettings, onStart
     });
 
   return (
-    <main className="home">
+    <div className="shell">
+    <main className={`home tab-${tab}`}>
       <header className="home-top">
-        <span className="home-top-side" aria-hidden />
+        <span className="home-top-side">{onDevice && <DeviceTag />}</span>
         {settings.brand === "tandem" ? <TandemWordmark /> : <Wordmark />}
         <button className="icon-btn" onClick={() => setSheet("settings")} aria-label="Settings">
           <Icon name="settings" />
         </button>
       </header>
 
+      {/* Four parts: the health card, documents, the medicine converter, the interpreter. */}
+      {tab === "card" && <CardTab persona={persona} />}
+      {tab === "docs" && (
+        <>
+          <h2 className="tab-title">Documents</h2>
+          <RecordSheet persona={persona} editable page sections={["document"]} addBar="document" onClose={() => {}} />
+        </>
+      )}
+      {tab === "meds" && (
+        <>
+          <h2 className="tab-title">Medicines</h2>
+          <Medicines persona={persona} trip={trip} prep={prep} prepError={prepError} onRefresh={prepare} />
+        </>
+      )}
+      {tab === "talk" && (
+      <>
       <section className="panel patient-card">
       <button className="pc-open" onClick={() => setSheet("record")}>
         <span className="pc-head">
@@ -162,6 +192,8 @@ export default function Home({ persona, personas, settings, setSettings, onStart
           </button>
         )}
       </div>
+      </>
+      )}
 
 
       {sheet === "record" && <RecordSheet persona={persona} editable onClose={() => setSheet("none")} />}
@@ -186,7 +218,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
           <div className="group">
             <div className="group-title">Look</div>
             <div className="seg">
-              <button className={settings.brand !== "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tessera" }))}>
+              <button className={settings.brand !== "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "parity" }))}>
                 Parity
               </button>
               <button className={settings.brand === "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tandem" }))}>
@@ -205,34 +237,54 @@ export default function Home({ persona, personas, settings, setSettings, onStart
               </button>
             </div>
           </div>
-          <div className="group">
-            <div className="group-title row-between">
-              <span>Medicines in {country(local).name}</span>
-              {!sameCountry && (
-                <button className="link" onClick={prepare} disabled={prep === "busy"}>
-                  {prep === "busy" ? "Matching…" : "Refresh"}
-                </button>
-              )}
-            </div>
-            {prepError && <p className="error-text small">{prepError}</p>}
-            {persona.medications.map((m) => {
-              const eq = eqFor(m.name);
-              return (
-                <div key={m.id} className="row static">
-                  <span className="row-main">
-                    <strong>{m.name}</strong>
-                    <span className={eq?.status === "not_available_locally" ? "danger-text" : ""}>
-                      {!eq ? "…" : eq.status === "not_available_locally" ? `Not sold here (${eq.generic})` : `${eq.local_name}${eq.local_brands[0] ? ` · ${eq.local_brands[0]}` : ""}`}
-                    </span>
-                  </span>
-                  {eq && <StatusBadge status={eq.status} compact />}
-                </div>
-              );
-            })}
-          </div>
         </Sheet>
       )}
     </main>
+    {!inApp && <TabBar tab={tab} onTab={setTab} />}
+    </div>
+  );
+}
+
+const TAB_ITEMS: { id: Tab; label: string; icon: string }[] = [
+  { id: "card", label: "Card", icon: "card" },
+  { id: "docs", label: "Documents", icon: "doc" },
+  { id: "meds", label: "Medicines", icon: "pill" },
+  { id: "talk", label: "Interpret", icon: "chat" },
+];
+
+function TabBar({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
+  return (
+    <nav className="tabbar" aria-label="Sections">
+      {TAB_ITEMS.map((t) => (
+        <button key={t.id} data-tab={t.id} className={t.id === tab ? "on" : ""} aria-current={t.id === tab ? "page" : undefined} onClick={() => onTab(t.id)}>
+          <Icon name={t.icon} size={24} />
+          <span>{t.label}</span>
+        </button>
+      ))}
+    </nav>
+  );
+}
+
+/** The health card: who the patient is and what a doctor needs to know, in the doctor's language when it differs. */
+function CardTab({ persona }: { persona: Persona }) {
+  return (
+    <>
+      <section className="panel id-card">
+        <span className="avatar">{persona.initials}</span>
+        <span className="id-main">
+          <strong>{persona.name}</strong>
+          <span>
+            {age(persona.dob)} years · born {persona.dob} · blood type {persona.bloodType}
+          </span>
+          <span className="id-trip">
+            <Flag code={persona.home} size={18} /> {langName(persona.language)}
+            <Icon name="swap" size={14} />
+            <Flag code={persona.trip.country} size={18} /> {persona.trip.city}
+          </span>
+        </span>
+      </section>
+      <RecordSheet persona={persona} editable page sections={["allergy", "medication", "condition", "lab", "contact"]} onClose={() => {}} />
+    </>
   );
 }
 
@@ -271,11 +323,10 @@ function LanguageFields({ persona, setSettings }: { persona: Persona; setSetting
 export function Wordmark() {
   return (
     <span className="wordmark">
+      {/* Parity: an equals sign, two people on equal footing in the conversation. */}
       <svg viewBox="0 0 28 28" aria-hidden>
-        <rect x="1" y="1" width="12" height="12" rx="3.5" fill="var(--accent)" />
-        <rect x="15" y="1" width="12" height="12" rx="3.5" fill="var(--accent)" opacity=".35" />
-        <rect x="1" y="15" width="12" height="12" rx="3.5" fill="var(--accent)" opacity=".35" />
-        <rect x="15" y="15" width="12" height="12" rx="6" fill="var(--accent)" />
+        <rect x="2" y="7" width="24" height="5.5" rx="2.75" fill="var(--accent)" />
+        <rect x="2" y="15.5" width="24" height="5.5" rx="2.75" fill="var(--accent)" opacity=".55" />
       </svg>
       Parity
     </span>

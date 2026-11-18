@@ -111,3 +111,12 @@ test("Nepal: Asthalin is salbutamol (albuterol in the US); a plain ibuprofen men
   assert.equal(findCurated("ibuprofen").key, "ibuprofen");
   assert.equal(findCurated("Budecort 200 inhaler").key, "budesonide-inhaler");
 });
+
+test("brand-first order from the model is flipped so the listener's name leads", () => {
+  const e = findCurated("Ventolin");
+  const r = localizeDrug("I have asthma, but Ventolin (albuterol) isn't working.", e, { home: "NP", local: "US", listener: "clinician" });
+  assert.equal(r.translation, "I have asthma, but albuterol (Ventolin) isn't working.");
+  assert.equal(r.label, "albuterol (Ventolin)");
+  // Already in the right order: nothing to do.
+  assert.equal(localizeDrug("I use albuterol (Ventolin).", e, { home: "NP", local: "US", listener: "clinician" }), null);
+});

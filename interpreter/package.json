@@ -13,7 +13,9 @@
     "test": "node --experimental-strip-types --no-warnings --test \"tests/*.test.mjs\"",
     "test:api": "node --experimental-strip-types --no-warnings scripts/api-check.mjs",
     "test:accuracy": "node --experimental-strip-types --no-warnings scripts/accuracy.mjs",
-    "test:e2e": "node scripts/e2e-browser.mjs"
+    "test:e2e": "node scripts/e2e-browser.mjs",
+    "local:setup": "node scripts/local-setup.mjs",
+    "phone": "node scripts/phone.mjs"
   },
   "engines": {
     "node": ">=22"
@@ -29,6 +31,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.7.0",
     "puppeteer-core": "^25.17.0",
+    "qrcode-terminal": "^0.12.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "typescript": "^7.0.2",

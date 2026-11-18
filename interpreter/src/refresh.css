@@ -19,14 +19,12 @@
 .logo-loader { --ll: 26px; display: inline-grid; place-items: center; width: var(--ll); height: var(--ll); flex: none; color: var(--accent); }
 .logo-loader svg { width: 100%; height: 100%; grid-area: 1 / 1; overflow: visible; }
 .logo-loader .ll-tandem { display: none; }
-[data-brand="tandem"] .logo-loader .ll-tessera { display: none; }
+[data-brand="tandem"] .logo-loader .ll-parity { display: none; }
 [data-brand="tandem"] .logo-loader .ll-tandem { display: block; }
-/* Parity: the bright tile steps round the grid clockwise; the ones it left fade behind it like a trail. */
-.ll-tessera rect { fill: currentColor; transform-box: fill-box; transform-origin: center; animation: llTile 1.2s cubic-bezier(.5, 0, .5, 1) infinite; }
-.ll-tessera .t1 { animation-delay: .3s; }
-.ll-tessera .t2 { animation-delay: .6s; }
-.ll-tessera .t3 { animation-delay: .9s; }
-@keyframes llTile { 0% { opacity: 1; transform: scale(1); } 12% { opacity: 1; transform: scale(1.06); } 60%, 100% { opacity: .2; transform: scale(.78); } }
+/* Parity: the two bars of the equals sign take turns drawing out from the left, the other fading back. */
+.ll-parity rect { fill: currentColor; transform-box: fill-box; transform-origin: left center; animation: llBar 1.1s cubic-bezier(.5, 0, .3, 1) infinite; }
+.ll-parity .p1 { animation-delay: .55s; }
+@keyframes llBar { 0% { transform: scaleX(.25); opacity: .35; } 45% { transform: scaleX(1); opacity: 1; } 100% { transform: scaleX(.25); opacity: .35; } }
 /* Tandem: a light with a tail runs round each ring, gold one way, cream the other. */
 .ll-tandem circle { fill: none; stroke-width: 7; }
 .ll-tandem .base.a { stroke: var(--t-gold); opacity: .18; }
@@ -43,7 +41,7 @@
 @keyframes llRun { to { transform: rotate(360deg); } }
 .logo-loader.mono { color: currentColor; }
 .logo-loader.mono .ll-tandem .a, .logo-loader.mono .ll-tandem .b { stroke: currentColor; }
-@media (prefers-reduced-motion: reduce) { .ll-tessera rect, .ll-tandem circle { animation-duration: 3s; } }
+@media (prefers-reduced-motion: reduce) { .ll-parity rect, .ll-tandem circle { animation-duration: 3s; } }
 
 /* ---------- custom dropdown ---------- */
 .picker { position: relative; display: inline-flex; min-width: 0; }
@@ -265,3 +263,104 @@
 [data-brand="tandem"] .f-note.alert, [data-brand="tandem"] .f-note.alert .f-note-text strong, [data-brand="tandem"] .f-note.alert .f-note-icon { color: var(--t-navy); }
 [data-brand="tandem"] .f-note.alert .f-note-text span { color: rgb(11 36 82 / 88%); }
 [data-brand="tandem"] .f-note.alert .f-note-icon { background: rgb(11 36 82 / 10%); box-shadow: inset 0 0 0 1.5px rgb(11 36 82 / 45%); }
+
+/* ---------------------------------------------------------------- private mode (P) */
+/* Solid fill, white icon: the lock in each header while everything runs on the device. */
+.device-tag { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 8px; background: var(--ok); color: #fff; vertical-align: middle; flex: none; }
+.talk-title strong .device-tag { width: 22px; height: 22px; border-radius: 7px; margin-left: 8px; }
+.talk-title strong .device-tag svg { width: 13px; height: 13px; }
+.home-top-side { display: flex; align-items: center; }
+.device-note { position: absolute; z-index: 40; left: 16px; right: 16px; top: 64px; display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: var(--ink); color: #fff; font-size: 15px; font-weight: 550; line-height: 1.3; box-shadow: 0 10px 28px rgb(0 0 0 / 22%); animation: deviceNote 3.2s ease both; pointer-events: none; }
+.device-note.on { background: var(--ok); }
+.device-note svg { flex: none; }
+@keyframes deviceNote { 0% { opacity: 0; transform: translateY(-8px); } 8%, 88% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+.app.embedded .device-note { top: 12px; }
+/* Tandem's green is light: navy on it reads, white doesn't. */
+[data-brand="tandem"] .device-tag, [data-brand="tandem"] .device-note.on { color: #0b2452; }
+
+/* ---------------------------------------------------------------- round 8 */
+/* Medicine names are highlighted like a marker: dark text on a solid pale marker, not coloured text. */
+.drug, [data-brand="tandem"] .drug { color: var(--ink); background: #ffe08a; box-shadow: none; text-decoration: none; border-radius: 4px; padding: 0 .14em; font-weight: 650; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+.drug.danger, [data-brand="tandem"] .drug.danger { color: var(--ink); background: #ffc8bf; box-shadow: none; }
+[data-brand="tandem"] .drug, [data-brand="tandem"] .drug.danger { color: #0b2452; }
+[data-brand="tandem"] .drug { background: #f3c45f; }
+[data-brand="tandem"] .drug.danger { background: #ff9f92; }
+/* A medicine whose name changes for the listener is a small stack: the name they use, highlighted, and the name that
+   was said in small type underneath ("albuterol" over "Ventolin"). In the speaker's own line the flip lands on top;
+   in the translation the server's "albuterol (Ventolin)" is split the same way. It is a real block in the line,
+   so the line just grows a little; nothing hangs over the next one. */
+.drug.swaps, .drug.named { display: inline-flex; flex-direction: column; align-items: flex-start; vertical-align: baseline; margin: 0 .04em; padding: 0; background: none; cursor: pointer; }
+.drug.swaps .drug-stack, .drug.named .drug-main { background: #ffe08a; border-radius: 4px; padding: 0 .14em; }
+.drug.danger.swaps .drug-stack, .drug.danger.named .drug-main { background: #ffc8bf; }
+[data-brand="tandem"] .drug.swaps .drug-stack, [data-brand="tandem"] .drug.named .drug-main { background: #f3c45f; }
+[data-brand="tandem"] .drug.danger.swaps .drug-stack, [data-brand="tandem"] .drug.danger.named .drug-main { background: #ff9f92; }
+.drug.swaps, .drug.named, [data-brand="tandem"] .drug.swaps, [data-brand="tandem"] .drug.named { background: none; }
+.drug.swaps .drug-to { text-decoration: none; }
+.drug.swaps .drug-caption, .drug.named .drug-sub { position: static; transform: none; display: block; margin: .12em 0 0 .14em; font-size: max(11px, .42em); font-weight: 550; line-height: 1.15; letter-spacing: 0; white-space: nowrap; color: var(--ink-3); opacity: 1; }
+.drug.swaps .drug-caption { animation: fadeIn .3s ease-out calc(var(--d) + 1200ms) both; }
+[data-brand="tandem"] .drug.swaps .drug-caption, [data-brand="tandem"] .drug.named .drug-sub { color: rgb(247 241 227 / 72%); }
+/* The profile's lists: the hairlines above and below are enough; the 1px border read as a bright frame in Tandem. */
+.rec-section .list, [data-brand="tandem"] .rec-section .list { border: 0; }
+
+/* ---------------------------------------------------------------- four parts: card, documents, medicines, interpret */
+.shell { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.shell .home { padding-bottom: 18px; }
+.tabbar { flex: none; position: relative; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--panel-solid); box-shadow: 0 -1px 0 var(--edge); padding: 6px 6px max(10px, env(safe-area-inset-bottom)); }
+.tabbar button { display: grid; justify-items: center; gap: 2px; padding: 6px 0 4px; border: 0; background: none; color: var(--ink-3); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; }
+.tabbar button.on { color: var(--accent); }
+.tabbar button.on span { font-weight: 700; }
+[data-brand="tandem"] .tabbar { background: var(--t-navy-2); box-shadow: 0 -1px 0 rgb(247 241 227 / 10%); }
+[data-brand="tandem"] .tabbar button.on { color: var(--t-gold); }
+@media (min-width: 700px) { .tabbar { padding-bottom: 22px; } }
+.tab-title { margin: 2px 0 -6px; font-family: var(--serif); font-weight: 400; font-size: 30px; letter-spacing: -.02em; color: var(--ink); }
+
+/* Health card */
+.id-card { display: flex; align-items: center; gap: 14px; padding: 16px 18px; text-align: left; }
+.id-card .avatar { width: 56px; height: 56px; font-size: 20px; }
+.id-main { display: grid; gap: 3px; min-width: 0; }
+.id-main strong { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: -.02em; line-height: 1.15; color: var(--ink); }
+.id-main > span { font-size: 14.5px; color: var(--ink-2); }
+.id-main .id-trip { display: flex; align-items: center; gap: 6px; margin-top: 2px; color: var(--ink-2); }
+.record-page { display: grid; gap: 14px; }
+.record-page .rec-section .list { margin: 0 -20px; }
+.record-page .record-lang { justify-self: start; }
+
+/* Documents */
+.add-bar { display: grid; grid-template-columns: 1.3fr 1fr; gap: 10px; }
+.add-bar button { min-height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; }
+
+/* Medicine converter */
+.meds-page { display: grid; gap: 16px; }
+.conv { display: grid; gap: 10px; padding: 16px; text-align: left; }
+.conv-label { font-size: 13px; font-weight: 650; letter-spacing: .02em; color: var(--ink-3); }
+.conv-input { width: 100%; font: inherit; font-size: 19px; padding: 12px 14px; border: 1.5px solid var(--edge); border-radius: 12px; background: var(--bg); color: var(--ink); }
+.conv-input:focus { outline: none; border-color: var(--accent); }
+.conv-route { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.conv-swap { width: 40px; height: 40px; }
+.conv-go { min-height: 50px; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16.5px; }
+.conv-go:disabled { opacity: .45; cursor: default; }
+.conv-recent { display: flex; flex-wrap: wrap; gap: 6px; }
+.conv-recent button { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border: 1px solid var(--edge); border-radius: 999px; background: none; color: var(--ink-2); font: inherit; font-size: 13.5px; cursor: pointer; }
+.conv-msg { margin: 0; font-size: 15px; color: var(--ink-2); }
+.conv-result { display: grid; gap: 10px; padding: 16px 18px; text-align: left; }
+.conv-result.danger { box-shadow: inset 0 0 0 1.5px var(--danger); }
+.conv-from { display: flex; align-items: center; gap: 8px; font-size: 14.5px; color: var(--ink-3); }
+.conv-to { display: flex; align-items: center; gap: 12px; }
+.conv-to > span { display: grid; gap: 2px; }
+.conv-to strong { font-size: 27px; font-weight: 700; letter-spacing: -.01em; color: var(--ink); line-height: 1.15; }
+.conv-result.danger .conv-to strong { color: var(--danger); }
+.conv-to > span > span { font-size: 15px; color: var(--ink-2); }
+.conv-line, .conv-note { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 14.5px; line-height: 1.4; color: var(--ink-2); }
+.conv-result .fine { margin: 0; }
+.meds-mine { display: grid; gap: 8px; }
+.meds-mine .list { margin: 0 -20px; border-radius: 0; border: 0; box-shadow: 0 1px 0 var(--edge), 0 -1px 0 var(--edge); }
+.med-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; }
+.med-row .row-main { display: grid; gap: 3px; }
+.med-row .row-main strong { font-size: 17px; }
+[data-brand="tandem"] .conv-input { background: rgb(255 255 255 / 6%); border-color: rgb(247 241 227 / 18%); color: var(--t-cream); }
+[data-brand="tandem"] .conv-input:focus { border-color: var(--t-gold); }
+[data-brand="tandem"] .conv-recent button { border-color: rgb(247 241 227 / 18%); color: var(--t-cream); }
+[data-brand="tandem"] .meds-mine .list { box-shadow: 0 1px 0 rgb(247 241 227 / 8%), 0 -1px 0 rgb(247 241 227 / 8%); }
+.conv-route .picker { flex: 1; }
+[data-brand="tandem"] .record-page .seg { background: rgb(255 255 255 / 6%); box-shadow: inset 0 0 0 1px rgb(247 241 227 / 14%); }
+[data-brand="tandem"] .record-page .seg button:not(.on) { color: rgb(247 241 227 / 80%); }

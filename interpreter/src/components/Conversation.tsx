@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ContextItem, DrugMention, Equivalent, Persona, Speaker, Turn } from "../lib/types";
 import { Mic, type MicState } from "../lib/mic";
 import type { Player } from "../lib/player";
-import { demoVoice, fastDemo, FAST_RATE, setPlayerBusyHandler, sharedPlayer, unlockAudio } from "../lib/audioSession";
+import { demoVoice, demoVoicesOn, fastDemo, FAST_RATE, setPlayerBusyHandler, sharedPlayer, toggleDemoVoices, unlockAudio } from "../lib/audioSession";
 import { PERSONAS, hasDemo } from "../data/personas";
 import { halfDuplex } from "../lib/duplex";
 import { mergeContext } from "../lib/contextMerge";
@@ -11,14 +11,14 @@ import { recordForContext, sttTerms } from "../lib/record";
 import { isCached, loadTrip, rememberMentions, saveEquivalents, uniqueEquivalents, type Settings } from "../lib/store";
 import { dir, langName } from "../lib/langs";
 import { TurnBlock, IdleHero } from "./Stage";
-import ContextTiles, { AlertToast } from "./ContextDock";
-import { kindOf } from "./bits";
+import ContextTiles from "./ContextDock";
 import Orb from "./Orb";
 import DrugSheet from "./DrugSheet";
 import RecordSheet from "./RecordSheet";
 import { FocusDock, FocusView } from "./Focus";
 import ContextSheet from "./ContextSheet";
-import { Sheet } from "./bits";
+import { DeviceTag, Sheet } from "./bits";
+import { useOnDevice } from "../lib/onDevice";
 import Icon from "./Icon";
 import Flag from "./Flag";
 
@@ -48,6 +48,9 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function Conversation({ persona, settings, setSettings, onBack, demoRequest }: Props) {
   const [turns, setTurns] = useState<Turn[]>([]);
   const [ctx, setCtx] = useState<ContextItem[]>([]);
+  const onDevice = useOnDevice();
+  // Re-renders the Options sheet after a module-level toggle (speakers' voices in the demo).
+  const [, bump] = useState(0);
   const [micState, setMicState] = useState<MicState>("off");
   const [level, setLevel] = useState(0);
   const [speaking, setSpeaking] = useState(false);
@@ -439,14 +442,19 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
         el.pause();
         if (!raf) raf = requestAnimationFrame(tick);
       };
-      el.onended = done;
-      el.onerror = goSilent;
-      el.src = url;
-      // Secret fast demo (F): the recording itself plays faster too.
-      el.defaultPlaybackRate = el.playbackRate = rate;
-      el.play().then(() => {
-        if (!finished && !silent) raf = requestAnimationFrame(tick);
-      }, goSilent);
+      // Speakers' voices off (V): the line runs on the clock, silently, exactly like a clip that failed to load.
+      el.muted = false;
+      if (!demoVoicesOn()) goSilent();
+      else {
+        el.onended = done;
+        el.onerror = goSilent;
+        el.src = url;
+        // Secret fast demo (F): the recording itself plays faster too.
+        el.defaultPlaybackRate = el.playbackRate = rate;
+        el.play().then(() => {
+          if (!finished && !silent) raf = requestAnimationFrame(tick);
+        }, goSilent);
+      }
       const guard = setInterval(() => {
         if (token.cancelled) {
           el.pause();
@@ -800,7 +808,10 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
           <Icon name="back" />
         </button>
         <button className="talk-title" onClick={() => setSheet("record")}>
-          <strong>{persona.name}</strong>
+          <strong>
+            {persona.name}
+            {onDevice && <DeviceTag />}
+          </strong>
           <span>
             <Flag code={persona.home} size={20} className="pt" /> {langName(persona.language)}
             <span className="sep">↔</span>
@@ -818,7 +829,7 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
       )}
 
       {/* Allergies get the banner; other alerts flash their tile in the bottom bar. */}
-      {toast && (kindOf(toast.id) === "allergy" || /allerg|anaphyla/i.test(`${toast.title} ${toast.detail}`)) && <AlertToast item={toast} onOpen={() => setOpenCtx(toast)} onClose={() => setToast(null)} />}
+      {/* A new alert flashes its tile in the record dock below and buzzes the phone; no banner over the transcript. */}
 
       {!focus && (
       <div className="transcript" ref={stageRef}>
@@ -926,6 +937,22 @@ export default function Conversation({ persona, settings, setSettings, onBack, d
                   <strong>Play demo conversation</strong>
                 </span>
                 <kbd>D</kbd>
+              </button>
+            )}
+            {hasDemo(persona.id) && (
+              <button
+                className="row"
+                onClick={() => {
+                  toggleDemoVoices();
+                  bump((n) => n + 1);
+                }}
+              >
+                <Icon name={demoVoicesOn() ? "speaker" : "mute"} />
+                <span className="row-main">
+                  <strong>Speakers' voices in the demo</strong>
+                  <span>{demoVoicesOn() ? "On" : "Off: captions and spoken translations only"}</span>
+                </span>
+                <kbd>V</kbd>
               </button>
             )}
             {focus && (
