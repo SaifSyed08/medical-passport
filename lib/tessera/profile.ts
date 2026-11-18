@@ -5,6 +5,7 @@ import {
   DESTINATIONS,
   LANGUAGES,
   OTHER_DESTINATION,
+  SEVERITY_LABELS as severityLabel,
   TRANSLATED_FIELDS,
   TRANSLATED_LANGUAGES,
   type Allergy,
@@ -143,14 +144,6 @@ const labels: Record<Language, Labels> = {
   fr: { allergies: "Allergies", medications: "Médicaments", conditions: "Pathologies", bloodType: "Groupe sanguin", contacts: "Contacts d'urgence", none: "Aucune donnée enregistrée", unknownBlood: "Non renseigné" },
   it: { allergies: "Allergie", medications: "Farmaci", conditions: "Patologie", bloodType: "Gruppo sanguigno", contacts: "Contatti di emergenza", none: "Nessun dato registrato", unknownBlood: "Non registrato" },
   de: { allergies: "Allergien", medications: "Medikamente", conditions: "Erkrankungen", bloodType: "Blutgruppe", contacts: "Notfallkontakte", none: "Keine Angaben", unknownBlood: "Nicht angegeben" },
-};
-const severityLabel: Record<Language, Record<Allergy["severity"], string>> = {
-  en: { severe: "Severe", moderate: "Moderate", mild: "Mild" },
-  ja: { severe: "重度", moderate: "中等度", mild: "軽度" },
-  es: { severe: "Grave", moderate: "Moderada", mild: "Leve" },
-  fr: { severe: "Sévère", moderate: "Modérée", mild: "Légère" },
-  it: { severe: "Grave", moderate: "Moderata", mild: "Lieve" },
-  de: { severe: "Schwer", moderate: "Mittelschwer", mild: "Leicht" },
 };
 
 /** Text in `lang` if a translation exists; otherwise the English original, flagged as untranslated. */

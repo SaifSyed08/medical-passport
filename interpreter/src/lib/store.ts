@@ -33,7 +33,7 @@ export type Settings = {
   mode: MicMode;
   speak: boolean;
   pairs: Record<string, { patientLang: string; doctorLang: string; local: string }>;
-  /** Visual identity: the original Tessera look, or Tandem (press 3 to switch). */
+  /** Visual identity: the original Parity look, or Tandem (press 3 to switch). */
   brand: "tessera" | "tandem";
   /** Conversation layout: the scrolling transcript, or Focus (one line at a time; press L to switch). */
   layout: "classic" | "focus";

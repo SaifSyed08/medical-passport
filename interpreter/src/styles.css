@@ -1,6 +1,6 @@
-/* Tessera Interpreter: light, calm, readable from arm's length. Styled like the Tessera app (round 7 at the end). */
+/* Parity Interpreter: light, calm, readable from arm's length. Styled like the Parity app (round 7 at the end). */
 :root {
-  /* Same tokens as the Tessera app (mobile/src/lib/theme.ts), so the embedded page reads as one product. */
+  /* Same tokens as the Parity app (mobile/src/lib/theme.ts), so the embedded page reads as one product. */
   color-scheme: light;
   --bg: #f2f2ef;
   --panel: #ffffff;
@@ -545,7 +545,7 @@ i.dot.clinician { background: var(--clinician); }
   .sheet { border-radius: 30px 30px 44px 44px; }
 }
 .toast.panel { position: absolute; }
-/* Inside the Tessera app's WebView the page is already on a phone (or tablet): no drawn device frame. */
+/* Inside the Parity app's WebView the page is already on a phone (or tablet): no drawn device frame. */
 @media (min-width: 560px) {
   .app.embedded { width: auto; max-width: none; height: 100dvh; top: auto; transform: none; border-radius: 0; box-shadow: none; }
   .app.embedded::after { display: none; }
@@ -691,7 +691,7 @@ i.dot.clinician { background: var(--clinician); }
 .scan-actions { display: grid; grid-template-columns: auto 1fr; gap: 8px; position: sticky; bottom: 0; padding-top: 6px; }
 
 
-/* ================================================================= round 7: the Tessera app's look */
+/* ================================================================= round 7: the Parity app's look */
 /* Flat white cards with a hairline edge on the app's warm grey, serif titles, 8px buttons, no glass. */
 ::selection { background: rgb(49 95 152 / 18%); color: var(--ink); }
 input, textarea { caret-color: var(--accent); }

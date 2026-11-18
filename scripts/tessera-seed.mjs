@@ -1,4 +1,4 @@
-// Seeds (or with --reset, re-seeds) the synthetic Tessera traveler through the running API.
+// Seeds (or with --reset, re-seeds) the synthetic Parity traveler through the running API.
 // Usage: npm run db:seed [-- --reset] [-- --url http://127.0.0.1:8787]
 const args = process.argv.slice(2);
 const urlArg = args.includes("--url") ? args[args.indexOf("--url") + 1] : undefined;

@@ -3,7 +3,7 @@ import { useState, useSyncExternalStore } from "react";
 import { ArrowRight, Droplet, Globe2, HeartPulse, LockKeyhole, Phone, Pill, ShieldAlert } from "lucide-react";
 import { DEMO_NOTICE, LANGUAGE_NAMES, LANGUAGES, type Category, type EmergencyView, type Language } from "@/shared/tessera";
 
-// What a doctor sees after scanning a Tessera card: a date-of-birth check, then the emergency profile.
+// What a doctor sees after scanning a Parity card: a date-of-birth check, then the emergency profile.
 // The profile comes from POST /api/v1/scan/{cardId}; nothing about the patient is in this page until the date matches.
 
 type Copy = { title: string; lead: string; dob: string; open: string; opening: string; mismatch: string; locked: string; failed: string; kicker: string; selfReported: string; language: string };

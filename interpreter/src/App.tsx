@@ -19,7 +19,7 @@ export function effectivePersona(settings: Settings, personas: Persona[] = PERSO
 }
 
 export default function App() {
-  // Inside the Tessera app the signed-in traveler's own record comes first, and each visit starts on it.
+  // Inside the Parity app the signed-in traveler's own record comes first, and each visit starts on it.
   const [host, setHost] = useState<Persona | null>(hostPersona);
   useEffect(() => onHostPersona(setHost), []);
   // The app shows a diagnostic instead of a blank tab until it hears this.
@@ -45,7 +45,7 @@ export default function App() {
   const brand = settings.brand;
   useEffect(() => {
     document.documentElement.dataset.brand = brand;
-    document.title = brand === "tandem" ? "Tandem" : "Tessera Interpreter";
+    document.title = brand === "tandem" ? "Tandem" : "Parity Interpreter";
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (icon) icon.href = brand === "tandem" ? TANDEM_ICON : "/icon.svg";
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#f2f2ef");

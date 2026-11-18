@@ -1,4 +1,4 @@
-// Tessera Interpreter server: serves the app and proxies speech, translation and record-context calls to OpenAI.
+// Parity Interpreter server: serves the app and proxies speech, translation and record-context calls to OpenAI.
 // One process: Vite runs as middleware in dev, `dist/` is served with --prod.
 import express from "express";
 import http from "node:http";
@@ -27,7 +27,7 @@ app.disable("x-powered-by");
 // Optional access code for when the server is reachable from the internet (e.g. through a tunnel):
 // open https://<host>/?code=<ACCESS_CODE> once on the phone; a cookie keeps it unlocked.
 const ACCESS_CODE = process.env.ACCESS_CODE || "";
-// The Tessera app's own screens (not the embedded page) can't hold the cookie, so they send the code as a header.
+// The Parity app's own screens (not the embedded page) can't hold the cookie, so they send the code as a header.
 const cookieOk = (req) => !ACCESS_CODE || req.get("x-access-code") === ACCESS_CODE || (req.headers.cookie || "").split(/;\s*/).includes(`ti_code=${encodeURIComponent(ACCESS_CODE)}`);
 if (ACCESS_CODE) {
   app.use((req, res, next) => {

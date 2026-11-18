@@ -21,7 +21,7 @@
 .logo-loader .ll-tandem { display: none; }
 [data-brand="tandem"] .logo-loader .ll-tessera { display: none; }
 [data-brand="tandem"] .logo-loader .ll-tandem { display: block; }
-/* Tessera: the bright tile steps round the grid clockwise; the ones it left fade behind it like a trail. */
+/* Parity: the bright tile steps round the grid clockwise; the ones it left fade behind it like a trail. */
 .ll-tessera rect { fill: currentColor; transform-box: fill-box; transform-origin: center; animation: llTile 1.2s cubic-bezier(.5, 0, .5, 1) infinite; }
 .ll-tessera .t1 { animation-delay: .3s; }
 .ll-tessera .t2 { animation-delay: .6s; }

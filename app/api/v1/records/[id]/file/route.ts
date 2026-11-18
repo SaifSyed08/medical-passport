@@ -10,7 +10,7 @@ export const GET = withTraveler<{ id: string }>(async ({ request, db, traveler }
   const obj = row?.r2Key ? await env.BUCKET?.get(row.r2Key) : null;
   if (!row || !obj) return v1error(404, "File unavailable.", "not_found");
   if (new URL(request.url).searchParams.get("purpose") === "autofill")
-    await appendAudit(db, { travelerId: traveler.id, actor: "Tessera", actorRole: "system", action: "document_read", outcome: "info", detail: row.title });
+    await appendAudit(db, { travelerId: traveler.id, actor: "Parity", actorRole: "system", action: "document_read", outcome: "info", detail: row.title });
   return new Response(obj.body, {
     headers: { "Content-Type": row.contentType ?? "application/octet-stream", "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" },
   });

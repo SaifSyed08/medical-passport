@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Tessera",
+    "name": "Parity",
     "slug": "tessera",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,8 +10,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "org.texasconvergent.tessera.demo",
       "infoPlist": {
-        "NSFaceIDUsageDescription": "Tessera uses Face ID to confirm sensitive changes to your card.",
-        "NSMicrophoneUsageDescription": "Tessera's interpreter listens to you and your doctor so it can translate the conversation."
+        "NSFaceIDUsageDescription": "Parity uses Face ID to confirm sensitive changes to your card.",
+        "NSMicrophoneUsageDescription": "Parity's interpreter listens to you and your doctor so it can translate the conversation."
       }
     },
     "android": {
@@ -48,14 +48,14 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Tessera uses Face ID to confirm sensitive changes to your card."
+          "faceIDPermission": "Parity uses Face ID to confirm sensitive changes to your card."
         }
       ],
       [
         "expo-media-library",
         {
-          "photosPermission": "Tessera saves your card's QR code to Photos when you ask it to.",
-          "savePhotosPermission": "Tessera saves your card's QR code to Photos when you ask it to.",
+          "photosPermission": "Parity saves your card's QR code to Photos when you ask it to.",
+          "savePhotosPermission": "Parity saves your card's QR code to Photos when you ask it to.",
           "isAccessMediaLocationEnabled": false
         }
       ],

@@ -17,6 +17,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { hasJapanese } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
+import { Icon, type IconName } from "./icons";
 import { TesseraMark } from "./mark";
 import { color, font, radius, space, TOUCH } from "@/lib/theme";
 
@@ -89,7 +90,7 @@ export function DemoBanner() {
   );
 }
 
-/** The Tessera wordmark. Long-press opens presenter tools. */
+/** The Parity wordmark. Long-press opens presenter tools. */
 export function Logo({ presenter = true }: { presenter?: boolean }) {
   const { me } = useSession();
   return (
@@ -97,11 +98,11 @@ export function Logo({ presenter = true }: { presenter?: boolean }) {
       onLongPress={presenter && me?.presenterEnabled ? () => { void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); router.push("/presenter"); } : undefined}
       delayLongPress={600}
       accessibilityRole="image"
-      accessibilityLabel="Tessera"
+      accessibilityLabel="Parity"
       style={styles.logo}
     >
       <TesseraMark size={28} />
-      <T weight="500" style={{ fontSize: 17, letterSpacing: -0.5, color: color.ink }}>Tessera</T>
+      <T weight="500" style={{ fontSize: 17, letterSpacing: -0.5, color: color.ink }}>Parity</T>
     </Pressable>
   );
 }
@@ -196,6 +197,87 @@ export function Row({ title, detail, right, onPress, label, last }: { title: str
   );
 }
 
+/** Severity and similar labels that must stand out in a list (the solid "Severe" tag). */
+export function Badge({ children, tone = "error" }: { children: string; tone?: "error" | "warn" | "muted" }) {
+  const c = { error: [color.errorText, "white"], warn: [color.warnText, "white"], muted: [color.notice, color.noticeText] }[tone];
+  return (
+    <View style={[styles.badge, { backgroundColor: c[0] }]}>
+      <T weight="500" style={{ color: c[1], fontSize: 12 }}>{children}</T>
+    </View>
+  );
+}
+
+const LIST_TONE = { allergy: color.errorText, blue: color.blue, green: color.okText, plain: color.sectionTitle } as const;
+export type ListTone = keyof typeof LIST_TONE;
+
+/**
+ * A titled list that runs edge to edge: icon, serif title and count above, then white rows.
+ * The screens' main content (allergies, medicines, records) uses this instead of floating cards.
+ */
+export function ListSection({ icon, title, count, tone = "plain", action, children }: { icon?: IconName; title: string; count?: number; tone?: ListTone; action?: ReactNode; children: ReactNode }) {
+  const c = LIST_TONE[tone];
+  return (
+    <View style={{ gap: 8, marginTop: 4 }}>
+      <View style={styles.listHead}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 1 }}>
+          {icon && <Icon name={icon} color={c} size={19} />}
+          <T serif accessibilityRole="header" accessibilityLabel={count == null ? title : `${title}, ${count}`} style={{ fontSize: 19, color: c, flexShrink: 1 }}>
+            {title}
+          </T>
+          {count != null && <T importantForAccessibility="no" style={{ fontSize: 14, color: color.muted }}>{String(count)}</T>}
+        </View>
+        {action}
+      </View>
+      <View style={styles.list}>{children}</View>
+    </View>
+  );
+}
+
+/** One row of a ListSection. Children are the row's text lines; `right` holds a badge or status mark. */
+export function ListRow({ children, right, onPress, label, last }: { children: ReactNode; right?: ReactNode; onPress?: () => void; label?: string; last?: boolean }) {
+  const inner = (
+    <>
+      <View style={{ flex: 1, gap: 3 }}>{children}</View>
+      {right}
+    </>
+  );
+  const style = [styles.listRow, !last && styles.rowLine];
+  return onPress ? (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [style, pressed && { backgroundColor: "#f6f7f8" }]}>
+      {inner}
+    </Pressable>
+  ) : (
+    <View accessible accessibilityLabel={label} style={style}>{inner}</View>
+  );
+}
+
+/** The quiet line a list shows when it has nothing in it. */
+export function ListEmpty({ children }: { children: string }) {
+  return <T style={{ color: color.subtle, paddingHorizontal: space.xl, paddingVertical: 14 }}>{children}</T>;
+}
+
+/** The outlined "+ Add" / "Edit" pill beside a list title, coloured like that list. */
+export function SmallButton({ children, onPress, label, tone = "blue", icon = "plus" }: { children: string; onPress: () => void; label?: string; tone?: ListTone; icon?: IconName }) {
+  const c = LIST_TONE[tone];
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label ?? children}
+      onPress={onPress}
+      hitSlop={6}
+      style={({ pressed }) => [styles.small, { borderColor: c }, pressed && { backgroundColor: "rgba(49,95,152,0.06)" }]}
+    >
+      <Icon name={icon} color={c} size={15} stroke={2} />
+      <T weight="500" style={{ color: c, fontSize: 14 }}>{children}</T>
+    </Pressable>
+  );
+}
+
+/** Small print under a screen (what was translated, what is shared). */
+export function Footnote({ children }: { children: string }) {
+  return <T style={{ fontSize: 12.5, lineHeight: 18, color: color.muted }}>{children}</T>;
+}
+
 export function Pill({ children, tone = "ok" }: { children: string; tone?: "ok" | "warn" | "muted" | "error" }) {
   const c = {
     ok: [color.okBg, color.okText],
@@ -234,7 +316,7 @@ export function Field({ label, hint, error, ...input }: TextInputProps & { label
         placeholderTextColor={color.subtle}
         maxFontSizeMultiplier={1.6}
         {...input}
-        style={[styles.input, input.multiline && { minHeight: 90, textAlignVertical: "top" }, !!error && { borderColor: color.errorText }]}
+        style={[styles.input, input.multiline && { minHeight: 90, textAlignVertical: "top" }, input.style, !!error && { borderColor: color.errorText }]}
       />
       {error ? <T style={{ fontSize: 12.5, color: color.errorText }}>{error}</T> : hint ? <T style={{ fontSize: 12.5, color: color.subtle }}>{hint}</T> : null}
     </View>
@@ -320,9 +402,9 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.bg },
   text: { color: color.ink, fontSize: 15 },
   eyebrow: { fontSize: 11.5, letterSpacing: 1.8, color: "#7d8c99", textTransform: "uppercase" },
-  demo: { alignSelf: "flex-start", backgroundColor: color.notice, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
+  demo: { alignSelf: "center", backgroundColor: color.notice, borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 5 },
   demoText: { fontSize: 11.5, color: color.noticeText },
-  logo: { flexDirection: "row", alignItems: "center", gap: 9, minHeight: TOUCH, alignSelf: "flex-start" },
+  logo: { flexDirection: "row", alignItems: "center", gap: 9, minHeight: TOUCH, alignSelf: "center" },
   button: { minHeight: 52, borderRadius: radius.button, paddingHorizontal: 22, paddingVertical: 13, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, borderWidth: 1 },
   primary: { backgroundColor: color.blue, borderColor: "transparent" },
   secondary: { backgroundColor: "transparent", borderColor: "#cdd5dd" },
@@ -330,6 +412,11 @@ const styles = StyleSheet.create({
   sectionHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.m, marginBottom: 6 },
   row: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: TOUCH, paddingVertical: 10 },
   rowLine: { borderBottomWidth: 1, borderBottomColor: "#edf0f2" },
+  badge: { borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3, alignSelf: "flex-start" },
+  listHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.m, minHeight: 36 },
+  list: { marginHorizontal: -space.xl, backgroundColor: color.surface, borderTopWidth: 1, borderBottomWidth: 1, borderColor: color.line },
+  listRow: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: TOUCH, paddingHorizontal: space.xl, paddingVertical: 13 },
+  small: { flexDirection: "row", alignItems: "center", gap: 5, minHeight: 36, paddingHorizontal: 13, borderRadius: radius.pill, borderWidth: 1.2 },
   pill: { borderRadius: radius.pill, paddingHorizontal: 9, paddingVertical: 4, alignSelf: "flex-start" },
   notice: { borderRadius: radius.button, paddingHorizontal: 15, paddingVertical: 13, borderWidth: 1 },
   input: { minHeight: TOUCH, borderWidth: 1, borderColor: color.fieldLine, borderRadius: radius.field, backgroundColor: "white", paddingHorizontal: 14, paddingVertical: 11, fontSize: 16, color: color.ink },

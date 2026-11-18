@@ -42,7 +42,7 @@ export function CardFace({
         <View style={styles.top}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 7, opacity: 0.9 }}>
             <TesseraMark size={16} color={th.ink} />
-            <T style={{ color: th.ink, fontSize: 14, letterSpacing: -0.3 }}>Tessera</T>
+            <T style={{ color: th.ink, fontSize: 14, letterSpacing: -0.3 }}>Parity</T>
           </View>
           <Pill tone={status === "active" ? "ok" : status === "frozen" ? "warn" : "muted"}>{statusLabel}</Pill>
         </View>

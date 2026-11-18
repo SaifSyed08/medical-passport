@@ -15,7 +15,7 @@ import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslat
 
 type Props = {
   persona: Persona;
-  /** Everyone selectable under Settings: the Tessera traveler (when embedded), then the demo patients. */
+  /** Everyone selectable under Settings: the Parity traveler (when embedded), then the demo patients. */
   personas: Persona[];
   settings: Settings;
   setSettings: (f: (s: Settings) => Settings) => void;
@@ -187,7 +187,7 @@ export default function Home({ persona, personas, settings, setSettings, onStart
             <div className="group-title">Look</div>
             <div className="seg">
               <button className={settings.brand !== "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tessera" }))}>
-                Tessera
+                Parity
               </button>
               <button className={settings.brand === "tandem" ? "on" : ""} onClick={() => setSettings((s) => ({ ...s, brand: "tandem" }))}>
                 Tandem <kbd>3</kbd>
@@ -277,7 +277,7 @@ export function Wordmark() {
         <rect x="1" y="15" width="12" height="12" rx="3.5" fill="var(--accent)" opacity=".35" />
         <rect x="15" y="15" width="12" height="12" rx="6" fill="var(--accent)" />
       </svg>
-      Tessera
+      Parity
     </span>
   );
 }

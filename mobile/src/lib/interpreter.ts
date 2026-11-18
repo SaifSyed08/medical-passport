@@ -1,4 +1,4 @@
-// Turns the signed-in traveler's Tessera profile and records into the interpreter's patient record.
+// Turns the signed-in traveler's Parity profile and records into the interpreter's patient record.
 // The interpreter tab (app/(tabs)/interpreter.tsx) hands this to the embedded page, which matches it against
 // what is said to flag allergies, medicines, conditions and documents. Contacts and insurance are not included.
 import { destinationName, languageForCountry, OTHER_DESTINATION, type Me, type Profile, type RecordItem } from "@shared/tessera";

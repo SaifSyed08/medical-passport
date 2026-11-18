@@ -1,4 +1,4 @@
-"""Tessera OCR: reads the text off an uploaded document with PaddleOCR (https://github.com/PaddlePaddle/PaddleOCR).
+"""Parity OCR: reads the text off an uploaded document with PaddleOCR (https://github.com/PaddlePaddle/PaddleOCR).
 
 Runs entirely on this machine: no AI API is called. The extractor Worker (../extractor) posts a document's bytes
 to POST /ocr and turns the returned text into profile suggestions with plain rules (extractor/src/rules.ts).
@@ -236,5 +236,5 @@ class Handler(BaseHTTPRequestHandler):
 
 if __name__ == "__main__":
     warm_up()
-    print(f"Tessera OCR (PaddleOCR) on http://{HOST}:{PORT}")
+    print(f"Parity OCR (PaddleOCR) on http://{HOST}:{PORT}")
     ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 
 /**
- * The logo as a loading loop. Tessera: the bright tile runs round the 2x2 grid with a fading trail behind it.
+ * The logo as a loading loop. Parity: the bright tile runs round the 2x2 grid with a fading trail behind it.
  * Tandem: a light runs round each ring, the two chasing each other in opposite directions with a tail.
  * Both marks are drawn; the page's brand shows the right one (CSS). `mono` draws it all in currentColor, for
  * use on a coloured button.

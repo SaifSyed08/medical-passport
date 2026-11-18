@@ -1,4 +1,4 @@
-# Tessera Interpreter
+# Parity Interpreter
 
 **A patient-aware medical interpreter on the patient's phone.**
 
@@ -19,7 +19,7 @@ npm run dev          # then open http://localhost:5173
 Press **D**, or tap **Play demo conversation**. It replays a real recorded run: the speakers' voices, live captions, the drug-name flips, the record tiles and alerts, and the spoken translations. It needs no mic, no network and no API calls. **Esc** stops it. If a recorded clip can't load or stalls, that line carries on silently with its captions instead of freezing the demo. Switch patients under ⚙ on the home screen.
 
 - **Sofía Hernández** is from Guadalajara and visiting Austin (Spanish ⇄ English). Her record is written in Spanish, and the doctor reads it in English.
-- **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Tessera medical passport](https://github.com/SaifSyed08/medical-passport) demo.
+- **Jordan Rivera** is an American student in Tokyo (English ⇄ Japanese). He's the traveler from the [Parity medical passport](https://github.com/SaifSyed08/medical-passport) demo.
 - **Sita Gurung** is from Pokhara and visiting New York (Nepali ⇄ English). She has back pain and took two **Flexon**, not knowing it contains ibuprofen, an NSAID, which sets off her asthma. The word flips to *ibuprofen + acetaminophen* and the NSAID-allergy banner drops in. The doctor then proposes ketorolac (another NSAID) and a CT with contrast, and her record shows a contrast-dye reaction too. The lines to say are in the [demo script doc](https://claude.ai/artifact/TKTvdwnDLx7LXDkdvCNk5k).
 
 Hidden keys:
@@ -55,7 +55,7 @@ npm run demo     # production build + server
 The mic needs HTTPS, so pick one:
 
 1. **Same Wi-Fi:** open the `https://<laptop-IP>:5443` address printed at startup and accept the certificate warning.
-2. **Tunnel** (most reliable at events): run `npx cloudflared tunnel --url http://localhost:5173`. Start the server with `ACCESS_CODE=something` and open the link once as `…/?code=something`. Without the code the API answers 401, so nobody else can spend your credits. The Tessera app's Medicines tab sends the same code in an `X-Access-Code` header.
+2. **Tunnel** (most reliable at events): run `npx cloudflared tunnel --url http://localhost:5173`. Start the server with `ACCESS_CODE=something` and open the link once as `…/?code=something`. Without the code the API answers 401, so nobody else can spend your credits. The Parity app's Medicines tab sends the same code in an `X-Access-Code` header.
 
 In a loud room, switch to **Tap to talk** under ⋯. **⌨ Type** runs typed text through the same pipeline.
 

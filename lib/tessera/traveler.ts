@@ -1,4 +1,5 @@
 import { and, desc, eq } from "drizzle-orm";
+import { z } from "zod";
 import { tesseraRecords, tesseraRequests, tesseraTravelers } from "@/db/schema";
 import { DEFAULT_PRIVACY, type AccessRequest, type Language, type Privacy, type Profile, type RecordItem, type RequestStatus } from "@/shared/tessera";
 import { appendAudit } from "./audit";
@@ -98,6 +99,28 @@ export const UPLOAD_TYPES: Record<string, string> = {
   "image/heic": "photo",
 };
 export const MAX_UPLOAD_BYTES = 8 * 1024 * 1024;
+
+const isDay = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !Number.isNaN(Date.parse(`${d}T00:00:00Z`)) && new Date(`${d}T00:00:00Z`).toISOString().startsWith(d);
+/** A record the traveler typed in ("Type it in"): a visit note, a letter, a prescription copied by hand. */
+export const typedRecordSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  date: z.string().trim().refine(isDay, "Use a real date as YYYY-MM-DD.").optional(),
+  facility: z.string().trim().max(120).optional(),
+  text: z.string().trim().min(1).max(20000),
+});
+
+/**
+ * Stored like an upload without a file: its text sits where the scanner keeps the text it read, so the
+ * same scan suggests allergies and medicines from it, the interpreter can match against it, and it can be deleted.
+ */
+export async function createTypedRecord(db: TesseraDb, travelerId: string, input: z.infer<typeof typedRecordSchema>) {
+  const row = {
+    id: "upl_" + randomId(12), travelerId, kind: "upload", title: input.title, date: input.date || nowIso().slice(0, 10),
+    facility: input.facility || null, body: input.text, summary: null, simulated: 0, r2Key: null, contentType: null, size: null, created: nowIso(),
+  };
+  await db.insert(tesseraRecords).values(row);
+  return toRecord(row);
+}
 
 /** Only uploads are deletable. Removes the file, the row and any profile links to it, and logs it. */
 export async function deleteRecord(

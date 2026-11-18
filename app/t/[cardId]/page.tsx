@@ -7,7 +7,7 @@ import { TesseraMark } from "@/components/tessera-mark";
 import { TesseraScan } from "@/components/tessera-scan";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Tessera", robots: { index: false, follow: false }, referrer: "no-referrer" };
+export const metadata: Metadata = { title: "Parity", robots: { index: false, follow: false }, referrer: "no-referrer" };
 
 // Card landing for clinicians. A usable card asks for the patient's date of birth, then shows the
 // emergency profile (components/tessera-scan.tsx). Unknown, frozen and voided cards all render the same neutral message.
@@ -30,13 +30,13 @@ export default async function Page({ params }: { params: Promise<{ cardId: strin
   return (
     <div className="reader-shell">
       <header className="site-header">
-        <span className="wordmark"><TesseraMark className="brand-mark" /><span>Tessera</span></span>
+        <span className="wordmark"><TesseraMark className="brand-mark" /><span>Parity</span></span>
       </header>
       {usable ? (
         <TesseraScan cardId={cardId} />
       ) : (
         <main className="gate-panel">
-          <h1>Tessera</h1>
+          <h1>Parity</h1>
           <p className="lead">{NEUTRAL_CARD_MESSAGE}</p>
           <p className="notice">{DEMO_NOTICE}</p>
         </main>
