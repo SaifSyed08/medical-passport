@@ -1,4 +1,4 @@
-// The Tessera Interpreter (interpreter/), embedded as-is in a WebView: same design, captions, translation and demo.
+// The Parity Interpreter (interpreter/), embedded as-is in a WebView: same design, captions, translation and demo.
 // The page gets the traveler's own record so it can flag allergies, medicines, conditions and documents as people talk.
 import type { Profile, RecordItem } from "@shared/tessera";
 import { useEffect, useMemo, useRef, useState } from "react";

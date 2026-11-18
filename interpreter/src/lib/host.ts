@@ -1,4 +1,4 @@
-// Running inside the Tessera mobile app: the app's WebView sets window.__TESSERA__ before the page loads,
+// Running inside the Parity mobile app: the app's WebView sets window.__TESSERA__ before the page loads,
 // carrying the signed-in traveler's own record, and posts { type: "tessera:persona" } when it changes.
 import type { Persona } from "./types";
 

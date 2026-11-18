@@ -44,7 +44,7 @@ export const COUNTRIES: Record<string, { name: string; flag: string }> = {
 export const RTL = new Set(["ar", "ur", "fa"]);
 export const langName = (c: string) => LANGS[c]?.name || c;
 export const langNative = (c: string) => LANGS[c]?.native || c;
-// Countries outside COUNTRIES (e.g. AR, CR from the Tessera app) still get their full English name.
+// Countries outside COUNTRIES (e.g. AR, CR from the Parity app) still get their full English name.
 let regionNames: Intl.DisplayNames | null = null;
 try {
   regionNames = new Intl.DisplayNames(["en"], { type: "region" });

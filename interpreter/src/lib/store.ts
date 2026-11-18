@@ -65,7 +65,11 @@ export const loadTrip = (home: string, local: string): TripCache => read<TripCac
 
 export function saveEquivalents(home: string, local: string, items: Equivalent[]) {
   const t = loadTrip(home, local);
-  for (const e of items) {
+  for (const next of items) {
+    // Names heard in conversation come without readings; keep the ones already fetched for the same names.
+    const prev = t.items[norm(next.input || next.key || next.generic)];
+    const same = prev && prev.local_name === next.local_name && prev.local_brands.join("|") === next.local_brands.join("|");
+    const e = next.local_reading === undefined && same ? { ...next, local_reading: prev.local_reading, local_brands_reading: prev.local_brands_reading } : next;
     if (e.input) t.items[norm(e.input)] = e;
     t.items[norm(e.key || e.generic)] = e;
   }

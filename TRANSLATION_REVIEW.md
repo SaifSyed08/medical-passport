@@ -1,6 +1,6 @@
 # Translation review
 
-**Status: unreviewed.** Every non-English string in Tessera (Japanese, Spanish, French, Italian, German) was hand-written for a demo and has **not** been checked by a qualified medical translator. Before any user test with clinicians who read these languages, a reviewer must verify them. Verified translations are one of the product's success metrics.
+**Status: unreviewed.** Every non-English string in Parity (Japanese, Spanish, French, Italian, German) was hand-written for a demo and has **not** been checked by a qualified medical translator. Before any user test with clinicians who read these languages, a reviewer must verify them. Verified translations are one of the product's success metrics.
 
 ## Where the strings live
 - `lib/tessera/seed-data.ts`: the `tr` map on Jordan Rivera's allergies, medications, conditions and contact relationships (`tr.ja`, `tr.es`, `tr.fr`, `tr.it`, `tr.de`).

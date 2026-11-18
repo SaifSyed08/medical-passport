@@ -1,1 +1,1 @@
-{ "name": "Tessera Interpreter", "short_name": "Interpreter", "start_url": "/", "display": "standalone", "background_color": "#f2f2ef", "theme_color": "#17243a", "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
+{ "name": "Parity Interpreter", "short_name": "Interpreter", "start_url": "/", "display": "standalone", "background_color": "#f2f2ef", "theme_color": "#17243a", "icons": [{ "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }] }

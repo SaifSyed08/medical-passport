@@ -1,5 +1,5 @@
 /* Tandem: deep navy, gold and cream, with a classic serif for what matters (press 3 to switch).
-   Everything is scoped to [data-brand="tandem"], so the original Tessera look is untouched. */
+   Everything is scoped to [data-brand="tandem"], so the original Parity look is untouched. */
 
 [data-brand="tandem"] {
   --t-navy: #0b2452;

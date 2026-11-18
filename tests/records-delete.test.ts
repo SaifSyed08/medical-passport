@@ -4,7 +4,7 @@ import { tesseraRecords } from "@/db/schema";
 import { listAudit } from "@/lib/tessera/audit";
 import { seedIfMissing } from "@/lib/tessera/seed";
 import { JORDAN_ID } from "@/lib/tessera/seed-data";
-import { deleteRecord, getTraveler, updateTraveler } from "@/lib/tessera/traveler";
+import { createTypedRecord, deleteRecord, getTraveler, listRecords, typedRecordSchema, updateTraveler } from "@/lib/tessera/traveler";
 import { freshDb } from "./d1-shim";
 
 const row = (id: string, kind: string, travelerId = JORDAN_ID) => ({
@@ -44,5 +44,27 @@ describe("deleteRecord", () => {
   it("returns not_deletable for seeded documents", async () => {
     const { db, traveler } = await setup();
     expect(await deleteRecord(db, undefined, traveler, "doc_test000001")).toBe("not_deletable");
+  });
+});
+
+describe("typed records", () => {
+  it("keeps the text where the scanner reads it, with no file, and can be deleted", async () => {
+    const { db, traveler } = await setup();
+    const input = typedRecordSchema.parse({ title: "  Clinic note ", date: "2026-03-02", facility: "City Clinic", text: "Allergic to sulfa drugs." });
+    const r = await createTypedRecord(db, JORDAN_ID, input);
+    expect(r).toMatchObject({ kind: "upload", title: "Clinic note", date: "2026-03-02", facility: "City Clinic", body: "Allergic to sulfa drugs.", hasFile: false });
+    expect((await listRecords(db, JORDAN_ID)).some(x => x.id === r.id)).toBe(true);
+    const bucket = { delete: vi.fn(async () => {}) };
+    expect(await deleteRecord(db, bucket, traveler, r.id)).toBe("deleted");
+    expect(bucket.delete).not.toHaveBeenCalled();
+  });
+
+  it("defaults the date to today and rejects empty text or an impossible date", async () => {
+    const { db } = await setup();
+    const r = await createTypedRecord(db, JORDAN_ID, typedRecordSchema.parse({ title: "Note", text: "x" }));
+    expect(r.date).toBe(new Date().toISOString().slice(0, 10));
+    expect(typedRecordSchema.safeParse({ title: "Note", text: "   " }).success).toBe(false);
+    expect(typedRecordSchema.safeParse({ title: "Note", text: "x", date: "2026-02-30" }).success).toBe(false);
+    expect(typedRecordSchema.safeParse({ title: "", text: "x" }).success).toBe(false);
   });
 });

@@ -2,7 +2,7 @@
 // scanning a document. Applied on top of the saved record everywhere (home, record sheet, the live context), so a
 // deleted allergy never surfaces in a conversation and a scanned one does.
 import { useSyncExternalStore } from "react";
-import type { Allergy, Condition, Contact, Lab, Medication, Persona, RecordDoc } from "./types";
+import type { Allergy, Condition, Contact, Insurance, Lab, Medication, Persona, RecordDoc } from "./types";
 
 export type RecordEdits = {
   removed: string[];
@@ -12,7 +12,11 @@ export type RecordEdits = {
   labs: Lab[];
   documents: RecordDoc[];
   contacts: Contact[];
+  /** Basics and insurance as the patient corrected them (Card tab → Edit). */
+  profile?: ProfileEdits;
 };
+
+export type ProfileEdits = { sex?: string; bloodType?: string; heightCm?: number | null; weightKg?: number | null; insurance?: Insurance };
 
 const EMPTY: RecordEdits = { removed: [], allergies: [], medications: [], conditions: [], labs: [], documents: [], contacts: [] };
 const keyOf = (personaId: string) => `ti.edits.${personaId}`;
@@ -75,6 +79,11 @@ export function addItems(personaId: string, add: Partial<Omit<RecordEdits, "remo
   });
 }
 
+export function saveProfile(personaId: string, patch: ProfileEdits) {
+  const e = loadEdits(personaId);
+  save(personaId, { ...e, profile: { ...e.profile, ...patch } });
+}
+
 export function resetEdits(personaId: string) {
   try {
     localStorage.removeItem(keyOf(personaId));
@@ -90,7 +99,8 @@ export function hasEdits(personaId: string) {
   return count(e) > 0;
 }
 
-const count = (e: RecordEdits) => e.removed.length + e.allergies.length + e.medications.length + e.conditions.length + e.labs.length + e.documents.length + e.contacts.length;
+const count = (e: RecordEdits) =>
+  e.removed.length + e.allergies.length + e.medications.length + e.conditions.length + e.labs.length + e.documents.length + e.contacts.length + (e.profile ? 1 : 0);
 
 /** The record with the patient's changes applied. Returns the same object when there are none. */
 export function applyEdits(p: Persona, e: RecordEdits = loadEdits(p.id)): Persona {
@@ -104,6 +114,7 @@ export function applyEdits(p: Persona, e: RecordEdits = loadEdits(p.id)): Person
     labs: keep([...e.labs, ...p.labs]),
     documents: keep([...e.documents, ...p.documents]),
     contacts: keep([...p.contacts, ...e.contacts]),
+    ...e.profile,
   };
 }
 

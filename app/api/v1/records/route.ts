@@ -1,15 +1,21 @@
 import { env } from "cloudflare:workers";
 import { tesseraRecords } from "@/db/schema";
 import { nowIso } from "@/lib/tessera/db";
-import { v1error, v1json, withTraveler } from "@/lib/tessera/http";
+import { body, v1error, v1json, withTraveler } from "@/lib/tessera/http";
 import { randomId } from "@/lib/tessera/tokens";
-import { listRecords, MAX_UPLOAD_BYTES, toRecord, UPLOAD_TYPES } from "@/lib/tessera/traveler";
+import { createTypedRecord, listRecords, MAX_UPLOAD_BYTES, toRecord, typedRecordSchema, UPLOAD_TYPES } from "@/lib/tessera/traveler";
 export { OPTIONS } from "@/lib/tessera/http";
 
 export const GET = withTraveler(async ({ db, traveler }) => v1json(await listRecords(db, traveler.id)));
 
 // Multipart upload: fields `file` and optional `title`. Stored in R2 under tessera/{traveler}/{record}.
+// JSON { title, date?, facility?, text }: a record typed in by hand, with no file.
 export const POST = withTraveler(async ({ request, db, traveler }) => {
+  if ((request.headers.get("content-type") ?? "").includes("application/json")) {
+    const b = await body(request, typedRecordSchema);
+    if (!b.ok) return b.res;
+    return v1json(await createTypedRecord(db, traveler.id, b.data), 201);
+  }
   if (!env.BUCKET) return v1error(503, "File storage is unavailable.", "storage_unavailable");
   let form: FormData;
   try {

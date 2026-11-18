@@ -5,16 +5,21 @@ import { ImageManipulator, SaveFormat } from "expo-image-manipulator";
 import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useState } from "react";
-import { View } from "react-native";
-import type { RecordItem } from "@shared/tessera";
+import { Pressable, StyleSheet, View } from "react-native";
+import { destinationName, LANGUAGE_NAMES, type Language, type Profile, type RecordItem } from "@shared/tessera";
 import { api, ApiError } from "@/lib/api";
 import { ensureAutofillOptIn } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
 import type { Strings } from "@/lib/i18n";
+import { flag } from "@/lib/flag";
+import { homeCode } from "@/lib/interpreter";
 import { useScans, type Scan } from "@/lib/scans";
 import { useSession } from "@/lib/session";
-import { space } from "@/lib/theme";
-import { Button, Heading, LoadError, Loading, Logo, Notice, Pill, Row, Screen, Section } from "@/components/ui";
+import { color, radius, space } from "@/lib/theme";
+import { aiField, recordText, useTranslation } from "@/lib/translate";
+import { DocThumb } from "@/components/doc-thumb";
+import { Icon, type IconName } from "@/components/icons";
+import { Button, Footnote, Heading, ListEmpty, ListRow, ListSection, LoadError, Loading, Logo, Notice, Pill, Screen, Segmented, T } from "@/components/ui";
 
 type Pick = { uri: string; name: string; type: string };
 
@@ -35,11 +40,18 @@ async function toJpeg(uri: string) {
 }
 
 export default function Records() {
-  const { t } = useSession();
+  const { t, me } = useSession();
   const { scans, start } = useScans();
+  // Titles and summaries in the doctor's language, translated by AI (the same request the Health tab makes).
+  const profile = useResource<Profile>("/profile");
+  const docLang: Language = me?.language ?? "en";
+  const [view, setView] = useState<Language>("en");
+  const lang: Language = docLang !== "en" && view === docLang ? docLang : "en";
   const records = useResource<RecordItem[]>("/records");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
+  // "Scan or upload" opens its three choices in place (camera, photo, PDF) rather than a pop-up.
+  const [choosing, setChoosing] = useState(false);
 
   async function upload(file: Pick): Promise<RecordItem | undefined> {
     setBusy(true);
@@ -112,42 +124,107 @@ export default function Records() {
   }
 
   const list = records.data ?? [];
+  const tr = useTranslation(recordText(profile.data, records.data), docLang, lang !== "en" && !!profile.data);
+  const shown = (r: RecordItem, field: "title" | "summary" | "body", original: string) => (lang !== "en" && aiField(tr.data, "documents", r.id, field)) || original;
+  const home = profile.data?.basics.homeCountry?.trim();
+  const trip = destinationName(me?.destinationCountry);
+  const choose = (pick: () => Promise<void>) => () => {
+    setChoosing(false);
+    void pick();
+  };
   return (
     <Screen onRefresh={records.refresh} refreshing={records.loading} stale={records.stale}>
       <Logo />
       <Heading>{t.records}</Heading>
-      <Notice>{t.restrictedNote}</Notice>
       <View style={{ flexDirection: "row", gap: space.m }}>
-        <Button style={{ flex: 1 }} busy={busy} onPress={pickPdf}>{t.uploadPdf}</Button>
-        <Button secondary style={{ flex: 1 }} disabled={busy} onPress={pickPhoto}>{t.uploadPhoto}</Button>
+        <Button style={{ flex: 1.15, paddingHorizontal: 10 }} busy={busy} onPress={() => setChoosing(c => !c)} label={t.recScanUpload}>
+          <Icon name="camera" color="white" size={19} />
+          <T weight="500" numberOfLines={1} style={{ fontSize: 15.5, color: "white", flexShrink: 1 }}>{t.recScanUpload}</T>
+        </Button>
+        <Button secondary style={{ flex: 1, paddingHorizontal: 10 }} disabled={busy} onPress={() => router.push("/type-record")} label={t.recType}>
+          <Icon name="pencil" color={color.blue} size={18} />
+          <T weight="500" numberOfLines={1} style={{ fontSize: 15.5, color: "#30445e", flexShrink: 1 }}>{t.recType}</T>
+        </Button>
       </View>
-      <Button secondary disabled={busy} onPress={scan}>{t.scanCamera}</Button>
+      {choosing && (
+        <View style={styles.choices}>
+          <Choice icon="camera" label={t.scanCamera} onPress={choose(scan)} />
+          <Choice icon="image" label={t.uploadPhoto} onPress={choose(pickPhoto)} />
+          <Choice icon="records" label={t.uploadPdf} onPress={choose(pickPdf)} last />
+        </View>
+      )}
       {busy && <Notice>{t.uploading}</Notice>}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {!records.data && records.loading && <Loading />}
       {!records.data && records.error && <LoadError onRetry={records.refresh} />}
-      {list.length > 0 && (
-        <Section>
+      {docLang !== "en" && list.length > 0 && (
+        <View style={{ gap: space.s }}>
+          <View style={{ alignSelf: "flex-start", minWidth: 250 }}>
+            <Segmented
+              label={t.viewIn}
+              value={lang}
+              onChange={setView}
+              options={[
+                { value: "en", label: `${home ? `${flag(homeCode(home))} ` : ""}English` },
+                { value: docLang, label: `${flag(me?.destinationCountry)} ${LANGUAGE_NAMES[docLang]}`.trim() },
+              ]}
+            />
+          </View>
+          {lang !== "en" && (tr.loading || tr.error) && <T style={{ fontSize: 13, color: tr.error ? color.warnText : color.muted }}>{tr.loading ? t.trLoading : t.trFailed}</T>}
+        </View>
+      )}
+      {records.data && (
+        <ListSection icon="records" tone="green" title={t.recList} count={list.length}>
+          {list.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
           {list.map((r, i) => {
             const scan = scans[r.id];
             const status = scan && scanStatus(t, scan);
             // Ready (with suggestions) and failed scans open the review screen; the rest open the record.
             const toReview = scan?.status === "error" || (scan?.status === "ready" && scan.suggestions.length > 0);
-            const detail = [r.date, r.facility].filter(Boolean).join(" · ");
+            const tag = status ? <Pill tone={status.tone}>{status.text}</Pill> : r.simulated ? <Pill tone="warn">{t.simulated}</Pill> : null;
             return (
-              <Row
+              <ListRow
                 key={r.id}
-                title={r.title}
-                detail={detail}
-                label={status ? `${r.title}${detail ? `, ${detail}` : ""}. ${status.text}` : undefined}
                 last={i === list.length - 1}
+                label={[r.title, r.facility, r.date, status?.text].filter(Boolean).join(", ")}
                 onPress={() => router.push(toReview ? { pathname: "/review", params: { recordId: r.id } } : { pathname: "/record/[id]", params: { id: r.id } })}
-                right={status ? <Pill tone={status.tone}>{status.text}</Pill> : r.simulated ? <Pill tone="warn">{t.simulated}</Pill> : r.kind === "encounter" ? <Pill tone="muted">Visit</Pill> : undefined}
-              />
+              >
+                <View style={{ flexDirection: "row", gap: 14 }}>
+                  <DocThumb record={r} />
+                  <View style={{ flex: 1, gap: 3 }}>
+                    <T weight="500" style={{ fontSize: 15.5, lineHeight: 21, color: color.ink }}>{shown(r, "title", r.title)}</T>
+                    <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+                      {!!r.facility && <Icon name="pin" color={color.muted} size={13} />}
+                      <T numberOfLines={1} style={{ flex: 1, fontSize: 12.5, color: color.muted }}>{r.facility || (r.kind === "encounter" ? "Visit" : "")}</T>
+                      <T style={{ fontSize: 12.5, color: color.muted, fontVariant: ["tabular-nums"] }}>{r.date}</T>
+                    </View>
+                    {!!(r.summary || (!r.hasFile && r.body)) && <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 19, color: color.body }}>{r.summary ? shown(r, "summary", r.summary) : shown(r, "body", r.body ?? "")}</T>}
+                    {tag && <View style={{ marginTop: 3 }}>{tag}</View>}
+                  </View>
+                </View>
+              </ListRow>
             );
           })}
-        </Section>
+        </ListSection>
       )}
+      {lang !== "en" && tr.data && <Footnote>{t.trAi.replace("{country}", trip ?? LANGUAGE_NAMES[lang])}</Footnote>}
+      <Footnote>{t.restrictedNote}</Footnote>
     </Screen>
   );
 }
+
+function Choice({ icon, label, onPress, last }: { icon: IconName; label: string; onPress: () => void; last?: boolean }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={({ pressed }) => [styles.choice, !last && styles.choiceLine, pressed && { backgroundColor: "#f6f7f8" }]}>
+      <Icon name={icon} color={color.blue} size={20} />
+      <T style={{ flex: 1, fontSize: 15.5, color: color.ink }}>{label}</T>
+      <Icon name="chevronRight" color={color.subtle} size={18} />
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  choices: { backgroundColor: color.surface, borderRadius: radius.section, borderWidth: 1, borderColor: color.line, overflow: "hidden", marginTop: -4 },
+  choice: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 52, paddingHorizontal: space.l },
+  choiceLine: { borderBottomWidth: 1, borderBottomColor: "#edf0f2" },
+});

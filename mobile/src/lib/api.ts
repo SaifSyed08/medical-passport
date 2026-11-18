@@ -1,4 +1,4 @@
-// Client for the Tessera Workers API (/api/v1). Bearer token only; no cookies.
+// Client for the Parity Workers API (/api/v1). Bearer token only; no cookies.
 import type { ApiError as ApiErrorBody } from "@shared/tessera";
 
 export const API_URL = (process.env.EXPO_PUBLIC_API_URL ?? "").replace(/\/$/, "");
@@ -17,7 +17,7 @@ let onUnauthorized: (() => void) | null = null;
 export const setToken = (t: string | null) => (token = t);
 export const getToken = () => token;
 export const setUnauthorizedHandler = (fn: () => void) => (onUnauthorized = fn);
-/** Signs out after a 401 from any Tessera service (the main API or the extractor Worker). */
+/** Signs out after a 401 from any Parity service (the main API or the extractor Worker). */
 export const signalUnauthorized = () => {
   if (token) onUnauthorized?.();
 };

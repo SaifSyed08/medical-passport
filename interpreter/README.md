@@ -4,10 +4,12 @@
 
 | Tab | What it does |
 | --- | --- |
-| **Card** | What a doctor needs to know: allergies, medicines (with their local names), conditions, labs and emergency contacts. It's shown in the doctor's language when the record is in another one, and every section takes additions. |
+| **Card** | The patient's Parity card with a QR code (tap it for a full-screen code to show a doctor), then what a doctor needs to know: allergies, medicines (with their local names), conditions, labs and emergency contacts, plus basics (blood type, height, weight) and insurance. It's shown in the doctor's language when the record is in another one, and every section takes additions or edits. |
 | **Documents** | Visits, letters and reports. **Scan or upload** reads a photo on the phone (OCR plus the same rules as the passport's extractor) and suggests what to add to the card. **Type it in** adds one by hand. Tap a document to open it as a page. |
 | **Medicines** | Type any medicine, pick two countries, and see what it's called and sold as there, whether it's sold at all, and how strengths are labelled. Below that are the patient's own medicines for this trip. A checked list answers first; an AI suggestion is labelled as one. |
 | **Interpret** | The live interpreter described below. |
+
+**The card's QR** opens `/card/<patient>` on this server: the doctor enters the patient's date of birth (5 wrong tries lock it for that visit) and sees allergies, medicines, conditions, labs and contacts, never documents or insurance. It works for the four built-in patients without the access code. Its translation comes from `POST /api/card-translation`, which only returns a translation the patient's own Card tab already fetched and never calls a model, so a public link can't spend credits; otherwise the doctor sees the original. Edits made on the patient's phone aren't on the doctor's page. Demo only: the check runs in the page.
 
 The original light look is now called **Parity**; press **3** for Tandem. Inside the Tessera Expo app (`../mobile`), which embeds this page in its own Interpreter tab, only the interpreter shows.
 

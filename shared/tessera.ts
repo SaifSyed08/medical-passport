@@ -85,6 +85,15 @@ export const DEFAULT_PRIVACY: Privacy = {
 };
 
 export type Severity = "severe" | "moderate" | "mild";
+/** Severity as a doctor reads it, per language (the doctor page and the app's language switch). */
+export const SEVERITY_LABELS: Record<Language, Record<Severity, string>> = {
+  en: { severe: "Severe", moderate: "Moderate", mild: "Mild" },
+  ja: { severe: "重度", moderate: "中等度", mild: "軽度" },
+  es: { severe: "Grave", moderate: "Moderada", mild: "Leve" },
+  fr: { severe: "Sévère", moderate: "Modérée", mild: "Légère" },
+  it: { severe: "Grave", moderate: "Moderata", mild: "Lieve" },
+  de: { severe: "Schwer", moderate: "Mittelschwer", mild: "Leicht" },
+};
 export const BLOOD_TYPES = ["Unknown", "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] as const;
 export type BloodType = (typeof BLOOD_TYPES)[number];
 

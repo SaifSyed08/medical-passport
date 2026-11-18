@@ -1,6 +1,6 @@
 // "Add document": read a photo of a paper record on the phone, with no AI model and nothing uploaded to us.
 // Tesseract (classic OCR, run in the browser) turns the photo into text; the medical passport's own rule-based
-// reader (extractor/src/rules.ts, the same rules the Tessera app's scanner uses) finds allergies, medicines and
+// reader (extractor/src/rules.ts, the same rules the Parity app's scanner uses) finds allergies, medicines and
 // conditions in it. Every finding quotes its line, and the patient ticks what to keep before anything is saved.
 import { findFindings } from "../../../extractor/src/rules";
 import { parseFindings } from "../../../extractor/src/findings";
@@ -77,7 +77,7 @@ export function describe(text: string, findings: Suggestion[], id: string): Reco
   };
 }
 
-/** Rules only: the same reader the Tessera app's scanner uses. */
+/** Rules only: the same reader the Parity app's scanner uses. */
 export function readFindings(text: string): Suggestion[] {
   return parseFindings(findFindings(text)).filter((s) => s.kind !== "bloodType");
 }

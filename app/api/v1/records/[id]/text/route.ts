@@ -16,7 +16,7 @@ export const GET = withTraveler<{ id: string }>(async ({ db, traveler }, { id })
   if (!row) return v1error(404, "Document not found.", "not_found");
   if (row.kind !== "upload") return v1error(403, "Only uploaded documents have scanned text.", "not_upload");
   const text = row.body ?? "";
-  if (text) await appendAudit(db, { travelerId: traveler.id, actor: "Tessera", actorRole: "system", action: "document_read", outcome: "info", detail: row.title });
+  if (text) await appendAudit(db, { travelerId: traveler.id, actor: "Parity", actorRole: "system", action: "document_read", outcome: "info", detail: row.title });
   return v1json({ text });
 });
 

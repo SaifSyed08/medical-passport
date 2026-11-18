@@ -9,7 +9,7 @@ export const photos = sqliteTable("photos", {
   id: text("id").primaryKey(), owner: text("owner").notNull(),
 });
 
-// Tessera traveler app (mobile). Synthetic demo data only; separate from the website's passports.
+// Parity traveler app (mobile). Synthetic demo data only; separate from the website's passports.
 export const tesseraTravelers = sqliteTable("tessera_travelers", {
   id: text("id").primaryKey(), name: text("name").notNull(), dob: text("dob").notNull(),
   profile: text("profile").notNull(), privacy: text("privacy").notNull(),

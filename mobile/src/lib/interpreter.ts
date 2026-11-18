@@ -1,4 +1,4 @@
-// Turns the signed-in traveler's Tessera profile and records into the interpreter's patient record.
+// Turns the signed-in traveler's Parity profile and records into the interpreter's patient record.
 // The interpreter tab (app/(tabs)/interpreter.tsx) hands this to the embedded page, which matches it against
 // what is said to flag allergies, medicines, conditions and documents. Contacts and insurance are not included.
 import { destinationName, languageForCountry, OTHER_DESTINATION, type Me, type Profile, type RecordItem } from "@shared/tessera";
@@ -7,6 +7,23 @@ import type { AppLanguage } from "./i18n";
 export const INTERPRETER_URL = (process.env.EXPO_PUBLIC_INTERPRETER_URL ?? "").replace(/\/$/, "");
 export const INTERPRETER_CODE = process.env.EXPO_PUBLIC_INTERPRETER_CODE ?? "";
 /** The page to load. The access code unlocks the interpreter server once; it then keeps a cookie. */
+/** A JSON call to the interpreter server (interpreter/server) from the app's own screens, with the access code as a header. */
+export async function interpreterPost<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), timeoutMs);
+  try {
+    const res = await fetch(`${INTERPRETER_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(INTERPRETER_CODE ? { "X-Access-Code": INTERPRETER_CODE } : {}) },
+      body: JSON.stringify(body),
+      signal: abort.signal,
+    });
+    if (!res.ok) throw new Error(`${path} ${res.status}`);
+    return (await res.json()) as T;
+  } finally {
+    clearTimeout(timer);
+  }
+}
 export const interpreterPage = () => (INTERPRETER_URL ? `${INTERPRETER_URL}/${INTERPRETER_CODE ? `?code=${encodeURIComponent(INTERPRETER_CODE)}` : ""}` : "");
 
 /** Same shape as `Persona` in interpreter/src/lib/types.ts. */
@@ -17,6 +34,9 @@ export type InterpreterPersona = {
   dob: string;
   sex: string;
   bloodType: string;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  insurance?: { plan: string; memberId: string; group: string; phone: string };
   language: string;
   home: string;
   trip: { country: string; city: string; doctorLanguage: string; reason: string };
@@ -59,6 +79,9 @@ export function toPersona(me: Me, profile: Profile, records: RecordItem[], uiLan
     dob: me.traveler.dob,
     sex: profile.basics.sex,
     bloodType: profile.bloodType === "Unknown" ? "unknown" : profile.bloodType,
+    heightCm: profile.basics.heightCm,
+    weightKg: profile.basics.weightKg,
+    insurance: { plan: profile.insurance.plan, memberId: profile.insurance.memberId, group: profile.insurance.group, phone: profile.insurance.phone },
     // The patient speaks the app's language; they can change it in the interpreter's settings.
     language: uiLang,
     home: homeCode(profile.basics.homeCountry),

@@ -8,7 +8,7 @@ import type { Card } from "@/shared/tessera";
  */
 export type PassContent = {
   serialNumber: string;
-  organizationName: "Tessera";
+  organizationName: "Parity";
   description: string;
   patientName: string;
   qrMessage: string;
@@ -23,8 +23,8 @@ export const CLINICIAN_INSTRUCTIONS =
 export function buildPassContent(card: Pick<Card, "serialNumber" | "cardUrl" | "status">, patientName: string): PassContent {
   return {
     serialNumber: card.serialNumber,
-    organizationName: "Tessera",
-    description: "Tessera medical card (demo)",
+    organizationName: "Parity",
+    description: "Parity medical card (demo)",
     patientName,
     qrMessage: card.cardUrl,
     instructions: CLINICIAN_INSTRUCTIONS,

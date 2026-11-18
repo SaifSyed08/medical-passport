@@ -10,7 +10,7 @@ import { useResource } from "@/lib/cache";
 import { clinicianHint } from "@/lib/i18n";
 import { CARD_KEY, useSession } from "@/lib/session";
 import { color, font, space, TOUCH } from "@/lib/theme";
-import { TesseraMark } from "@/components/mark";
+import { ParityMark } from "@/components/mark";
 import { DemoBanner, T } from "@/components/ui";
 import { storage } from "@/lib/storage";
 
@@ -48,10 +48,10 @@ export default function Show() {
       <DemoBanner />
       <View style={{ alignItems: "center", gap: space.xl }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          <TesseraMark size={22} />
-          <T weight="500" style={{ fontSize: 16, letterSpacing: -0.3, color: color.ink }}>Tessera</T>
+          <ParityMark size={22} />
+          <T weight="500" style={{ fontSize: 16, letterSpacing: -0.3, color: color.ink }}>Parity</T>
         </View>
-        <View accessible accessibilityRole="image" accessibilityLabel={`QR code for ${me?.traveler.name ?? "your"} Tessera card`} style={styles.qr}>
+        <View accessible accessibilityRole="image" accessibilityLabel={`QR code for ${me?.traveler.name ?? "your"} Parity card`} style={styles.qr}>
           {url ? <QRCode value={url} size={size} ecl="M" /> : <View style={{ width: size, height: size }} />}
         </View>
         <T style={{ fontFamily: font.serif, fontSize: 32, color: color.ink, textAlign: "center" }}>{me?.traveler.name}</T>

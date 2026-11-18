@@ -8,10 +8,11 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { MODELS, HttpError, transcribe, chatJSON, chatJSONObject, speech } from "./openai.mjs";
-import { createHash } from "node:crypto";
 import { LOCAL_MODELS, transcribeLocal, chatJSONLocal, chatJSONObjectLocal, speechLocal, localStatus, translateRecordLocal } from "./local.mjs";
 import { interpretLocal } from "./localInterpret.mjs";
 import { contextByRules } from "./rules.mjs";
+import { cachedTranslation, recordKey } from "./recordCache.mjs";
+import { addReadings, READINGS_SCHEMA, readingsPrompt } from "./readings.mjs";
 import {
   INTERPRET_SCHEMA, interpretPrompt, interpretUser,
   CONTEXT_SCHEMA, contextPrompt, contextUser,
@@ -37,7 +38,9 @@ if (ACCESS_CODE) {
   app.use((req, res, next) => {
     // Set the cookie and serve the page as asked: the page reads ?code= too and keeps it.
     if (req.query.code === ACCESS_CODE) res.setHeader("Set-Cookie", `ti_code=${encodeURIComponent(ACCESS_CODE)}; Path=/; Max-Age=2592000; HttpOnly; SameSite=Lax`);
-    if (req.path.startsWith("/api/") && req.path !== "/api/health" && !cookieOk(req)) return res.status(401).json({ error: "Locked: open the link with ?code=… first" });
+    // Open without the code: health, and the doctor page's read-only lookup of an already-made translation (no model call).
+    const open = req.path === "/api/health" || req.path === "/api/card-translation";
+    if (req.path.startsWith("/api/") && !open && !cookieOk(req)) return res.status(401).json({ error: "Locked: open the link with ?code=… first" });
     next();
   });
 }
@@ -307,6 +310,14 @@ function saveCache() {
     console.warn("could not write equivalents cache:", e.message);
   }
 }
+// How to say a name in a script the traveler can't read (server/readings.mjs), keyed "<script>:<text>".
+const READINGS_FILE = path.join(ROOT, "data", "readings.json");
+let readingCache = {};
+try {
+  readingCache = JSON.parse(fs.readFileSync(READINGS_FILE, "utf8"));
+} catch {
+  readingCache = {};
+}
 
 app.post("/api/equivalents", wrap(async (req, res) => {
   const home = code(req.body?.home, "MX").toUpperCase();
@@ -347,7 +358,21 @@ app.post("/api/equivalents", wrap(async (req, res) => {
     });
     saveCache();
   }
-  res.json({ items: out.filter(Boolean) });
+  const ask = phoneSized(req) ? null : async (texts, script) => {
+    const r = await brain(req).chatJSON({ name: "readings", schema: READINGS_SCHEMA, system: readingsPrompt(script), user: texts.map((t) => `- ${t}`).join("\n"), model: MODELS.llm });
+    const by = new Map((r.readings || []).map((x) => [x.text, x.reading]));
+    return texts.map((t, i) => by.get(t) ?? r.readings?.[i]?.reading);
+  };
+  const { items: read, added } = await addReadings(out.filter(Boolean), home, { cache: readingCache, ask });
+  if (added) {
+    try {
+      fs.mkdirSync(path.dirname(READINGS_FILE), { recursive: true });
+      fs.writeFileSync(READINGS_FILE, JSON.stringify(readingCache, null, 1));
+    } catch (e) {
+      console.warn("could not write readings cache:", e.message);
+    }
+  }
+  res.json({ items: read });
 }));
 
 /* ---------------------------------------------------------------- record translation */
@@ -366,7 +391,7 @@ app.post("/api/translate-record", wrap(async (req, res) => {
   const to = code(req.body?.to, "en");
   if (!record || typeof record !== "object") throw new HttpError(400, "record required");
   const body = JSON.stringify(record).slice(0, 60_000);
-  const ck = `${phoneSized(req) ? "local:" : ""}${to}:${createHash("sha256").update(body).digest("hex").slice(0, 24)}`;
+  const ck = recordKey(record, to, phoneSized(req));
   if (recordCache[ck]) return res.json({ record: recordCache[ck], cached: true });
   const from = code(req.body?.from, "");
   const out = phoneSized(req) && from ? await translateRecordLocal(record, from, to) : await brain(req).chatJSONObject({
@@ -385,6 +410,15 @@ app.post("/api/translate-record", wrap(async (req, res) => {
   }
   res.json({ record: out, cached: false });
 }));
+
+// The doctor page behind a card's QR (src/components/DoctorCard.tsx) reads the built-in record in the doctor's language.
+// It never asks the model: only a translation the patient's own phone already fetched is returned, so a public link
+// can't spend credits. A miss is a 404 and the page shows the original.
+app.post("/api/card-translation", (req, res) => {
+  const hit = cachedTranslation(recordCache, req.body?.record, code(req.body?.to, ""));
+  if (!hit) return res.status(404).json({ error: "Not translated yet" });
+  res.json({ record: hit, cached: true });
+});
 
 app.use("/api", (_req, res) => res.status(404).json({ error: "Not found" }));
 

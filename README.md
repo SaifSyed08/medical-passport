@@ -19,14 +19,14 @@ Use a native HealthKit application and approved provider authorization for live 
 ## Development
 Use Node >=22.13, the Sites installation/build helpers, and the included local preview. Generate migrations after schema changes and apply them to the local D1 database before testing. The local platform sign-in route is `/signin-with-chatgpt?return_to=/`.
 
-## Tessera traveler app and `/api/v1`
+## Parity traveler app and `/api/v1`
 > **Demo only · synthetic data · not for clinical use.** Production emergency-access policies need healthcare and legal review.
 
 The repo now also contains:
 - `mobile/`: the Expo traveler app (iOS and Android). Setup, Expo Go notes and checks are in [mobile/README.md](mobile/README.md).
 - `interpreter/`: **Parity**, the traveler's phone in four parts: a health card (what a doctor needs to know), documents (scan, upload or type them in), a medicine converter (what a medicine is called and sold as in another country), and a patient-aware live interpreter. `cd interpreter && npm run phone` puts it on a phone with a link and a QR code. In the interpreter, the traveler hands their phone to the doctor and they both talk. It shows live captions and translates aloud. Medicine names switch to local ones (Ventolin becomes albuterol). The record items that matter come up as they talk, with alerts such as penicillin anaphylaxis when the doctor says "amoxicillin". It is a separate Vite + Express project. Run it with `cd interpreter && npm install && npm run dev` (needs `OPENAI_API_KEY`), and press **D** for the recorded demo. Details are in [interpreter/README.md](interpreter/README.md).
 - `/api/v1/*`: a JSON API on the same Worker for the app, with bearer-token auth (`app/api/v1`, logic in `lib/tessera`, types in `shared/tessera.ts`).
-- `/t/{card_id}`: the URL every Tessera QR code opens. It asks for the patient's date of birth, then shows their emergency profile (only the categories they left as "Emergency"), in the doctor's language.
+- `/t/{card_id}`: the URL every Parity QR code opens. It asks for the patient's date of birth, then shows their emergency profile (only the categories they left as "Emergency"), in the doctor's language.
 - [AUDIT.md](AUDIT.md) (repo audit and gap list), [TRANSLATION_REVIEW.md](TRANSLATION_REVIEW.md) (Japanese strings needing a qualified reviewer), [docs/WALLET_PLAN.md](docs/WALLET_PLAN.md) (Apple Wallet next steps).
 
 ### Web and backend
@@ -40,7 +40,7 @@ npm test             # vitest (backend logic against real SQLite)
 npm run lint
 npm run db:seed      # seed Jordan Rivera through the running API; add `-- --reset` to wipe and reseed
 ```
-The Tessera tables are created and seeded automatically on the first `/api/v1` or `/t/` request, so `db:seed` is optional. Point it at another server with `-- --url https://<host>`.
+The Parity tables are created and seeded automatically on the first `/api/v1` or `/t/` request, so `db:seed` is optional. Point it at another server with `-- --url https://<host>`.
 
 ### Mobile against the deployed Workers URL or local dev
 Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/env.example`), then run `cd mobile && npx expo start`:
@@ -52,7 +52,7 @@ Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/env.example`), then run 
 2. Tap **Show to a doctor**. The screen brightens with a large QR. Scan it with a second phone: it opens `/t/{card_id}`, which asks for the patient's date of birth (Jordan's is 2004-03-12) and then shows the emergency profile. A wrong date shows nothing.
 3. Back in the app, open **Privacy → Access log**: the scan, the date-of-birth check and the view were logged. A local notification fires for new clinician activity.
 4. **Privacy → Preview what a doctor sees**: the emergency profile in Japanese, allergies and medications first. Switch between English, Japanese, Spanish, French, Italian and German. Under **Privacy → Your trip**, pick another country (e.g. Spain) and the doctor language follows it. Mark Conditions as Restricted and preview again.
-5. Long-press the **Tessera logo** for presenter tools. Run **Dr. Tanaka requests full record**: a notification arrives and Privacy shows the request. Approve or deny it with biometrics (a tap in Expo Go on iOS).
+5. Long-press the **Parity logo** for presenter tools. Run **Dr. Tanaka requests full record**: a notification arrives and Privacy shows the request. Approve or deny it with biometrics (a tap in Expo Go on iOS).
 6. **Privacy → Freeze card**, then scan again: the page shows the neutral "This card can't be used right now." The log shows a blocked scan. Unfreeze.
 7. **Card → Replace card**, then open the old QR or link: neutral message. The new QR works.
 8. **Add to Apple Wallet** shows "Coming soon" and a labelled preview of the future pass.
@@ -74,12 +74,12 @@ Set `EXPO_PUBLIC_API_URL` in `mobile/.env` (see `mobile/env.example`), then run 
 - **Blank profiles** are throwaway: one per sign-in, gone after sign-out or 12 hours. **Reset demo data** wipes everyone's data, including blank profiles in use, which then get signed out.
 - **"Simulated extraction"** of uploaded documents is a placeholder. No text is read.
 
-## Assumptions (Tessera mobile work)
+## Assumptions (Parity mobile work)
 Recorded while adding the Expo traveler app (`mobile/`). See [AUDIT.md](AUDIT.md) for the full audit.
 - **Demo only, synthetic data, not for clinical use.** Production emergency-access policies need healthcare and legal review.
 - The existing website (`/`, `/home`, `/professional`, `/card/:token`, `/api/*`) keeps its behavior. Web code may be refactored for the mobile app, but nothing changes functionally.
 - The traveler app talks to a new versioned JSON API at `/api/v1/*` on the same Worker, using its own bearer tokens. The platform sign-in headers are not available to a native app.
-- Tessera traveler data (Jordan Rivera) lives in new `tessera_*` D1 tables. Website cards (Alex Morgan / guest) do not appear in the mobile app, and vice versa.
+- Parity traveler data (Jordan Rivera) lives in new `tessera_*` D1 tables. Website cards (Alex Morgan / guest) do not appear in the mobile app, and vice versa.
 - The card URL is `/t/{card_id}`. `card_id` is long and random. The backend builds the URL, and every QR code renders that URL. The URL never carries a name, DOB or medical data. Replacing a card issues a new `card_id` and voids the old one.
 - The clinician flow and AI Q&A are **deferred**. For now `/t/{card_id}` is a placeholder: "card detected, clinician access coming soon" for active cards, and the same neutral "can't be used" message for unknown, frozen or voided cards.
 - No new Cloudflare bindings (KV, Durable Objects, secrets). New state lives in D1 and R2 so the Sites deployment config is unchanged. Tables are created at runtime with `CREATE TABLE IF NOT EXISTS`, because it's unverified whether Sites applies Drizzle migrations.

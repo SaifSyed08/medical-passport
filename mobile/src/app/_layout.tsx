@@ -38,6 +38,7 @@ function Root() {
         <Stack.Screen name="insurance" options={{ presentation: "modal" }} />
         <Stack.Screen name="trip" options={{ presentation: "modal" }} />
         <Stack.Screen name="review" options={{ presentation: "modal" }} />
+        <Stack.Screen name="type-record" options={{ presentation: "modal" }} />
         <Stack.Screen name="activity" options={{ headerShown: true, title: t.accessLog, headerBackTitle: t.tabPrivacy }} />
         <Stack.Screen name="record/[id]" options={{ headerShown: true, title: t.records, headerBackTitle: t.records }} />
       </Stack>

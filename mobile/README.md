@@ -1,6 +1,6 @@
-# Tessera traveler app (Expo)
+# Parity traveler app (Expo)
 
-The traveler side of Tessera: Jordan Rivera's medical card with its QR code, health profile, documents, privacy controls and access log. It talks to the existing Workers backend at `/api/v1`.
+The traveler side of Parity: Jordan Rivera's medical card with its QR code, health profile, documents, privacy controls and access log. It talks to the existing Workers backend at `/api/v1`.
 
 **Demo only · synthetic data · not for clinical use.**
 
@@ -49,7 +49,7 @@ cloudflared tunnel --url http://127.0.0.1:8788                                  
 Looks up what a medicine from home is called in the destination country, and converts the traveler's own medicines. It asks the interpreter server's `/api/equivalents` (a checked reference list first, an AI suggestion otherwise, each result labelled). Only medicine names and two country codes are sent. It needs the same `EXPO_PUBLIC_INTERPRETER_URL` and `EXPO_PUBLIC_INTERPRETER_CODE` as the Interpreter tab; without them the tab says the lookup isn't set up.
 
 ### Interpreter tab (optional)
-The **Interpreter** tab embeds the Tessera Interpreter (`../interpreter`) in a WebView, with the same screens, live captions, spoken translation and recorded demo. It is given the signed-in traveler's record: allergies, medicines, conditions and the text of their records and documents. While someone talks, it flags whatever is relevant, for example a penicillin allergy when the doctor mentions amoxicillin. Contacts and insurance are not sent. The demo patients (Sofía, Jordan) are still under ⚙ in the interpreter, with **Play demo conversation**.
+The **Interpreter** tab embeds the Parity Interpreter (`../interpreter`) in a WebView, with the same screens, live captions, spoken translation and recorded demo. It is given the signed-in traveler's record: allergies, medicines, conditions and the text of their records and documents. While someone talks, it flags whatever is relevant, for example a penicillin allergy when the doctor mentions amoxicillin. Contacts and insurance are not sent. The demo patients (Sofía, Jordan) are still under ⚙ in the interpreter, with **Play demo conversation**.
 
 The interpreter has its own Node server, which calls OpenAI, so it needs `OPENAI_API_KEY`. The phone's mic only works over HTTPS, so reach it through a tunnel:
 
@@ -72,7 +72,7 @@ Everything runs in Expo Go, with these differences:
 | Face ID (iOS) | Not available in Expo Go. Replace card and approve/deny fall back to a tap confirmation. | Real Face ID |
 | Fingerprint / face unlock (Android) | Works | Works |
 | Local notifications | Works (local only; no push is used) | Works |
-| App icon, splash, app name | Expo Go's own | Tessera's |
+| App icon, splash, app name | Expo Go's own | Parity's |
 | Save QR to Photos, share, document/photo pickers, brightness | Works | Works |
 
 A development build needs `npx expo run:ios` (Xcode) or `npx expo run:android` (Android Studio), or EAS (`npx eas-cli@latest build --profile development`).
@@ -86,7 +86,7 @@ A development build needs `npx expo run:ios` (Xcode) or `npx expo run:android` (
 
 ## Presenter tools
 
-**Long-press the Tessera logo** on any tab. You can simulate Dr. Tanaka viewing the emergency profile or requesting the full record, a wrong date of birth, or an unverified clinician; toggle auto-approve; and reset demo data. These stand in for the clinician web flow, which isn't built yet.
+**Long-press the Parity logo** on any tab. You can simulate Dr. Tanaka viewing the emergency profile or requesting the full record, a wrong date of birth, or an unverified clinician; toggle auto-approve; and reset demo data. These stand in for the clinician web flow, which isn't built yet.
 
 ## Checks
 
