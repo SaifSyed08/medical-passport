@@ -1,6 +1,15 @@
-# Tessera Interpreter
+# Parity
 
-**A patient-aware medical interpreter on the patient's phone.**
+**A traveling patient's phone, in four parts: a health card, their documents, a medicine converter, and a patient-aware live interpreter.**
+
+| Tab | What it does |
+| --- | --- |
+| **Card** | What a doctor needs to know: allergies, medicines (with their local names), conditions, labs and emergency contacts. It's shown in the doctor's language when the record is in another one, and every section takes additions. |
+| **Documents** | Visits, letters and reports. **Scan or upload** reads a photo on the phone (OCR plus the same rules as the passport's extractor) and suggests what to add to the card. **Type it in** adds one by hand. Tap a document to open it as a page. |
+| **Medicines** | Type any medicine, pick two countries, and see what it's called and sold as there, whether it's sold at all, and how strengths are labelled. Below that are the patient's own medicines for this trip. A checked list answers first; an AI suggestion is labelled as one. |
+| **Interpret** | The live interpreter described below. |
+
+The original light look is now called **Parity**; press **3** for Tandem. Inside the Tessera Expo app (`../mobile`), which embeds this page in its own Interpreter tab, only the interpreter shows.
 
 A foreign patient can't explain what's wrong. They hand the doctor their phone, and then they both just talk. The app hears who is speaking from the language. While they're still talking it shows live captions, then the cleaned-up sentence, then the translation in large type, spoken aloud. Because it knows the patient's saved record, it also does two things a translator can't:
 
@@ -27,7 +36,7 @@ Hidden keys:
 
 | Key | |
 | --- | --- |
-| **3** | Switches to **Tandem**, a second look: navy, gold and cream, with a serif for the words that matter |
+| **3** | Switches between the two looks: **Parity** (light) and **Tandem** (navy, gold and cream, with a serif for the words that matter) |
 | **L** | Switches the conversation to **Focus**, an experimental layout (also under ⚙ → Conversation layout). One line at a time in very large type, the record's notes pinned under the sentence that raised them, earlier lines as a ribbon of dots at the top (tap one, swipe sideways, or scroll or swipe down, to go back), and the two people as chips either side of the mic (tap one to say who talks next) |
 | **F** | Fast demo: the recording plays about 1.6× faster with shorter pauses. Press again for normal speed |
 | **V** | The demo without the speakers' recorded voices: captions still roll and the translations are still spoken (also in ⋯). Press again to bring the voices back |
@@ -48,7 +57,16 @@ Hidden keys:
 
 ## Run it on a phone
 
-You need Node 22+ and `OPENAI_API_KEY` in the environment.
+One command builds it, starts it locked with an access code, and prints a link and a QR code to scan:
+
+```sh
+npm run phone              # a free Cloudflare tunnel: HTTPS from any network (needs cloudflared: winget install Cloudflare.cloudflared)
+npm run phone -- --lan     # same Wi-Fi, no tunnel: https://<laptop-IP>:5443 (accept the certificate warning)
+```
+
+Live translation needs `OPENAI_API_KEY`; the recorded demo (D) and private mode (P) don't.
+
+The pieces, by hand. You need Node 22+ and `OPENAI_API_KEY` in the environment.
 
 ```sh
 npm run dev      # http://localhost:5173, plus https://<LAN-IP>:5443 (self-signed) for phones on the same Wi-Fi
@@ -127,6 +145,7 @@ node scripts/demo-check.mjs sofia          # plays demo mode headless and checks
 node scripts/demo-regressions.mjs          # browser regressions with a mocked API (stop/restart, half-duplex, scrolling…)
 node scripts/profile-check.mjs             # editable profile: swipe to delete, undo, scan a printed note, persistence
 node scripts/focus-check.mjs sita --tandem # the Focus layout through a recorded demo
+node scripts/tabs-check.mjs [--tandem]     # the four parts: card, documents (open, add), medicine converter, interpreter
 npm run test:api -- sofia                  # live API: TTS-voiced lines → transcribe → interpret + context (paid)
 npm run test:accuracy                      # accuracy on 16 new lines across the 3 patients (paid, a few cents)
 node scripts/demo-check.mjs sita --stall   # demo failsafe: the script fetch fails once and two clips hang forever

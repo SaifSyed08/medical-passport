@@ -435,7 +435,7 @@ async function certificate() {
 }
 
 http.createServer(app).listen(PORT, () => {
-  console.log(`\nTessera Interpreter (${PROD ? "prod" : "dev"})`);
+  console.log(`\nParity (${PROD ? "prod" : "dev"})`);
   console.log(`  this computer:  http://localhost:${PORT}`);
   console.log(`  models: stt=${MODELS.stt} llm=${MODELS.llm} context=${MODELS.context} tts=${MODELS.tts}`);
   if (!process.env.OPENAI_API_KEY) console.log("  WARNING: OPENAI_API_KEY is not set");

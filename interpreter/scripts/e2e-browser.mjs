@@ -111,7 +111,7 @@ await page.evaluateOnNewDocument((b64) => {
 await page.goto(BASE, { waitUntil: "networkidle0" });
 await page.evaluate((p, speak, priv) => {
   localStorage.clear();
-  localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak, pairs: {} }));
+  localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: p, mode: "auto", speak, pairs: {} }));
   if (priv) localStorage.setItem("ti.onDevice", "1");
 }, persona, SPEAK, PRIVATE);
 await page.reload({ waitUntil: "networkidle0" });

@@ -21,7 +21,7 @@ page.on("pageerror", (e) => errors.push(e.message));
 await page.goto(BASE, { waitUntil: "networkidle0" });
 await page.evaluate((p) => {
   localStorage.clear();
-  localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: p, mode: "auto", speak: true, pairs: {} }));
+  localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: p, mode: "auto", speak: true, pairs: {} }));
 }, persona);
 await page.reload({ waitUntil: "networkidle0" });
 await new Promise((r) => setTimeout(r, 1200));

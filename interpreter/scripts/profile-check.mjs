@@ -11,7 +11,7 @@ const BASE = process.env.BASE || "http://localhost:5173";
 const CHROME = process.env.CHROME || ["C:/Program Files/Google/Chrome/Application/chrome.exe", "/usr/bin/google-chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find((p) => fs.existsSync(p));
 const OUT = path.resolve(".cache/profile");
 fs.mkdirSync(OUT, { recursive: true });
-const brand = process.argv.includes("--tandem") ? "tandem" : "tessera";
+const brand = process.argv.includes("--tandem") ? "tandem" : "parity";
 
 let failed = 0;
 const check = (ok, what) => {
@@ -45,7 +45,7 @@ try {
     if (sessionStorage.getItem("seeded")) return;
     sessionStorage.setItem("seeded", "1");
     localStorage.clear();
-    localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: "sita", mode: "auto", speak: true, pairs: {}, brand }));
+    localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: "sita", mode: "auto", speak: true, pairs: {}, brand }));
   }, brand);
   await page.goto(BASE, { waitUntil: "networkidle2" });
   await page.waitForSelector(".patient-card");

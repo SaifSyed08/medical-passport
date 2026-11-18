@@ -10,7 +10,7 @@ const BASE = process.env.BASE || "http://localhost:5173";
 const CHROME = process.env.CHROME || ["C:/Program Files/Google/Chrome/Application/chrome.exe", "/usr/bin/google-chrome", "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find((p) => fs.existsSync(p));
 // Any patient with a recorded demo (public/demo/<id>.json).
 const persona = process.argv.slice(2).find((a) => !a.startsWith("--") && fs.existsSync(`public/demo/${a}.json`)) || "sofia";
-const brand = process.argv.includes("--tandem") ? "tandem" : "tessera";
+const brand = process.argv.includes("--tandem") ? "tandem" : "parity";
 const OUT = path.resolve(".cache/focus");
 fs.mkdirSync(OUT, { recursive: true });
 const demo = JSON.parse(fs.readFileSync(`public/demo/${persona}.json`, "utf8"));
@@ -33,7 +33,7 @@ try {
     if (sessionStorage.getItem("seeded")) return;
     sessionStorage.setItem("seeded", "1");
     localStorage.clear();
-    localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: persona, mode: "auto", speak: true, pairs: {}, brand, layout: "focus" }));
+    localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: persona, mode: "auto", speak: true, pairs: {}, brand, layout: "focus" }));
   }, persona, brand);
   await page.goto(BASE, { waitUntil: "networkidle2" });
   await page.keyboard.press("f"); // fast demo
