@@ -98,7 +98,7 @@ async function launch({ fakeMic = false } = {}) {
   await page.goto(BASE, { waitUntil: "networkidle0" });
   await page.evaluate(() => {
     localStorage.clear();
-    localStorage.setItem("ti.settings.v1", JSON.stringify({ personaId: "sofia", mode: "auto", speak: true, pairs: {} }));
+    localStorage.setItem("ti.settings.v1", JSON.stringify({ tab: "talk", personaId: "sofia", mode: "auto", speak: true, pairs: {} }));
   });
   await page.reload({ waitUntil: "networkidle0" });
   return { browser, page };

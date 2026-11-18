@@ -52,7 +52,7 @@ export default function App() {
   const brand = settings.brand;
   useEffect(() => {
     document.documentElement.dataset.brand = brand;
-    document.title = brand === "tandem" ? "Tandem" : "Tessera Interpreter";
+    document.title = brand === "tandem" ? "Tandem" : "Parity";
     const icon = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
     if (icon) icon.href = brand === "tandem" ? TANDEM_ICON : "/icon.svg";
     document.querySelector('meta[name="theme-color"]')?.setAttribute("content", brand === "tandem" ? "#0b2452" : "#f2f2ef");
@@ -133,7 +133,7 @@ export default function App() {
       if (e.key === "3") {
         // Don't leave a focus ring on whatever was clicked last.
         (document.activeElement as HTMLElement | null)?.blur?.();
-        setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "tessera" : "tandem" }));
+        setSettings((s) => ({ ...s, brand: s.brand === "tandem" ? "parity" : "tandem" }));
         return;
       }
       if (e.key === "d" || e.key === "D") {
