@@ -84,6 +84,12 @@ export const identitySchema = z.object({
 
 type Item = { id: string; tr?: Partial<Record<TranslatedLanguage, Record<string, string | undefined>>> } & Record<string, unknown>;
 
+/** A new destination country. The study location named a place in the old one, so it's cleared when the country changes. */
+export function withDestination(profile: Profile, destinationCountry: string): Profile {
+  const moved = destinationCountry !== profile.basics.destinationCountry;
+  return { ...profile, basics: { ...profile.basics, destinationCountry, ...(moved ? { studyLocation: "" } : {}) } };
+}
+
 /**
  * Profiles stored before translations were generalised used `substanceJa`-style fields.
  * Convert them to `tr.ja` on read so existing data keeps its Japanese.

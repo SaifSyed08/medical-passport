@@ -6,6 +6,7 @@ export type Condition = { id: string; name: string; since?: string; note: string
 export type Lab = { id: string; name: string; value: string; unit: string; ref: string; flag: "H" | "L" | "" ; date: string; source?: string };
 export type RecordDoc = { id: string; kind: "visit" | "document" | "imaging"; title: string; date: string; facility: string; body: string };
 export type Contact = { id: string; name: string; relationship: string; phone: string };
+export type Insurance = { plan: string; memberId: string; group: string; phone: string };
 
 export type Persona = {
   id: string;
@@ -14,6 +15,10 @@ export type Persona = {
   dob: string;
   sex: string;
   bloodType: string;
+  /** Not recorded when missing. */
+  heightCm?: number | null;
+  weightKg?: number | null;
+  insurance?: Insurance;
   /** Language the patient speaks (ISO 639-1). */
   language: string;
   /** Home country (ISO 3166-1 alpha-2): where their medicines are named. */
@@ -44,6 +49,9 @@ export type Equivalent = {
   local_name: string;
   local_brands: string[];
   local_strength: string;
+  /** How to say local_name / each brand in the home country's script; "" when it's already readable. Set by /api/equivalents. */
+  local_reading?: string;
+  local_brands_reading?: string[];
   status: DrugStatus;
   note: string;
   source: "curated" | "ai";

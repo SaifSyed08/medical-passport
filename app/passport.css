@@ -378,6 +378,6 @@ form.studio-address{max-width:490px;margin:auto;animation:address-in .65s .18s b
 
 /* Doctor page a Parity card's QR code opens (components/tessera-scan.tsx) */
 .scan-reader{padding-bottom:40px}.scan-name{font-size:clamp(2.4rem,7vw,3.7rem);overflow-wrap:anywhere}.scan-reader .medicine-list>div{font-size:1rem;color:#33495b}.scan-reader .medicine-list small{font-size:.82rem;color:#566c7b}.scan-severe{font-weight:700;color:#a94d40}.scan-empty{font-style:italic;color:#8b959e!important}.scan-en{margin-left:8px;padding:2px 7px;border-radius:99px;background:#eef1f3;color:#697482;font-size:.62rem;letter-spacing:.04em;vertical-align:middle}.scan-reader .notice{margin-top:22px}
-/* The Parity mark (components/tessera-mark.tsx): four tiles in the brand blue */
+/* The Parity mark (components/tessera-mark.tsx): an equals sign in the brand blue */
 .brand-mark{flex:none;width:28px;height:28px;color:#315f98}
 @media(max-width:760px){.brand-mark{width:25px;height:25px}}

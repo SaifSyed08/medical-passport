@@ -1,11 +1,12 @@
 import { router, type Href } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { destinationName, LANGUAGE_NAMES, SEVERITY_LABELS, type Language, type Profile } from "@shared/tessera";
+import { destinationName, LANGUAGE_NAMES, SEVERITY_LABELS, type Language, type Profile, type RecordItem } from "@shared/tessera";
 import { useResource } from "@/lib/cache";
 import { flag } from "@/lib/flag";
 import { homeCode } from "@/lib/interpreter";
 import type { ItemKind } from "@/lib/profile";
+import { aiField, recordText, useTranslation, type RecordText } from "@/lib/translate";
 import { useSession } from "@/lib/session";
 import { color, radius, space } from "@/lib/theme";
 import { Icon } from "@/components/icons";
@@ -30,11 +31,16 @@ const initials = (name: string) =>
 type Translatable = { tr?: Partial<Record<string, Partial<Record<string, string>>>> };
 type Shown = { text: string; en: boolean };
 
-/** A field as a doctor reading `lang` sees it: the stored translation, or the English original marked EN. */
-function inLang(lang: Language, item: Translatable, field: string, original: string): Shown {
+/**
+ * A field as a doctor reading `lang` sees it: the stored translation (the one the doctor page uses), else the AI
+ * translation of the record, else the English original marked EN.
+ */
+function inLang(lang: Language, item: Translatable & { id: string }, field: string, original: string, ai?: { data: RecordText | null; list: keyof RecordText }): Shown {
   if (lang === "en" || !original) return { text: original, en: false };
-  const t = item.tr?.[lang]?.[field];
-  return t ? { text: t, en: false } : { text: original, en: true };
+  const stored = item.tr?.[lang]?.[field];
+  if (stored) return { text: stored, en: false };
+  const machine = ai && aiField(ai.data, ai.list, item.id, field);
+  return machine ? { text: machine, en: false } : { text: original, en: true };
 }
 
 /** Text with a small "EN" tag when it hasn't been translated into the language being shown. */
@@ -55,6 +61,10 @@ export default function Health() {
   const docLang: Language = me?.language ?? "en";
   const [view, setView] = useState<Language>("en");
   const lang: Language = docLang !== "en" && view === docLang ? docLang : "en";
+  // The same text as the Records tab sends, so one translation serves both.
+  const records = useResource<RecordItem[]>("/records");
+  const tr = useTranslation(recordText(p, records.data), docLang, lang !== "en" && !!p);
+  const ai = (list: keyof RecordText) => ({ data: tr.data, list });
   const add = (kind: ItemKind, label: string, tone: "allergy" | "blue" = "blue") => (
     <SmallButton tone={tone} onPress={() => router.push({ pathname: "/item/[kind]", params: { kind } })} label={`${t.add} ${label}`}>
       {t.add}
@@ -85,10 +95,10 @@ export default function Health() {
           style={({ pressed }) => [styles.who, pressed && { opacity: 0.7 }]}
         >
           <View style={styles.avatar}>
-            <T weight="500" style={{ color: "white", fontSize: 19, letterSpacing: 0.5 }}>{initials(name) || "?"}</T>
+            <T weight="500" style={{ color: "white", fontSize: 20, letterSpacing: 0.5 }}>{initials(name) || "?"}</T>
           </View>
           <View style={{ flex: 1, gap: 3 }}>
-            <T serif accessibilityRole="header" style={{ fontSize: 23, lineHeight: 27, color: color.ink }}>{name}</T>
+            <T serif accessibilityRole="header" style={{ fontSize: 24, lineHeight: 28, letterSpacing: -0.4, color: color.ink }}>{name}</T>
             <T style={{ fontSize: 13.5, lineHeight: 19, color: color.body }}>
               {[years != null && t.ageYears.replace("{n}", String(years)), dob ? t.bornOn.replace("{d}", dob) : `${t.dob}: ${t.notRecorded}`, blood].filter(Boolean).join(" · ")}
             </T>
@@ -126,7 +136,11 @@ export default function Health() {
               ]}
             />
           </View>
-          {lang !== "en" && <T style={{ fontSize: 13, lineHeight: 18, color: color.muted }}>{t.viewAsDoctor.replace("{lang}", LANGUAGE_NAMES[lang])}</T>}
+          {lang !== "en" && (
+            <T style={{ fontSize: 13, lineHeight: 18, color: tr.error ? color.warnText : color.muted }}>
+              {tr.loading ? t.trLoading : tr.error ? t.trFailed : tr.data ? t.trAi.replace("{country}", trip ?? LANGUAGE_NAMES[lang]) : t.viewAsDoctor.replace("{lang}", LANGUAGE_NAMES[lang])}
+            </T>
+          )}
         </View>
       )}
 
@@ -137,8 +151,8 @@ export default function Health() {
           <ListSection icon="alert" tone="allergy" title={t.allergies} count={p.allergies.length} action={add("allergy", t.allergies, "allergy")}>
             {p.allergies.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
             {p.allergies.map((a, i) => {
-              const substance = inLang(lang, a, "substance", a.substance);
-              const reaction = inLang(lang, a, "reaction", a.reaction);
+              const substance = inLang(lang, a, "substance", a.substance, ai("allergies"));
+              const reaction = inLang(lang, a, "reaction", a.reaction, ai("allergies"));
               const severity = SEVERITY_LABELS[lang][a.severity];
               return (
                 <ListRow
@@ -158,9 +172,9 @@ export default function Health() {
           <ListSection icon="medicines" tone="blue" title={t.medications} count={p.medications.length} action={add("medication", t.medications)}>
             {p.medications.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
             {p.medications.map((m, i) => {
-              const generic = inLang(lang, m, "generic", m.generic);
-              const schedule = inLang(lang, m, "schedule", m.schedule);
-              const purpose = inLang(lang, m, "purpose", m.purpose);
+              const generic = inLang(lang, m, "generic", m.generic, ai("medications"));
+              const schedule = inLang(lang, m, "schedule", m.schedule, ai("medications"));
+              const purpose = inLang(lang, m, "purpose", m.purpose, ai("medications"));
               const title = m.brand ? `${m.brand}${m.dose ? ` ${m.dose}` : ""}` : null;
               const more = [schedule, purpose].filter(x => x.text);
               const moreShown = { text: more.map(x => x.text).join(" · "), en: more.some(x => x.en) };
@@ -177,8 +191,8 @@ export default function Health() {
           <ListSection icon="condition" title={t.conditions} count={p.conditions.length} action={add("condition", t.conditions)}>
             {p.conditions.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
             {p.conditions.map((c, i) => {
-              const name = inLang(lang, c, "name", c.name);
-              const note = inLang(lang, c, "note", c.note);
+              const name = inLang(lang, c, "name", c.name, ai("conditions"));
+              const note = inLang(lang, c, "note", c.note, ai("conditions"));
               return (
                 <ListRow key={c.id} last={i === p.conditions.length - 1} onPress={edit("condition", c.id)} label={`${name.text}${note.text ? `. ${note.text}` : ""}`}>
                   <Tx weight="500" style={styles.title} v={name} />
@@ -206,9 +220,9 @@ export default function Health() {
           <ListSection icon="phone" title={t.contacts} count={p.contacts.length} action={add("contact", t.contacts)}>
             {p.contacts.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
             {p.contacts.map((c, i) => (
-              <ListRow key={c.id} last={i === p.contacts.length - 1} onPress={edit("contact", c.id)} label={[c.name, inLang(lang, c, "relationship", c.relationship).text, c.phone].filter(Boolean).join(", ")}>
+              <ListRow key={c.id} last={i === p.contacts.length - 1} onPress={edit("contact", c.id)} label={[c.name, inLang(lang, c, "relationship", c.relationship, ai("contacts")).text, c.phone].filter(Boolean).join(", ")}>
                 <T weight="500" style={styles.title}>{c.name}</T>
-                <Tx style={styles.detail} v={(() => { const r = inLang(lang, c, "relationship", c.relationship); return { text: [r.text, c.phone].filter(Boolean).join(" · "), en: r.en }; })()} />
+                <Tx style={styles.detail} v={(() => { const r = inLang(lang, c, "relationship", c.relationship, ai("contacts")); return { text: [r.text, c.phone].filter(Boolean).join(" · "), en: r.en }; })()} />
               </ListRow>
             ))}
           </ListSection>
@@ -242,7 +256,7 @@ function Vital({ label, value, empty, notRecorded }: { label: string; value: str
 const styles = StyleSheet.create({
   profile: { backgroundColor: color.surface, borderRadius: radius.section, borderWidth: 1, borderColor: color.line, overflow: "hidden" },
   who: { flexDirection: "row", alignItems: "center", gap: 14, padding: space.l },
-  avatar: { width: 54, height: 54, borderRadius: 27, backgroundColor: color.blue, alignItems: "center", justifyContent: "center" },
+  avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: color.blue, alignItems: "center", justifyContent: "center" },
   trip: { flexDirection: "row", alignItems: "center", gap: space.m, paddingHorizontal: space.l, paddingVertical: 11, minHeight: 48, borderTopWidth: 1, borderTopColor: "#edf0f2" },
   place: { fontSize: 14, color: color.ink },
   title: { fontSize: 15.5, lineHeight: 21, color: color.ink },

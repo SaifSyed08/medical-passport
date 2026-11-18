@@ -1,5 +1,5 @@
 import { Redirect, Tabs } from "expo-router";
-import type { ColorValue } from "react-native";
+import { Text, type ColorValue } from "react-native";
 import { Icon, type IconName } from "@/components/icons";
 import { useActivity } from "@/lib/activity";
 import { useSession } from "@/lib/session";
@@ -10,6 +10,15 @@ const icon = (name: IconName) =>
   function TabIcon({ color: c }: { color: ColorValue }) {
     return <Icon name={name} color={c as string} size={23} />;
   };
+
+// The web app's tab labels: 12px, semibold, bold on the tab you're on.
+function TabLabel({ focused, color: c, children }: { focused: boolean; color: string; children: string }) {
+  return (
+    <Text numberOfLines={1} maxFontSizeMultiplier={1.3} style={{ color: c, fontSize: 12, fontWeight: focused ? "700" : "600", marginTop: 2 }}>
+      {children}
+    </Text>
+  );
+}
 
 export default function TabsLayout() {
   const { signedIn, me, t } = useSession();
@@ -27,7 +36,7 @@ export default function TabsLayout() {
         tabBarInactiveTintColor: color.muted,
         tabBarStyle: { backgroundColor: color.surface, borderTopWidth: 1, borderTopColor: color.line, minHeight: 64, paddingTop: 6, elevation: 0, shadowOpacity: 0 },
         tabBarItemStyle: { minHeight: 50 },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: "500", marginTop: 2 },
+        tabBarLabel: ({ focused, color: c, children }) => <TabLabel focused={focused} color={c as string}>{children}</TabLabel>,
         tabBarBadgeStyle: { backgroundColor: color.errorText, color: "white", fontSize: 11 },
         sceneStyle: { backgroundColor: color.bg },
       }}

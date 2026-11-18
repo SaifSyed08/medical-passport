@@ -357,6 +357,10 @@
 .med-row { display: flex; align-items: center; gap: 10px; padding: 14px 20px; }
 .med-row .row-main { display: grid; gap: 3px; }
 .med-row .row-main strong { font-size: 17px; }
+/* "Sounds like karonāru": how to say a name written in a script the traveler can't read. */
+.sounds, .row-main span.sounds { display: block; font-size: 14.5px; line-height: 1.35; color: var(--ink); }
+.sounds b { font-size: 12.5px; font-weight: 600; color: var(--accent); margin-right: 6px; }
+.conv-result .sounds { font-size: 16px; }
 [data-brand="tandem"] .conv-input { background: rgb(255 255 255 / 6%); border-color: rgb(247 241 227 / 18%); color: var(--t-cream); }
 [data-brand="tandem"] .conv-input:focus { border-color: var(--t-gold); }
 [data-brand="tandem"] .conv-recent button { border-color: rgb(247 241 227 / 18%); color: var(--t-cream); }
@@ -364,3 +368,49 @@
 .conv-route .picker { flex: 1; }
 [data-brand="tandem"] .record-page .seg { background: rgb(255 255 255 / 6%); box-shadow: inset 0 0 0 1px rgb(247 241 227 / 14%); }
 [data-brand="tandem"] .record-page .seg button:not(.on) { color: rgb(247 241 227 / 80%); }
+
+/* ---------------------------------------------------------------- card, QR and doctor page */
+/* The patient's card (components/ParityCard.tsx), in the Tessera app's "midnight" card look. */
+.parity-card { position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: space-between; aspect-ratio: 1.586; width: 100%; padding: 18px 20px; border: 1px solid #3d5468; border-radius: 17px; background: linear-gradient(115deg, #12273e, #203d58); color: #e8eef2; text-align: left; font: inherit; cursor: pointer; box-shadow: 0 14px 30px rgb(16 36 62 / 28%); transition: transform .2s; }
+.parity-card:active { transform: scale(.985); }
+.parity-card:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+.pc-watermark { position: absolute; right: -54px; top: -46px; opacity: .07; transform: rotate(12deg); pointer-events: none; }
+.pc-top, .pc-bottom { position: relative; display: flex; justify-content: space-between; gap: 14px; }
+.pc-top { align-items: center; }
+.pc-bottom { align-items: flex-end; }
+.pc-brand { display: inline-flex; align-items: center; gap: 7px; font-size: 14px; font-weight: 600; opacity: .9; }
+.pc-chip { padding: 4px 10px; border-radius: 99px; background: rgb(255 255 255 / 12%); font-size: 12px; font-weight: 600; }
+.pc-who { display: grid; gap: 5px; min-width: 0; }
+.pc-kicker { font-size: 9.5px; letter-spacing: .2em; text-transform: uppercase; opacity: .55; }
+.pc-name { font-family: var(--serif); font-size: 27px; line-height: 1.1; letter-spacing: -.02em; overflow-wrap: anywhere; }
+.pc-meta { font-size: 12px; letter-spacing: .04em; opacity: .7; font-variant-numeric: tabular-nums; }
+.pc-qr { flex: none; width: 84px; height: 84px; padding: 7px; border-radius: 9px; background: #fff; }
+.pc-qr svg, .card-qr-code svg { display: block; width: 100%; height: 100%; }
+.card-qr { display: grid; justify-items: center; gap: 12px; text-align: center; padding-bottom: 8px; }
+.card-qr-code { width: min(72vw, 280px); aspect-ratio: 1; padding: 14px; border-radius: 16px; background: #fff; box-shadow: 0 0 0 1px var(--line-2); }
+.card-qr strong { font-family: var(--serif); font-weight: 400; font-size: 24px; letter-spacing: -.02em; color: var(--ink); }
+.card-qr p { margin: 0; max-width: 34ch; font-size: 15px; line-height: 1.45; color: var(--ink-2); }
+.card-qr .fine { font-size: 12.5px; }
+.card-qr-link { color: var(--accent); text-decoration: none; overflow-wrap: anywhere; }
+
+/* Basics and insurance on the Card tab */
+.rec-section.basics, .rec-section.insurance { --c: var(--title); }
+.vitals { display: flex !important; flex-direction: row !important; flex-wrap: wrap; gap: 14px 28px !important; }
+.vital { display: grid; gap: 2px; }
+.vital b { font-family: var(--serif); font-weight: 400; font-size: 23px; color: var(--title); font-variant-numeric: tabular-nums; }
+.vital small { font-size: 12.5px; color: var(--ink-3); }
+.seg.wrap { grid-auto-flow: row; grid-template-columns: repeat(3, 1fr); }
+
+/* The doctor page a card's QR opens (components/DoctorCard.tsx) */
+.doctor-card { min-height: 100%; max-width: 560px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 20px 28px; display: flex; flex-direction: column; gap: 18px; background: var(--bg); }
+.dc-head { display: flex; justify-content: center; padding: 4px 0; }
+.dc-gate { display: grid; gap: 14px; padding: 22px 20px; border-radius: 16px; text-align: left; }
+.dc-gate h1 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: 28px; letter-spacing: -.02em; color: var(--ink); }
+.dc-gate p { margin: 0; font-size: 15.5px; line-height: 1.45; color: var(--ink-2); }
+.dc-gate input { font: inherit; font-size: 18px; }
+.dc-gate .btn-primary:disabled { opacity: .45; }
+.dc-error { color: var(--danger) !important; font-weight: 600; }
+.dc-lang { justify-self: start; align-self: flex-start; min-width: 240px; }
+.dc-demo { text-align: center; margin-top: auto; }
+.dc-note { text-align: center; color: var(--ink-2); }
+.doctor-card .rec-section .list { margin: 0 -20px; }

@@ -16,6 +16,7 @@ import { loadTranslatedRecord, useTranslatedRecord } from "../lib/recordTranslat
 import type { Tab } from "../lib/store";
 import Medicines from "./Medicines";
 import { embedded } from "../lib/host";
+import { CardFace, CardQr, hasCard, ProfileExtras } from "./ParityCard";
 
 type Props = {
   persona: Persona;
@@ -65,7 +66,8 @@ export default function Home({ persona, personas, settings, setSettings, onStart
   useEffect(() => {
     const t = loadTrip(home, local);
     setTrip(t);
-    if (!sameCountry && persona.medications.some((m) => !t.items[norm(m.name)])) void prepare();
+    // Fetch again for medicines saved before the server gave readings (how to say a name in another script).
+    if (!sameCountry && persona.medications.some((m) => t.items[norm(m.name)]?.local_reading === undefined)) void prepare();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [home, local, persona.id, persona.medications.map((m) => m.name).join("|")]);
 
@@ -267,8 +269,11 @@ function TabBar({ tab, onTab }: { tab: Tab; onTab: (t: Tab) => void }) {
 
 /** The health card: who the patient is and what a doctor needs to know, in the doctor's language when it differs. */
 function CardTab({ persona }: { persona: Persona }) {
+  const [qr, setQr] = useState(false);
   return (
     <>
+      {hasCard(persona.id) && <CardFace persona={persona} onOpen={() => setQr(true)} />}
+      {qr && <CardQr persona={persona} onClose={() => setQr(false)} />}
       <section className="panel id-card">
         <span className="avatar">{persona.initials}</span>
         <span className="id-main">
@@ -284,6 +289,9 @@ function CardTab({ persona }: { persona: Persona }) {
         </span>
       </section>
       <RecordSheet persona={persona} editable page sections={["allergy", "medication", "condition", "lab", "contact"]} onClose={() => {}} />
+      <div className="record-page">
+        <ProfileExtras persona={persona} />
+      </div>
     </>
   );
 }

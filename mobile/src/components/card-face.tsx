@@ -4,7 +4,7 @@ import QRCode from "react-native-qrcode-svg";
 import type { CardStatus } from "@shared/tessera";
 import { useSession } from "@/lib/session";
 import { cardThemes, font, radius, type CardTheme } from "@/lib/theme";
-import { TesseraMark } from "./mark";
+import { ParityMark } from "./mark";
 import { Pill, T } from "./ui";
 
 /**
@@ -37,11 +37,11 @@ export function CardFace({
     >
       <LinearGradient colors={th.fill} start={{ x: 0, y: 0.2 }} end={{ x: 1, y: 0.8 }} style={[styles.card, { borderColor: th.edge }]}>
         <View style={styles.watermark} importantForAccessibility="no-hide-descendants">
-          <TesseraMark size={250} color={th.ink} opacity={0.07} />
+          <ParityMark size={250} color={th.ink} opacity={0.07} />
         </View>
         <View style={styles.top}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 7, opacity: 0.9 }}>
-            <TesseraMark size={16} color={th.ink} />
+            <ParityMark size={16} color={th.ink} />
             <T style={{ color: th.ink, fontSize: 14, letterSpacing: -0.3 }}>Parity</T>
           </View>
           <Pill tone={status === "active" ? "ok" : status === "frozen" ? "warn" : "muted"}>{statusLabel}</Pill>

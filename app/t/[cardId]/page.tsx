@@ -3,7 +3,7 @@ import { DEMO_NOTICE, NEUTRAL_CARD_MESSAGE } from "@/shared/tessera";
 import { appendAudit } from "@/lib/tessera/audit";
 import { lookupForScan } from "@/lib/tessera/cards";
 import { tessera } from "@/lib/tessera/http";
-import { TesseraMark } from "@/components/tessera-mark";
+import { ParityMark } from "@/components/tessera-mark";
 import { TesseraScan } from "@/components/tessera-scan";
 
 export const dynamic = "force-dynamic";
@@ -30,7 +30,7 @@ export default async function Page({ params }: { params: Promise<{ cardId: strin
   return (
     <div className="reader-shell">
       <header className="site-header">
-        <span className="wordmark"><TesseraMark className="brand-mark" /><span>Parity</span></span>
+        <span className="wordmark"><ParityMark className="brand-mark" /><span>Parity</span></span>
       </header>
       {usable ? (
         <TesseraScan cardId={cardId} />

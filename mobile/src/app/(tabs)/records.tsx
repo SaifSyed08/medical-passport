@@ -6,16 +6,20 @@ import * as ImagePicker from "expo-image-picker";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import type { RecordItem } from "@shared/tessera";
+import { destinationName, LANGUAGE_NAMES, type Language, type Profile, type RecordItem } from "@shared/tessera";
 import { api, ApiError } from "@/lib/api";
 import { ensureAutofillOptIn } from "@/lib/autofill";
 import { useResource } from "@/lib/cache";
 import type { Strings } from "@/lib/i18n";
+import { flag } from "@/lib/flag";
+import { homeCode } from "@/lib/interpreter";
 import { useScans, type Scan } from "@/lib/scans";
 import { useSession } from "@/lib/session";
 import { color, radius, space } from "@/lib/theme";
+import { aiField, recordText, useTranslation } from "@/lib/translate";
+import { DocThumb } from "@/components/doc-thumb";
 import { Icon, type IconName } from "@/components/icons";
-import { Button, Footnote, Heading, ListEmpty, ListRow, ListSection, LoadError, Loading, Logo, Notice, Pill, Screen, T } from "@/components/ui";
+import { Button, Footnote, Heading, ListEmpty, ListRow, ListSection, LoadError, Loading, Logo, Notice, Pill, Screen, Segmented, T } from "@/components/ui";
 
 type Pick = { uri: string; name: string; type: string };
 
@@ -36,8 +40,13 @@ async function toJpeg(uri: string) {
 }
 
 export default function Records() {
-  const { t } = useSession();
+  const { t, me } = useSession();
   const { scans, start } = useScans();
+  // Titles and summaries in the doctor's language, translated by AI (the same request the Health tab makes).
+  const profile = useResource<Profile>("/profile");
+  const docLang: Language = me?.language ?? "en";
+  const [view, setView] = useState<Language>("en");
+  const lang: Language = docLang !== "en" && view === docLang ? docLang : "en";
   const records = useResource<RecordItem[]>("/records");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: "ok" | "error"; text: string } | null>(null);
@@ -115,6 +124,10 @@ export default function Records() {
   }
 
   const list = records.data ?? [];
+  const tr = useTranslation(recordText(profile.data, records.data), docLang, lang !== "en" && !!profile.data);
+  const shown = (r: RecordItem, field: "title" | "summary" | "body", original: string) => (lang !== "en" && aiField(tr.data, "documents", r.id, field)) || original;
+  const home = profile.data?.basics.homeCountry?.trim();
+  const trip = destinationName(me?.destinationCountry);
   const choose = (pick: () => Promise<void>) => () => {
     setChoosing(false);
     void pick();
@@ -144,6 +157,22 @@ export default function Records() {
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {!records.data && records.loading && <Loading />}
       {!records.data && records.error && <LoadError onRetry={records.refresh} />}
+      {docLang !== "en" && list.length > 0 && (
+        <View style={{ gap: space.s }}>
+          <View style={{ alignSelf: "flex-start", minWidth: 250 }}>
+            <Segmented
+              label={t.viewIn}
+              value={lang}
+              onChange={setView}
+              options={[
+                { value: "en", label: `${home ? `${flag(homeCode(home))} ` : ""}English` },
+                { value: docLang, label: `${flag(me?.destinationCountry)} ${LANGUAGE_NAMES[docLang]}`.trim() },
+              ]}
+            />
+          </View>
+          {lang !== "en" && (tr.loading || tr.error) && <T style={{ fontSize: 13, color: tr.error ? color.warnText : color.muted }}>{tr.loading ? t.trLoading : t.trFailed}</T>}
+        </View>
+      )}
       {records.data && (
         <ListSection icon="records" tone="green" title={t.recList} count={list.length}>
           {list.length === 0 && <ListEmpty>{t.noneYet}</ListEmpty>}
@@ -161,15 +190,15 @@ export default function Records() {
                 onPress={() => router.push(toReview ? { pathname: "/review", params: { recordId: r.id } } : { pathname: "/record/[id]", params: { id: r.id } })}
               >
                 <View style={{ flexDirection: "row", gap: 14 }}>
-                  <Paper />
+                  <DocThumb record={r} />
                   <View style={{ flex: 1, gap: 3 }}>
-                    <T weight="500" style={{ fontSize: 15.5, lineHeight: 21, color: color.ink }}>{r.title}</T>
+                    <T weight="500" style={{ fontSize: 15.5, lineHeight: 21, color: color.ink }}>{shown(r, "title", r.title)}</T>
                     <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
                       {!!r.facility && <Icon name="pin" color={color.muted} size={13} />}
                       <T numberOfLines={1} style={{ flex: 1, fontSize: 12.5, color: color.muted }}>{r.facility || (r.kind === "encounter" ? "Visit" : "")}</T>
                       <T style={{ fontSize: 12.5, color: color.muted, fontVariant: ["tabular-nums"] }}>{r.date}</T>
                     </View>
-                    {!!(r.summary || (!r.hasFile && r.body)) && <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 19, color: color.body }}>{r.summary || r.body}</T>}
+                    {!!(r.summary || (!r.hasFile && r.body)) && <T numberOfLines={2} style={{ fontSize: 13.5, lineHeight: 19, color: color.body }}>{r.summary ? shown(r, "summary", r.summary) : shown(r, "body", r.body ?? "")}</T>}
                     {tag && <View style={{ marginTop: 3 }}>{tag}</View>}
                   </View>
                 </View>
@@ -178,20 +207,9 @@ export default function Records() {
           })}
         </ListSection>
       )}
+      {lang !== "en" && tr.data && <Footnote>{t.trAi.replace("{country}", trip ?? LANGUAGE_NAMES[lang])}</Footnote>}
       <Footnote>{t.restrictedNote}</Footnote>
     </Screen>
-  );
-}
-
-/** A small sheet of paper standing in for the document's first page. */
-function Paper() {
-  return (
-    <View style={styles.paper}>
-      <View style={[styles.paperLine, { width: "70%", backgroundColor: color.okText, opacity: 0.55 }]} />
-      {[100, 85, 100, 60].map((w, i) => (
-        <View key={i} style={[styles.paperLine, { width: `${w}%` }]} />
-      ))}
-    </View>
   );
 }
 
@@ -209,6 +227,4 @@ const styles = StyleSheet.create({
   choices: { backgroundColor: color.surface, borderRadius: radius.section, borderWidth: 1, borderColor: color.line, overflow: "hidden", marginTop: -4 },
   choice: { flexDirection: "row", alignItems: "center", gap: space.m, minHeight: 52, paddingHorizontal: space.l },
   choiceLine: { borderBottomWidth: 1, borderBottomColor: "#edf0f2" },
-  paper: { width: 38, height: 50, borderRadius: 4, backgroundColor: "white", borderWidth: 1, borderColor: color.line, padding: 6, gap: 4, marginTop: 2 },
-  paperLine: { height: 2.5, borderRadius: 1, backgroundColor: "#d5dbe0" },
 });

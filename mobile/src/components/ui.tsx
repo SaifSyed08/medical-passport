@@ -18,7 +18,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { hasJapanese } from "@/lib/i18n";
 import { useSession } from "@/lib/session";
 import { Icon, type IconName } from "./icons";
-import { TesseraMark } from "./mark";
+import { ParityMark } from "./mark";
 import { color, font, radius, space, TOUCH } from "@/lib/theme";
 
 /** Text that switches to Noto Sans JP when it contains Japanese. Dynamic type stays on. */
@@ -101,7 +101,7 @@ export function Logo({ presenter = true }: { presenter?: boolean }) {
       accessibilityLabel="Parity"
       style={styles.logo}
     >
-      <TesseraMark size={28} />
+      <ParityMark size={28} />
       <T weight="500" style={{ fontSize: 17, letterSpacing: -0.5, color: color.ink }}>Parity</T>
     </Pressable>
   );
@@ -214,7 +214,8 @@ export type ListTone = keyof typeof LIST_TONE;
  * A titled list that runs edge to edge: icon, serif title and count above, then white rows.
  * The screens' main content (allergies, medicines, records) uses this instead of floating cards.
  */
-export function ListSection({ icon, title, count, tone = "plain", action, children }: { icon?: IconName; title: string; count?: number; tone?: ListTone; action?: ReactNode; children: ReactNode }) {
+/** `boxed`: the children are their own cards (stacked with a gap) instead of rows in one edge-to-edge list. */
+export function ListSection({ icon, title, count, tone = "plain", action, boxed, children }: { icon?: IconName; title: string; count?: number; tone?: ListTone; action?: ReactNode; boxed?: boolean; children: ReactNode }) {
   const c = LIST_TONE[tone];
   return (
     <View style={{ gap: 8, marginTop: 4 }}>
@@ -228,7 +229,7 @@ export function ListSection({ icon, title, count, tone = "plain", action, childr
         </View>
         {action}
       </View>
-      <View style={styles.list}>{children}</View>
+      <View style={boxed ? { gap: 10 } : styles.list}>{children}</View>
     </View>
   );
 }

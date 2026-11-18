@@ -149,6 +149,7 @@ export default function Medicines({ persona, trip, prep, prepError, onRefresh }:
                       {!eq ? "…" : eq.status === "not_available_locally" ? `Not sold here · ask for ${eq.generic}` : [eq.local_name, eq.local_brands[0]].filter(Boolean).join(" · ")}
                     </span>
                   )}
+                  {!sameCountry && eq && <Sounds text={soundsLike(eq, 1)} />}
                 </span>
                 {eq && !sameCountry && <StatusBadge status={eq.status} compact />}
               </div>
@@ -157,6 +158,23 @@ export default function Medicines({ persona, trip, prep, prepError, onRefresh }:
         </div>
       </section>
     </div>
+  );
+}
+
+/** How to say the local name and brands when any of them is in a script the traveler can't read; "" otherwise. */
+function soundsLike(eq: Equivalent, brands: number) {
+  const parts = [eq.local_name, ...eq.local_brands.slice(0, brands)];
+  const reads = [eq.local_reading || "", ...(eq.local_brands_reading || []).slice(0, brands)];
+  if (eq.status === "not_available_locally" || !reads.some(Boolean)) return "";
+  return parts.map((p, i) => reads[i] || p).filter(Boolean).join(" · ");
+}
+
+function Sounds({ text }: { text: string }) {
+  if (!text) return null;
+  return (
+    <span className="sounds">
+      <b>Sounds like</b> {text}
+    </span>
   );
 }
 
@@ -178,6 +196,7 @@ function Result({ eq, q }: { eq: Equivalent; q: Lookup }) {
           {unavailable && <span>{`Generic: ${eq.generic}`}</span>}
         </span>
       </div>
+      <Sounds text={soundsLike(eq, eq.local_brands.length)} />
       {!unavailable && <StatusBadge status={eq.status} />}
       {(eq.local_strength || eq.home_strength) && (
         <p className="conv-line">

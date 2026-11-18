@@ -80,19 +80,29 @@ export function mergeIds(orig: RecordBody, tr: Partial<RecordBody>): RecordBody 
 }
 
 export function useTranslatedRecord(p: Persona, lang: string, enabled: boolean) {
-  const [state, setState] = useState<{ record: RecordBody | null; loading: boolean; error: string }>(() => ({ record: readCache(p, lang), loading: false, error: "" }));
+  const want = enabled && p.recordLanguage !== lang;
+  // The state remembers which record + language it holds, so switching country never shows the last language's text.
+  const k = key(p, lang);
+  const [state, setState] = useState<{ k: string; record: RecordBody | null; loading: boolean; error: string }>(() => ({ k, record: readCache(p, lang), loading: false, error: "" }));
   useEffect(() => {
-    if (!enabled || p.recordLanguage === lang) return;
+    if (!want) return;
     const c = readCache(p, lang);
-    if (c) return setState({ record: c, loading: false, error: "" });
+    if (c) return setState({ k, record: c, loading: false, error: "" });
     let live = true;
-    setState((s) => ({ ...s, loading: true, error: "" }));
+    setState({ k, record: null, loading: true, error: "" });
     loadTranslatedRecord(p, lang)
-      .then((r) => live && setState({ record: r, loading: false, error: "" }))
-      .catch((e) => live && setState({ record: null, loading: false, error: (e as Error).message }));
+      .then((r) => live && setState({ k, record: r, loading: false, error: "" }))
+      .catch((e) => live && setState({ k, record: null, loading: false, error: (e as Error).message }));
     return () => {
       live = false;
     };
-  }, [p, lang, enabled]);
-  return state;
+    // `k` covers the record's content and the language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [k, want]);
+  if (!want) return { record: null, loading: false, error: "" };
+  if (state.k !== k) {
+    const c = readCache(p, lang);
+    return { record: c, loading: !c, error: "" };
+  }
+  return { record: state.record, loading: state.loading, error: state.error };
 }
