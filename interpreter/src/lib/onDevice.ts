@@ -2,6 +2,7 @@
 // instead of the cloud. Every request then carries X-On-Device, and the server answers it locally
 // (server/local.mjs) without ever falling back to OpenAI. Remembered on this phone.
 import { useSyncExternalStore } from "react";
+import { accessHeaders } from "./access.ts";
 
 const KEY = "ti.onDevice";
 let on = (() => {
@@ -42,7 +43,7 @@ export type LocalStatus = { ready: boolean; mt?: boolean; device?: string; voice
 /** Loads the local models for this pair of languages, so the first line isn't slow. */
 export async function warmLocal(langs: string[]): Promise<LocalStatus | null> {
   try {
-    const r = await fetch(`/api/local?warm=1&langs=${encodeURIComponent(langs.join(","))}`);
+    const r = await fetch(`/api/local?warm=1&langs=${encodeURIComponent(langs.join(","))}`, { headers: accessHeaders() });
     return r.ok ? ((await r.json()) as LocalStatus) : null;
   } catch {
     return null;

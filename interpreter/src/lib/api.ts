@@ -1,5 +1,6 @@
 import type { DrugMention, Equivalent, Speaker } from "./types";
 import { deviceHeaders } from "./onDevice.ts";
+import { accessHeaders } from "./access.ts";
 
 /** Every call gives up after a while: a request that hangs on a weak connection must not freeze the conversation. */
 async function post<T>(path: string, body: unknown, timeoutMs = 30000): Promise<T> {
@@ -9,7 +10,7 @@ async function post<T>(path: string, body: unknown, timeoutMs = 30000): Promise<
   try {
     res = await fetch(path, {
       method: "POST",
-      headers: { "Content-Type": "application/json", ...deviceHeaders() },
+      headers: { "Content-Type": "application/json", ...deviceHeaders(), ...accessHeaders() },
       body: JSON.stringify(body),
       signal: abort.signal,
     });
@@ -94,6 +95,6 @@ export function translateRecord<T>(record: T, to: string, from?: string) {
 }
 
 export async function health() {
-  const r = await fetch("/api/health");
+  const r = await fetch("/api/health", { headers: accessHeaders() });
   return (await r.json()) as { ok: boolean; key: boolean; locked?: boolean; models: Record<string, string> };
 }
